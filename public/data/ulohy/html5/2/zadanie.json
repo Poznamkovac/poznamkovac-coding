@@ -1,0 +1,9 @@
+{
+    "nazov": "Nadpisy",
+    "zadanie": "Vytvorte webovú stránku s 3 nadpismi rôznej veľkosti. Každý nadpis (alebo podnadpis) bude obsahovať jeden paragraf s ľubovoľným textom.",
+    "pociatocnyKod": {
+        "html": "",
+        "css": null,
+        "js": null
+    }
+}

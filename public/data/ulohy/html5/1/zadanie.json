@@ -1,7 +1,7 @@
 {
-    "name": "Vytvorenie základnej webovej stránky",
-    "description": "Vytvorte základnú webovú stránku s 1 nadpisom a 1 odstavcom ktorý bude obsahovať text \"ahoj\"",
-    "initialCode": {
+    "nazov": "Jednoduchá stránka",
+    "zadanie": "Vytvor základnú webovú stránku s 1 odstavcom ktorý bude obsahovať text \"ahoj\".",
+    "pociatocnyKod": {
         "html": "<!-- Sem napíšte svoj kód: -->\n\n",
         "css": null,
         "js": null

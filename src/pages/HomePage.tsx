@@ -20,13 +20,13 @@ const HomePage: React.FC = () => {
 
   return (
     <div>
-      <h1 className="mb-6 text-3xl font-bold">Vytajte v Poznámkovač Weblearn!</h1>
+      <h1 className="mb-6 text-3xl font-bold">Vitajte v Poznámkovač (Webúlohy)!</h1>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {Object.entries(categories).map(([id, name]) => (
           <Link
             key={id}
             to={`/category/${id}`}
-            className="px-6 py-4 font-bold text-white transition duration-300 bg-blue-500 rounded shadow hover:bg-blue-600"
+            className="px-6 py-4 font-bold text-white transition duration-300 bg-blue-500 rounded shadow hover:bg-blue-700"
           >
             <FontAwesomeIcon
               // @ts-ignore

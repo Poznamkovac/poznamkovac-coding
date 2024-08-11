@@ -3,19 +3,21 @@ import { useParams } from "react-router-dom";
 import CodeEditor from "../components/CodeEditor";
 
 interface ChallengeData {
-  name: string;
-  description: string;
-  initialCode: {
+  nazov: string;
+  zadanie: string;
+  pociatocnyKod: {
     html: string | null;
     css: string | null;
     js: string | null;
   };
 }
 
+export type { ChallengeData };
+
 interface Test {
-  score: number;
-  details_pass?: string;
-  details_fail?: string;
+  skore?: number;
+  detaily_ok?: string;
+  detaily_zle?: string;
 }
 
 const ChallengePage: React.FC = () => {
@@ -34,17 +36,17 @@ const ChallengePage: React.FC = () => {
   useEffect(() => {
     fetch(`/data/ulohy/${categoryId}/${challengeId}/zadanie.json`)
       .then((response) => response.json())
-      .then((data) => {
+      .then((data: ChallengeData) => {
         setChallengeData(data);
-        setHtmlCode(data.initialCode.html || "");
-        setCssCode(data.initialCode.css || "");
-        setJsCode(data.initialCode.js || "");
+        setHtmlCode(data.pociatocnyKod.html || "");
+        setCssCode(data.pociatocnyKod.css || "");
+        setJsCode(data.pociatocnyKod.js || "");
       })
       .catch((error) => console.error("Chyba pri načítavaní údajov úlohy:", error));
 
     // Check if the image exists
     fetch(`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`)
-      .then(response => {
+      .then((response) => {
         if (response.headers.get("content-type")?.startsWith("image")) {
           setImageExists(true);
         }
@@ -103,19 +105,19 @@ const ChallengePage: React.FC = () => {
             console.error(`Chyba v metóde: ${method}:`, error);
             return {
               name: method,
-              result: { score: 0, details_fail: "Chyba pri spúštaní testov" },
+              result: { detaily_zle: "Chyba pri spúštaní testov" },
             };
           }
         })
       );
 
       setTestResults(results);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chyba pri spúštaní testov", error);
       setTestResults([
         {
           name: "Error",
-          result: { score: 0, details_fail: "Nastala chyba pri testovaní." },
+          result: { detaily_zle: "Nastala chyba pri testovaní." },
         },
       ]);
     }
@@ -140,14 +142,14 @@ const ChallengePage: React.FC = () => {
   return (
     <div className="min-h-screen text-white">
       <main className="container p-4 mx-auto">
-        <h2 className="mb-4 text-3xl font-bold">{challengeData.name}</h2>
-        <p className="mb-6">{challengeData.description}</p>
-        
+        <h2 className="mb-4 text-3xl font-bold">{challengeData.nazov}</h2>
+        <p className="mb-6" dangerouslySetInnerHTML={{ __html: challengeData.zadanie }} />
+
         {imageExists && (
           <div className="mb-6">
-            <img 
-              src={`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`} 
-              alt="Obrázok k úlohe" 
+            <img
+              src={`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`}
+              alt="Obrázok k úlohe"
               className="h-auto max-w-full"
             />
           </div>
@@ -155,9 +157,9 @@ const ChallengePage: React.FC = () => {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            {challengeData.initialCode.html !== null && renderEditor("html", htmlCode, setHtmlCode)}
-            {challengeData.initialCode.css !== null && renderEditor("css", cssCode, setCssCode)}
-            {challengeData.initialCode.js !== null && renderEditor("javascript", jsCode, setJsCode)}
+            {challengeData.pociatocnyKod.html !== null && renderEditor("html", htmlCode, setHtmlCode)}
+            {challengeData.pociatocnyKod.css !== null && renderEditor("css", cssCode, setCssCode)}
+            {challengeData.pociatocnyKod.js !== null && renderEditor("javascript", jsCode, setJsCode)}
           </div>
 
           <div>
@@ -196,22 +198,22 @@ const ChallengePage: React.FC = () => {
               />
             </div>
 
-            <button onClick={runTests} className="px-4 py-2 mt-4 font-bold text-white bg-blue-500 rounded hover:bg-blue-600">
+            <button onClick={runTests} className="px-4 py-2 mt-4 font-bold text-white bg-blue-600 rounded hover:bg-blue-700">
               ▶ Overiť riešenie
             </button>
 
             <div className="mt-4">
               {testResults.map(({ name, result }) => (
-                <div key={name} className={`p-2 mb-2 rounded ${result.score > 0 ? "bg-green-800" : "bg-red-800"}`}>
+                <div key={name} className={`p-2 mb-2 rounded ${result.detaily_ok ? "bg-green-800" : "bg-red-800"}`}>
                   <b>
-                    {result.score > 0 ? "✓" : "✗"} {name}
+                    {result.detaily_ok ? "✓" : "✗"} {name}
                   </b>
-                  <span> - {result.score > 0 ? `ok!` : "zle!"}</span>
+                  {result.detaily_ok ? `- ok!` : `- zle!`}
                   <br />
 
                   <span className="text-sm text-gray-300 font-italic">
-                    {result.score > 0 && result.details_pass && result.details_pass}
-                    {result.score === 0 && result.details_fail && result.details_fail}
+                    <span dangerouslySetInnerHTML={{ __html: result.detaily_ok || "" }} />
+                    <span dangerouslySetInnerHTML={{ __html: result.detaily_zle || "" }} />
                   </span>
                 </div>
               ))}

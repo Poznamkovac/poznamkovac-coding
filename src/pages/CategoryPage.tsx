@@ -1,30 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
-
-interface Challenge {
-  id: string;
-  name: string;
-  description: string;
-}
+import { ChallengeData } from "./ChallengePage";
 
 interface ChallengeCounts {
   [category: string]: number;
 }
 
-const CHALLENGES_PER_PAGE = 10;
+interface ChallengeList {
+  [id: string]: ChallengeData;
+}
+
+const CHALLENGES_PER_PAGE = 6;
 
 const CategoryPage: React.FC = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [challenges, setChallenges] = useState<ChallengeList>({});
   const [totalChallenges, setTotalChallenges] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(parseInt(searchParams.get("strana") || "1", 10));
 
   useEffect(() => {
     const fetchChallengeCounts = async () => {
       try {
-        const response = await fetch('/data/challenge-counts.json');
+        const response = await fetch("/data/challenge-counts.json");
         const counts: ChallengeCounts = await response.json();
         if (categoryId && counts[categoryId]) {
           setTotalChallenges(counts[categoryId]);
@@ -43,17 +42,18 @@ const CategoryPage: React.FC = () => {
       const endIndex = Math.min(startIndex + CHALLENGES_PER_PAGE - 1, totalChallenges);
 
       const challengePromises = [];
-      for (let i = startIndex; i < endIndex; i++) {
+      for (let i = startIndex; i <= endIndex; i++) {
         challengePromises.push(
           fetch(`/data/ulohy/${categoryId}/${i}/zadanie.json`)
             .then((response) => response.json())
-            .then((data) => ({ ...data, id: i.toString() }))
+            .then((data) => ({ [i]: data }))
         );
       }
 
       try {
         const fetchedChallenges = await Promise.all(challengePromises);
-        setChallenges(fetchedChallenges);
+        const challengeList = fetchedChallenges.reduce((index, data) => ({ ...index, ...data }), {});
+        setChallenges(challengeList);
       } catch (error) {
         console.error("Chyba pri načítavaní úloh:", error);
       }
@@ -76,7 +76,7 @@ const CategoryPage: React.FC = () => {
     }
   };
 
-  if (challenges.length === 0)
+  if (Object.keys(challenges).length === 0)
     return (
       <div>
         <p>Nie sú tu žiadne úlohy na zobrazenie.</p>
@@ -88,16 +88,18 @@ const CategoryPage: React.FC = () => {
 
   return (
     <div>
-      <h1 className="mb-6 text-3xl font-bold">{categoryId} úlohy</h1>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {challenges.map((challenge) => (
+        {Object.entries(challenges).map(([id, challenge]) => (
           <Link
-            key={challenge.id}
-            to={`/challenge/${categoryId}/${challenge.id}`}
-            className="p-6 transition duration-300 bg-blue-600 rounded-lg shadow-md hover:shadow-lg"
+            key={id}
+            to={`/challenge/${categoryId}/${id}`}
+            className="p-6 transition duration-300 bg-blue-700 rounded-lg shadow-md hover:shadow-lg"
           >
-            <h2 className="text-xl font-semibold">{challenge.name}</h2>
-            <p className="mt-2 text-sm">{challenge.description.slice(0, 100)}{challenge.description.length > 100 && '...'}</p>
+            <h2 className="text-xl font-semibold">[{id}.] {challenge.nazov}</h2>
+            <p className="mt-2 text-sm">
+              {challenge.zadanie.slice(0, 100)}
+              {challenge.zadanie.length > 100 && "..."}
+            </p>
           </Link>
         ))}
       </div>
@@ -106,7 +108,7 @@ const CategoryPage: React.FC = () => {
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="px-4 py-2 mr-2 text-white bg-blue-500 rounded disabled:bg-gray-300"
+            className="px-4 py-2 mr-2 text-white bg-blue-500 rounded disabled:bg-gray-700 disabled:text-gray-400"
           >
             Predchádzajúca
           </button>
@@ -116,7 +118,7 @@ const CategoryPage: React.FC = () => {
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 ml-2 text-white bg-blue-500 rounded disabled:bg-gray-300"
+            className="px-4 py-2 ml-2 text-white bg-blue-500 rounded disabled:bg-gray-700 disabled:text-gray-400"
           >
             Ďalšia
           </button>
