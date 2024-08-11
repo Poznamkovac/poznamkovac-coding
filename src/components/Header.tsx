@@ -8,8 +8,7 @@ const Header: React.FC = () => {
         <Link to="/" className="text-2xl font-bold">Poznámkovač Weblearn</Link>
         <nav>
           <ul className="flex space-x-4">
-            <li><Link to="/" className="hover:underline">Home</Link></li>
-            {/* Add more navigation items as needed */}
+            {/*<li><Link to="/" className="hover:underline">Domov</Link></li>*/}
           </ul>
         </nav>
       </div>

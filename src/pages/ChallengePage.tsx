@@ -29,9 +29,10 @@ const ChallengePage: React.FC = () => {
   const [jsCode, setJsCode] = useState<string>("");
   const [_, setPreviewError] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Array<{ name: string; result: Test }>>([]);
+  const [imageExists, setImageExists] = useState<boolean>(false);
 
   useEffect(() => {
-    fetch(`/data/challenges/${categoryId}/${challengeId}.json`)
+    fetch(`/data/ulohy/${categoryId}/${challengeId}/zadanie.json`)
       .then((response) => response.json())
       .then((data) => {
         setChallengeData(data);
@@ -40,6 +41,15 @@ const ChallengePage: React.FC = () => {
         setJsCode(data.initialCode.js || "");
       })
       .catch((error) => console.error("Chyba pri načítavaní údajov úlohy:", error));
+
+    // Check if the image exists
+    fetch(`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`)
+      .then(response => {
+        if (response.headers.get("content-type")?.startsWith("image")) {
+          setImageExists(true);
+        }
+      })
+      .catch(() => setImageExists(false));
   }, [categoryId, challengeId]);
 
   const handleCodeChange = (language: string, value: string | undefined) => {
@@ -60,7 +70,7 @@ const ChallengePage: React.FC = () => {
 
   const runTests = async () => {
     try {
-      const testModule = await import(/* @vite-ignore */ `/data/challenges/${categoryId}/${challengeId}.js`);
+      const testModule = await import(/* @vite-ignore */ `/data/ulohy/${categoryId}/${challengeId}/testy.js`);
       const tester = new testModule.default();
 
       const parser = new DOMParser();
@@ -132,8 +142,18 @@ const ChallengePage: React.FC = () => {
       <main className="container p-4 mx-auto">
         <h2 className="mb-4 text-3xl font-bold">{challengeData.name}</h2>
         <p className="mb-6">{challengeData.description}</p>
+        
+        {imageExists && (
+          <div className="mb-6">
+            <img 
+              src={`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`} 
+              alt="Obrázok k úlohe" 
+              className="h-auto max-w-full"
+            />
+          </div>
+        )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             {challengeData.initialCode.html !== null && renderEditor("html", htmlCode, setHtmlCode)}
             {challengeData.initialCode.css !== null && renderEditor("css", cssCode, setCssCode)}

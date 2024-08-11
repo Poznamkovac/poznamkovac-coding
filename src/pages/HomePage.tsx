@@ -10,7 +10,7 @@ const HomePage: React.FC = () => {
   const [categories, setCategories] = useState<Categories>({});
 
   useEffect(() => {
-    fetch("/data/categories.json")
+    fetch("/data/kategorie.json")
       .then((response) => response.json())
       .then((data) => setCategories(data))
       .catch((error) => console.error("Chyba pri načítaní kategórií:", error));
@@ -32,7 +32,7 @@ const HomePage: React.FC = () => {
               // @ts-ignore
               icon={["fab", id]}
               className="mr-2"
-            />{" "}
+            />
             {name}
           </Link>
         ))}
