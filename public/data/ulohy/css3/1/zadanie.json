@@ -1,0 +1,9 @@
+{
+    "nazov": "Farba textu",
+    "zadanie": "Zmeň farbu textu paragrafu s ID <code>cerven</code> na červenú (<code>red</code>).",
+    "pociatocnyKod": {
+        "html": "<p id=\"cerven\">červená</p>",
+        "css": "/* Sem napíšte svoj kód: */",
+        "js": null
+    }
+}

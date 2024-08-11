@@ -75,22 +75,7 @@ const ChallengePage: React.FC = () => {
       const testModule = await import(/* @vite-ignore */ `/data/ulohy/${categoryId}/${challengeId}/testy.js`);
       const tester = new testModule.default();
 
-      const parser = new DOMParser();
-      const virtualDOM = parser.parseFromString(htmlCode, "text/html");
-
-      const style = document.createElement("style");
-      style.textContent = cssCode;
-      virtualDOM.head.appendChild(style);
-
-      const script = virtualDOM.createElement("script");
-      script.textContent = `
-        try {
-          ${jsCode}
-        } catch (error) {
-          document.body.innerHTML += '<pre>Chyba: ' + error.toString() + '</pre>';
-        }
-      `;
-      virtualDOM.body.appendChild(script);
+      const previewWindow = (document.getElementById("preview") as HTMLIFrameElement)?.contentWindow;
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
         (prop) => prop.startsWith("test_") && typeof tester[prop] === "function"
@@ -99,7 +84,7 @@ const ChallengePage: React.FC = () => {
       const results = await Promise.all(
         testMethods.map(async (method) => {
           try {
-            const result: Test = await tester[method](virtualDOM);
+            const result: Test = await tester[method](previewWindow);
             return { name: method, result };
           } catch (error) {
             console.error(`Chyba v metóde: ${method}:`, error);
@@ -166,15 +151,16 @@ const ChallengePage: React.FC = () => {
             <h2 className="mb-2 text-xl font-semibold">Náhľad</h2>
             <div className="border border-gray-700 p-4 h-[400px] overflow-auto bg-white">
               <iframe
+                id="preview"
                 srcDoc={`
                   <html>
                     <head>
-                      <style>${cssCode}</style>
+                      <style id="css">${cssCode}</style>
                     </head>
-                    <body>
+                    <body id="html">
                       ${htmlCode}
                     </body>
-                    <script>
+                    <script id="js">
                       try {
                         ${jsCode}
                       } catch (error) {

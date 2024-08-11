@@ -1,7 +1,7 @@
 export default class HTMLChallengeTester {
-    /** @param {Document} dom */
-    test_nadpisy(dom) {
-        const nadpisy = dom.querySelectorAll('h1, h2, h3');
+    /** @param {Window} window */
+    test_nadpisy(window) {
+        const nadpisy = window.querySelectorAll('h1, h2, h3');
 
         if (nadpisy.length !== 3) return {
             detaily_zle: `Nenašli sa 3 nadpisy.`

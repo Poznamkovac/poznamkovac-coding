@@ -96,10 +96,7 @@ const CategoryPage: React.FC = () => {
             className="p-6 transition duration-300 bg-blue-700 rounded-lg shadow-md hover:shadow-lg"
           >
             <h2 className="text-xl font-semibold">[{id}.] {challenge.nazov}</h2>
-            <p className="mt-2 text-sm">
-              {challenge.zadanie.slice(0, 100)}
-              {challenge.zadanie.length > 100 && "..."}
-            </p>
+            <p className="mt-2 text-sm" dangerouslySetInnerHTML={{ __html: challenge.zadanie.slice(0, 100) }} />
           </Link>
         ))}
       </div>
