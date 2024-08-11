@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { HashRouter, Route, Routes } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -7,7 +7,7 @@ import ChallengePage from './pages/ChallengePage';
 
 function App() {
   return (
-      <Router>
+      <HashRouter>
         <div className="flex flex-col min-h-screen text-white bg-gray-900">
           <Header />
           <main className="container flex-grow px-4 py-8 mx-auto">
@@ -19,7 +19,7 @@ function App() {
           </main>
           <Footer />
         </div>
-      </Router>
+      </HashRouter>
   );
 }
 
