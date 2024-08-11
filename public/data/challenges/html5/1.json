@@ -1,0 +1,9 @@
+{
+    "name": "Vytvorenie základnej webovej stránky",
+    "description": "Vytvorte základnú webovú stránku s 1 nadpisom a 1 odstavcom ktorý bude obsahovať text \"ahoj\"",
+    "initialCode": {
+        "html": "<!-- Sem napíšte svoj kód: -->\n\n",
+        "css": null,
+        "js": null
+    }
+}
