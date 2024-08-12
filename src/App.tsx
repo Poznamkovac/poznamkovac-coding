@@ -6,10 +6,9 @@ import CategoryPage from "./pages/CategoryPage";
 import ChallengePage from "./pages/ChallengePage";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { fab } from "@fortawesome/free-brands-svg-icons";
 import { faHtml5, faCss3, faJs } from "@fortawesome/free-brands-svg-icons";
 
-library.add(fab, faHtml5, faCss3, faJs);
+library.add(faHtml5, faCss3, faJs);
 
 function App() {
   return (
