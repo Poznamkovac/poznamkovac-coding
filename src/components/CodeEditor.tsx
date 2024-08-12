@@ -1,24 +1,20 @@
-import React, { useRef, useEffect } from 'react';
-import type * as monaco from 'monaco-editor';
-import { Editor, OnMount } from '@monaco-editor/react';
-import { emmetHTML, emmetCSS } from 'emmet-monaco-es'
-import useAutoCloseTags from '../hooks/useAutoCloseTags';
+import React, { useRef, useEffect } from "react";
 
-declare global {
-  interface Window {
-    monaco: typeof monaco;
-  }
-}
+import type * as monaco from "monaco-editor";
+import { BeforeMount, Editor, Monaco, OnMount } from "@monaco-editor/react";
+import { Dispose, emmetHTML, emmetCSS } from "emmet-monaco-es";
+
+import useAutoCloseTags from "../hooks/useAutoCloseTags";
 
 interface CodeEditorProps {
   language: string;
   value: string;
-  onChange: (value: string | undefined) => void;
+  onChange: (value?: string) => void;
   readOnly?: boolean;
   height?: string;
 }
 
-const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, readOnly = false, height = '200px' }) => {
+const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, readOnly = false, height = "200px" }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const disposeEmmetHtmlRef = useRef<any>(null);
   const disposeEmmetCssRef = useRef<any>(null);
@@ -27,7 +23,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
     editorRef.current = editor;
   };
 
-  const handleEditorWillMount = (m: typeof monaco) => {
+  const handleEditorWillMount: BeforeMount = (m: Monaco) => {
     disposeEmmetHtmlRef.current = emmetHTML(m, ["html"]);
     disposeEmmetCssRef.current = emmetCSS(m, ["css"]);
   };
@@ -37,32 +33,33 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
   useEffect(() => {
     return () => {
       editorRef.current?.dispose();
-      disposeEmmetHtmlRef.current?.dispose();
-      disposeEmmetCssRef.current?.dispose();
+      disposeEmmetHtmlRef.current?.dispose?.();
+      disposeEmmetCssRef.current?.dispose?.();
     };
   }, []);
 
   return (
-    <Editor
-      height={height}
-      defaultLanguage={language}
-      theme="vs-dark"
-      value={value}
-      onChange={onChange}
-      beforeMount={handleEditorWillMount}
-      onMount={handleEditorDidMount}
-      options={{
-        readOnly: readOnly,
-        minimap: { enabled: false },
-        lineNumbers: 'on',
-        scrollBeyondLastLine: false,
-        theme: 'vs-dark',
-        autoClosingBrackets: 'always',
-        autoClosingQuotes: 'always',
-        formatOnPaste: true,
-        formatOnType: true,
-      }}
-    />
+      <Editor
+        loading={<div>Načítavam editor kódu...</div>}
+        height={height}
+        defaultLanguage={language}
+        theme="vs-dark"
+        value={value}
+        onChange={onChange}
+        beforeMount={handleEditorWillMount}
+        onMount={handleEditorDidMount}
+        options={{
+          readOnly: readOnly,
+          minimap: { enabled: false },
+          lineNumbers: "on",
+          scrollBeyondLastLine: false,
+          theme: "vs-dark",
+          autoClosingBrackets: "always",
+          autoClosingQuotes: "always",
+          formatOnPaste: true,
+          formatOnType: true,
+        }}
+      />
   );
 };
 

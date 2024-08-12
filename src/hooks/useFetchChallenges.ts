@@ -17,7 +17,6 @@ export const useFetchChallenges = (categoryId: string, currentPage: number) => {
       }
       return await response.json();
     } catch (error) {
-      console.error(`Chyba pri načítavaní úlohy ${index}:`, error);
       return null;
     }
   }, [categoryId]);
