@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from "react";
 
 import type * as monaco from "monaco-editor";
 import { BeforeMount, Editor, Monaco, OnMount } from "@monaco-editor/react";
-import { Dispose, emmetHTML, emmetCSS } from "emmet-monaco-es";
+import {emmetHTML, emmetCSS } from "emmet-monaco-es";
 
 import useAutoCloseTags from "../hooks/useAutoCloseTags";
 
