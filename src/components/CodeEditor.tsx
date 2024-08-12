@@ -1,7 +1,14 @@
 import React, { useRef, useEffect } from 'react';
-import * as monaco from 'monaco-editor';
+import type * as monaco from 'monaco-editor';
 import { Editor, OnMount } from '@monaco-editor/react';
+import { emmetHTML, emmetCSS } from 'emmet-monaco-es'
 import useAutoCloseTags from '../hooks/useAutoCloseTags';
+
+declare global {
+  interface Window {
+    monaco: typeof monaco;
+  }
+}
 
 interface CodeEditorProps {
   language: string;
@@ -13,18 +20,25 @@ interface CodeEditorProps {
 
 const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, readOnly = false, height = '200px' }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const disposeEmmetHtmlRef = useRef<any>(null);
+  const disposeEmmetCssRef = useRef<any>(null);
 
   const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;
+  };
+
+  const handleEditorWillMount = (m: typeof monaco) => {
+    disposeEmmetHtmlRef.current = emmetHTML(m, ["html"]);
+    disposeEmmetCssRef.current = emmetCSS(m, ["css"]);
   };
 
   useAutoCloseTags(editorRef.current);
 
   useEffect(() => {
     return () => {
-      if (editorRef.current) {
-        editorRef.current.dispose();
-      }
+      editorRef.current?.dispose();
+      disposeEmmetHtmlRef.current?.dispose();
+      disposeEmmetCssRef.current?.dispose();
     };
   }, []);
 
@@ -35,6 +49,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
       theme="vs-dark"
       value={value}
       onChange={onChange}
+      beforeMount={handleEditorWillMount}
       onMount={handleEditorDidMount}
       options={{
         readOnly: readOnly,
