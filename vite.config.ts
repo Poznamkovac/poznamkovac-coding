@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react-swc";
 export default defineConfig({
   plugins: [react()],
   build: {
+    chunkSizeWarningLimit: 4500, // monaco-editor je najväčší, nedá sa s tým nič robiť
     rollupOptions: {
       output: {
         manualChunks: (id: string) => {
