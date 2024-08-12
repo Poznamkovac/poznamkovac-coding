@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
         {Object.entries(categories).map(([id, name]) => (
           <Link
             key={id}
-            to={`/category/${id}`}
+            to={`/ulohy/${id}`}
             className="px-6 py-4 font-bold text-white transition duration-300 bg-blue-500 rounded shadow hover:bg-blue-700"
           >
             <FontAwesomeIcon
