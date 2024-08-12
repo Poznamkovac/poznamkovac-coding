@@ -18,8 +18,8 @@ function App() {
         <main className="container flex-grow px-4 py-8 mx-auto">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/category/:categoryId" element={<CategoryPage />} />
-            <Route path="/challenge/:categoryId/:challengeId" element={<ChallengePage />} />
+            <Route path="/ulohy/:categoryId" element={<CategoryPage />} />
+            <Route path="/ulohy/:categoryId/:challengeId" element={<ChallengePage />} />
           </Routes>
         </main>
         <Footer />
