@@ -1,50 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import CodeEditor from "../components/CodeEditor";
+import { ChallengeData } from "../types/challenge";
+import { Test } from "../types/test";
 
-interface ChallengeData {
-  nazov: string;
-  zadanie: string;
-  pociatocnyKod: {
-    html: string | null;
-    css: string | null;
-    js: string | null;
-  };
-}
+type CodeState = [string, boolean] | null;
 
-export type { ChallengeData };
-
-interface Test {
-  skore?: number;
-  detaily_ok?: string;
-  detaily_zle?: string;
-}
-
+/**
+ * Stránka s detailom úlohy.
+ */
 const ChallengePage: React.FC = () => {
   const { categoryId, challengeId } = useParams<{
     categoryId: string;
     challengeId: string;
   }>();
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
-  const [htmlCode, setHtmlCode] = useState<string>("");
-  const [cssCode, setCssCode] = useState<string>("");
-  const [jsCode, setJsCode] = useState<string>("");
+  const [htmlCode, setHtmlCode] = useState<CodeState>(null);
+  const [cssCode, setCssCode] = useState<CodeState>(null);
+  const [jsCode, setJsCode] = useState<CodeState>(null);
   const [_, setPreviewError] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Array<{ name: string; result: Test }>>([]);
   const [imageExists, setImageExists] = useState<boolean>(false);
 
   useEffect(() => {
+    // Načíta dáta o úlohe
     fetch(`/data/ulohy/${categoryId}/${challengeId}/zadanie.json`)
       .then((response) => response.json())
       .then((data: ChallengeData) => {
         setChallengeData(data);
-        setHtmlCode(data.pociatocnyKod.html || "");
-        setCssCode(data.pociatocnyKod.css || "");
-        setJsCode(data.pociatocnyKod.js || "");
+        setHtmlCode(processInitialCode(data.pociatocnyKod.html));
+        setCssCode(processInitialCode(data.pociatocnyKod.css));
+        setJsCode(processInitialCode(data.pociatocnyKod.js));
       })
       .catch((error) => console.error("Chyba pri načítavaní údajov úlohy:", error));
 
-    // Check if the image exists
+    // Zobrazí obrázok, ak existuje
     fetch(`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`)
       .then((response) => {
         if (response.headers.get("content-type")?.startsWith("image")) {
@@ -54,22 +44,39 @@ const ChallengePage: React.FC = () => {
       .catch(() => setImageExists(false));
   }, [categoryId, challengeId]);
 
-  const handleCodeChange = (language: string, value: string | undefined) => {
-    if (value === undefined) return;
+  const processInitialCode = (code: string | string[] | null | undefined): CodeState => {
+    if (Array.isArray(code)) {
+      if (code.length === 0) return null;
+      return code.length === 1 ? [code[0], false] : [code[0], !!code[1]];
+    }
+    if (typeof code === 'string') return [code, false];
+    return null;
+  };
+
+  /**
+   * Spravuje zmeny v kóde editora a náhľad.
+   */
+  const handleCodeChange = (language: string, value: string) => {
+    const updateCode = (prevState: CodeState): CodeState => 
+      prevState ? [value, prevState[1]] : [value, false];
+
     switch (language) {
       case "html":
-        setHtmlCode(value);
+        setHtmlCode(updateCode);
         break;
       case "css":
-        setCssCode(value);
+        setCssCode(updateCode);
         break;
       case "js":
-        setJsCode(value);
+        setJsCode(updateCode);
         break;
     }
     setPreviewError(null);
   };
 
+  /**
+   * Spustí testy pre overenie riešenia úlohy.
+   */
   const runTests = async () => {
     try {
       const testModule = await import(/* @vite-ignore */ `/data/ulohy/${categoryId}/${challengeId}/testy.js`);
@@ -108,19 +115,30 @@ const ChallengePage: React.FC = () => {
     }
   };
 
-  const renderEditor = (language: string, code: string, setCode: (value: string) => void) => (
-    <div className="mb-4">
-      <h2 className="mb-2 text-xl font-semibold">{language.toUpperCase()}</h2>
-      <CodeEditor
-        language={language}
-        value={code}
-        onChange={(value) => {
-          setCode(value || "");
-          handleCodeChange(language, value);
-        }}
-      />
-    </div>
-  );
+  /**
+   * Vykreslí editor pre daný jazyk.
+   */
+  const renderEditor = (language: string, codeState: CodeState, setCode: React.Dispatch<React.SetStateAction<CodeState>>) => {
+    if (!codeState) return null;
+    const [code, readOnly] = codeState;
+
+    return (
+      <div className="mb-4">
+        <h2 className="mb-2 text-xl font-semibold">{language.toUpperCase()}</h2>
+        <CodeEditor
+          readOnly={readOnly}
+          language={language}
+          value={code}
+          onChange={(value) => {
+            if (!readOnly) {
+              setCode([value || "", readOnly]);
+              handleCodeChange(language, value || "");
+            }
+          }}
+        />
+      </div>
+    );
+  };
 
   if (!challengeData) return <div>Načítavam...</div>;
 
@@ -142,9 +160,9 @@ const ChallengePage: React.FC = () => {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            {challengeData.pociatocnyKod.html !== null && renderEditor("html", htmlCode, setHtmlCode)}
-            {challengeData.pociatocnyKod.css !== null && renderEditor("css", cssCode, setCssCode)}
-            {challengeData.pociatocnyKod.js !== null && renderEditor("javascript", jsCode, setJsCode)}
+            {renderEditor("html", htmlCode, setHtmlCode)}
+            {renderEditor("css", cssCode, setCssCode)}
+            {renderEditor("javascript", jsCode, setJsCode)}
           </div>
 
           <div>
@@ -155,14 +173,14 @@ const ChallengePage: React.FC = () => {
                 srcDoc={`
                   <html>
                     <head>
-                      <style id="css">${cssCode}</style>
+                      <style id="css">${cssCode?.[0] || ''}</style>
                     </head>
                     <body id="html">
-                      ${htmlCode}
+                      ${htmlCode?.[0] || ''}
                     </body>
                     <script id="js">
                       try {
-                        ${jsCode}
+                        ${jsCode?.[0] || ''}
                       } catch (error) {
                         document.body.innerHTML += '<pre style="color: red;">' + error.toString() + '</pre>';
                       }
@@ -194,7 +212,7 @@ const ChallengePage: React.FC = () => {
                   <b>
                     {result.detaily_ok ? "✓" : "✗"} {name}
                   </b>
-                  {result.detaily_ok ? `- ok!` : `- zle!`}
+                  {result.detaily_ok ? ` - ok!` : ` - zle!`}
                   <br />
 
                   <span className="text-sm text-gray-300 font-italic">

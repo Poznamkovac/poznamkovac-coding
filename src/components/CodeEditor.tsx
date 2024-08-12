@@ -7,10 +7,11 @@ interface CodeEditorProps {
   language: string;
   value: string;
   onChange: (value: string | undefined) => void;
+  readOnly?: boolean;
   height?: string;
 }
 
-const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, height = '200px' }) => {
+const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, readOnly = false, height = '200px' }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const handleEditorDidMount: OnMount = (editor) => {
@@ -36,10 +37,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, heig
       onChange={onChange}
       onMount={handleEditorDidMount}
       options={{
+        readOnly: readOnly,
         minimap: { enabled: false },
         lineNumbers: 'on',
         scrollBeyondLastLine: false,
-        readOnly: false,
         theme: 'vs-dark',
         autoClosingBrackets: 'always',
         autoClosingQuotes: 'always',
