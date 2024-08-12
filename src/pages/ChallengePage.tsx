@@ -90,7 +90,7 @@ const ChallengePage: React.FC = () => {
             console.error(`Chyba v metóde: ${method}:`, error);
             return {
               name: method,
-              result: { detaily_zle: "Chyba pri spúštaní testov" },
+              result: { detaily_zle: `Chyba pri spúštaní testov: ${error}` },
             };
           }
         })
