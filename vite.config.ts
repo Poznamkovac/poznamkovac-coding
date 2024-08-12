@@ -9,7 +9,7 @@ export default defineConfig({
       output: {
         manualChunks: (id: string) => {
           if (id.includes("node_modules")) {
-            return id.split("node_modules/")[1].split("/")[0];
+            return "vendor";
           }
         },
       },
