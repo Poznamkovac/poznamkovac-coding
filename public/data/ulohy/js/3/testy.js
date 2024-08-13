@@ -11,9 +11,16 @@ export default class HTMLChallengeTester {
       };
     }
 
+    let todos = window.getTodos();
+    if (!Array.isArray(todos) || todos.length !== 0) {
+      return {
+        detaily_zle: "Počiatočný zoznam úloh by mal byť prázdne pole.",
+      };
+    }
+
     window.addTodo("Prvá úloha");
     window.addTodo("Druhá úloha");
-    let todos = window.getTodos();
+    todos = window.getTodos();
 
     if (todos.length !== 2) {
       return {
