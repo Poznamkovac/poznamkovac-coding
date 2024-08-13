@@ -17,7 +17,7 @@ export default class HTMLChallengeTester {
       return display === expectedDisplay;
     };
 
-    if (!testResponsive(1000, "inline-block") || !testResponsive(600, "block"))
+    if (!testResponsive(1000, "inline-block") || !testResponsive(600, "block")) // FIXME: šírka sa nemení, test reaguje na akutálnu vizuálnu šírku náhľadu
       return {
         detaily_zle: "Layout nie je responzívny. Použite media query pre obrazovky menšie ako 768px.",
       };
