@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useChallengeData } from "../hooks/useChallengeData";
 
@@ -8,11 +7,13 @@ import ChallengeTests from "../components/ChallengeTests";
 
 const ChallengePage: React.FC = () => {
   const { categoryId, challengeId } = useParams();
-  const { challengeData, htmlCode, cssCode, jsCode, imageExists, setHtmlCode, setCssCode, setJsCode } = useChallengeData(categoryId!, challengeId!);
-  const [_, setPreviewError] = useState<string | null>(null);
+  const { challengeData, htmlCode, cssCode, jsCode, imageExists, setHtmlCode, setCssCode, setJsCode } = useChallengeData(
+    categoryId!,
+    challengeId!
+  );
 
   const handleCodeChange = (language: string, value: string) => {
-    const updateCode = (prevState: [string, boolean] | null): [string, boolean] | null => 
+    const updateCode = (prevState: [string, boolean] | null): [string, boolean] | null =>
       prevState ? [value, prevState[1]] : [value, false];
 
     switch (language) {
@@ -26,7 +27,6 @@ const ChallengePage: React.FC = () => {
         setJsCode(updateCode);
         break;
     }
-    setPreviewError(null);
   };
 
   if (!challengeData) return <div>Načítavam...</div>;
@@ -55,17 +55,9 @@ const ChallengePage: React.FC = () => {
           </div>
 
           <div>
-            <ChallengePreview
-              htmlCode={htmlCode?.[0] || ''}
-              cssCode={cssCode?.[0] || ''}
-              jsCode={jsCode?.[0] || ''}
-              setPreviewError={setPreviewError}
-            />
+            <ChallengePreview htmlKod={htmlCode?.[0] || ""} cssKod={cssCode?.[0] || ""} jsKod={jsCode?.[0] || ""} />
 
-            <ChallengeTests
-              categoryId={categoryId!}
-              challengeId={challengeId!}
-            />
+            <ChallengeTests categoryId={categoryId!} challengeId={challengeId!} />
           </div>
         </div>
       </main>

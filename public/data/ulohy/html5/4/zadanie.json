@@ -1,0 +1,9 @@
+{
+    "nazov": "Vytvorenie jednoduchého formulára",
+    "zadanie": "Vytvor jednoduchý kontaktný formulár. Formulár by mal obsahovať polia pre meno, email, správu (textarea) a tlačidlo na odoslanie. Použite príslušné HTML5 inputy a pridajte základné atribúty ako 'required' pre povinné polia.",
+    "pociatocnyKod": {
+        "html": "<!-- Sem napíšte svoj kód -->\n\n",
+        "css": null,
+        "js": null
+    }
+}
