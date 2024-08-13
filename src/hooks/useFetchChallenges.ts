@@ -1,5 +1,5 @@
+import type { ChallengeList, ChallengeData } from '../types/challenge';
 import { useState, useCallback, useEffect } from 'react';
-import { ChallengeList, ChallengeData } from '../types/challenge';
 
 const CHALLENGES_PER_PAGE = 6;
 

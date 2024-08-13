@@ -1,8 +1,9 @@
-import React, { useRef, useEffect } from "react";
-
+import type React from "react";
 import type * as monaco from "monaco-editor";
+import { useRef, useEffect } from "react";
+
 import { BeforeMount, Editor, Monaco, OnMount } from "@monaco-editor/react";
-import {emmetHTML, emmetCSS } from "emmet-monaco-es";
+import { emmetHTML, emmetCSS } from "emmet-monaco-es";
 
 import useAutoCloseTags from "../hooks/useAutoCloseTags";
 
@@ -39,27 +40,27 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
   }, []);
 
   return (
-      <Editor
-        loading={<div>Načítavam editor kódu...</div>}
-        height={height}
-        defaultLanguage={language}
-        theme="vs-dark"
-        value={value}
-        onChange={onChange}
-        beforeMount={handleEditorWillMount}
-        onMount={handleEditorDidMount}
-        options={{
-          readOnly: readOnly,
-          minimap: { enabled: false },
-          lineNumbers: "on",
-          scrollBeyondLastLine: false,
-          theme: "vs-dark",
-          autoClosingBrackets: "always",
-          autoClosingQuotes: "always",
-          formatOnPaste: true,
-          formatOnType: true,
-        }}
-      />
+    <Editor
+      loading={<div>Načítavam editor kódu...</div>}
+      height={height}
+      defaultLanguage={language}
+      theme="vs-dark"
+      value={value}
+      onChange={onChange}
+      beforeMount={handleEditorWillMount}
+      onMount={handleEditorDidMount}
+      options={{
+        readOnly: readOnly,
+        minimap: { enabled: false },
+        lineNumbers: "on",
+        scrollBeyondLastLine: false,
+        theme: "vs-dark",
+        autoClosingBrackets: "always",
+        autoClosingQuotes: "always",
+        formatOnPaste: true,
+        formatOnType: true,
+      }}
+    />
   );
 };
 

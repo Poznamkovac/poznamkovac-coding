@@ -1,6 +1,6 @@
+import type React from "react";
 import { useParams } from "react-router-dom";
 import { useChallengeData } from "../hooks/useChallengeData";
-
 import ChallengeEditor from "../components/ChallengeEditor";
 import ChallengePreview from "../components/ChallengePreview";
 import ChallengeTests from "../components/ChallengeTests";
@@ -11,23 +11,6 @@ const ChallengePage: React.FC = () => {
     categoryId!,
     challengeId!
   );
-
-  const handleCodeChange = (language: string, value: string) => {
-    const updateCode = (prevState: [string, boolean] | null): [string, boolean] | null =>
-      prevState ? [value, prevState[1]] : [value, false];
-
-    switch (language) {
-      case "html":
-        setHtmlCode(updateCode);
-        break;
-      case "css":
-        setCssCode(updateCode);
-        break;
-      case "js":
-        setJsCode(updateCode);
-        break;
-    }
-  };
 
   if (!challengeData) return <div>Načítavam...</div>;
 
@@ -49,9 +32,27 @@ const ChallengePage: React.FC = () => {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <ChallengeEditor language="html" codeState={htmlCode} setCode={setHtmlCode} handleCodeChange={handleCodeChange} />
-            <ChallengeEditor language="css" codeState={cssCode} setCode={setCssCode} handleCodeChange={handleCodeChange} />
-            <ChallengeEditor language="javascript" codeState={jsCode} setCode={setJsCode} handleCodeChange={handleCodeChange} />
+            <ChallengeEditor
+              language="html"
+              codeState={htmlCode}
+              setCode={setHtmlCode}
+              categoryId={categoryId!}
+              challengeId={challengeId!}
+            />
+            <ChallengeEditor
+              language="css"
+              codeState={cssCode}
+              setCode={setCssCode}
+              categoryId={categoryId!}
+              challengeId={challengeId!}
+            />
+            <ChallengeEditor
+              language="javascript"
+              codeState={jsCode}
+              setCode={setJsCode}
+              categoryId={categoryId!}
+              challengeId={challengeId!}
+            />
           </div>
 
           <div>

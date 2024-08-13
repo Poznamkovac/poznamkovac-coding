@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from "react";
+import type React from "react";
+import type { ChallengeList } from "../types/challenge";
+import { useState, useMemo } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useFetchChallenges } from "../hooks/useFetchChallenges";
-import { ChallengeList } from "../types/challenge";
 
 /** Mriežka úloh zobrazí úlohy pomocou `grid` CSS rozloženia. */
 const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }> = ({ challenges, categoryId }) => (

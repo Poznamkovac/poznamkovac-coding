@@ -1,5 +1,6 @@
-import React from "react";
-import { Test } from "../types/test";
+import type React from "react";
+import type { Test } from "../types/test";
+import { useState } from "react";
 
 interface ChallengeTestsProps {
   categoryId: string;
@@ -7,7 +8,7 @@ interface ChallengeTestsProps {
 }
 
 const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId }) => {
-  const [testResults, setTestResults] = React.useState<Array<{ name: string; result: Test }>>([]);
+  const [testResults, setTestResults] = useState<Array<{ name: string; result: Test }>>([]);
 
   const runTests = async () => {
     try {

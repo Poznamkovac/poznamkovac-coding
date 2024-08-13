@@ -1,5 +1,5 @@
+import type { ChallengeData } from '../types/challenge';
 import { useState, useEffect } from 'react';
-import { ChallengeData } from '../types/challenge';
 
 type CodeState = [string, boolean] | null;
 

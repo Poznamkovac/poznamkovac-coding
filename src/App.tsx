@@ -1,12 +1,13 @@
 import { HashRouter, Route, Routes } from "react-router-dom";
+
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faHtml5, faCss3, faJs } from "@fortawesome/free-brands-svg-icons";
+
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
 import CategoryPage from "./pages/CategoryPage";
 import ChallengePage from "./pages/ChallengePage";
-
-import { library } from "@fortawesome/fontawesome-svg-core";
-import { faHtml5, faCss3, faJs } from "@fortawesome/free-brands-svg-icons";
 
 library.add(faHtml5, faCss3, faJs);
 

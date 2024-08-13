@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import type React from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -29,6 +30,7 @@ const HomePage: React.FC = () => {
             className="px-6 py-4 font-bold text-white transition duration-300 bg-blue-500 rounded shadow hover:bg-blue-700"
           >
             <FontAwesomeIcon
+              size="2x"
               // @ts-ignore
               icon={["fab", id]}
               className="mr-2"
