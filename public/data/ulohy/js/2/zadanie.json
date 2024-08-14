@@ -1,6 +1,7 @@
 {
     "nazov": "Jednoduchá funkcia",
     "zadanie": "Vytvor funkciu <code>scitaj</code>, ktorá prijme dva parametre a vráti ich súčet.\n\n<b>Poznámka:</b> Použi kľúčové slovo <code>function</code> pre definíciu funkcie.",
+    "maxSkore": 5,
     "pociatocnyKod": {
         "html": null,
         "css": null,

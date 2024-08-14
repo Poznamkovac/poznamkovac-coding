@@ -22,7 +22,7 @@ export default class HTMLChallengeTester {
     }
 
     return {
-      skore: 1,
+      skore: 5,
       detaily_ok: "Výborne! Funkcia správne sčítava čísla.",
     };
   }

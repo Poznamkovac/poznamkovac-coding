@@ -51,7 +51,7 @@ export default class HTMLChallengeTester {
     }
 
     return {
-      skore: 4,
+      skore: 25,
       detaily_ok: "Výborne! Vytvoril si funkčný Todo List s požadovanými funkciami.",
     };
   }

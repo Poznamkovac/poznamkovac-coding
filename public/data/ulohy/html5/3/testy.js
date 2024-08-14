@@ -34,7 +34,7 @@ export default class HTMLChallengeTester {
       };
 
     return {
-      skore: 1,
+      skore: 10,
       detaily_ok: "Výborne! Vytvoril si správnu základnú štruktúru HTML.",
     };
   }

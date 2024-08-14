@@ -1,28 +1,61 @@
 import type React from "react";
 import type { ChallengeList } from "../types/challenge";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useFetchChallenges } from "../hooks/useFetchChallenges";
 
-/** Mriežka úloh zobrazí úlohy pomocou `grid` CSS rozloženia. */
-const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }> = ({ challenges, categoryId }) => (
-  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-    {Object.entries(challenges).map(([id, challenge]) => (
-      <Link
-        key={id}
-        to={`/ulohy/${categoryId}/${id}`}
-        className="p-6 transition duration-300 bg-blue-700 rounded-lg shadow-md hover:shadow-lg"
-      >
-        <h2 className="text-xl font-semibold">[{id}.] {challenge.nazov}</h2>
-        <p className="mt-2 text-sm" dangerouslySetInnerHTML={{ __html: challenge.zadanie.slice(0, 100) }} />
-      </Link>
-    ))}
-  </div>
-);
+const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }> = ({ challenges, categoryId }) => {
+  const [completionStatus, setCompletionStatus] = useState<{ [key: string]: { completed: boolean; score: number } }>({});
+
+  useEffect(() => {
+    const newCompletionStatus: { [key: string]: { completed: boolean; score: number } } = {};
+    Object.entries(challenges).forEach(([id, challenge]) => {
+      const storedScore = localStorage.getItem(`uloha_${categoryId}_${id}_skore`);
+      const score = storedScore ? parseInt(storedScore, 10) : 0;
+      newCompletionStatus[id] = {
+        completed: score === challenge.maxSkore,
+        score: score,
+      };
+    });
+    setCompletionStatus(newCompletionStatus);
+  }, [challenges, categoryId]);
+
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {Object.entries(challenges).map(([id, challenge]) => (
+        <Link
+          key={id}
+          to={`/ulohy/${categoryId}/${id}`}
+          className="p-6 transition duration-300 bg-blue-700 rounded-lg shadow-md hover:shadow-lg"
+        >
+          <h2 className="text-xl font-semibold">
+            <div className="inline-block px-2 py-1 mr-2 text-white bg-blue-900 rounded-full text-bold">{id}.</div>
+            {completionStatus[id]?.completed && "✅ "} {challenge.nazov}
+          </h2>
+          <p
+            className="mt-2 text-sm"
+            dangerouslySetInnerHTML={{
+              __html: challenge.zadanie.split(" ").slice(0, 15).join(" ") + "...",
+            }}
+          />
+          <div className="mt-2 text-sm">
+            <div className="inline-block px-2 py-1 text-xs bg-gray-700 rounded-lg white">
+              <b>Skóre:</b> {completionStatus[id]?.score || 0} / {challenge.maxSkore}
+              {(completionStatus[id]?.score || 0) > challenge.maxSkore && " (si veľmi šikovný :D)"}
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+};
 
 /** Stránkovanie zoznamu úloh. */
-const Pagination: React.FC<{ currentPage: number; isLastPage: boolean; onPageChange: (page: number) => void }> = 
-  ({ currentPage, isLastPage, onPageChange }) => (
+const Pagination: React.FC<{ currentPage: number; isLastPage: boolean; onPageChange: (page: number) => void }> = ({
+  currentPage,
+  isLastPage,
+  onPageChange,
+}) => (
   <div className="flex justify-center mt-8">
     <button
       onClick={() => onPageChange(currentPage - 1)}
@@ -31,9 +64,7 @@ const Pagination: React.FC<{ currentPage: number; isLastPage: boolean; onPageCha
     >
       Predchádzajúca
     </button>
-    <span className="px-4 py-2">
-      Strana {currentPage}
-    </span>
+    <span className="px-4 py-2">Strana {currentPage}</span>
     <button
       onClick={() => onPageChange(currentPage + 1)}
       disabled={isLastPage}

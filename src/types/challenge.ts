@@ -6,6 +6,9 @@ export interface ChallengeData {
   nazov: string;
   /** Zadanie úlohy. Môže obsahovať HTML tagy. */
   zadanie: string;
+  /** Maximálne skóre ktoré možno za túto úlohu dostať. */
+  maxSkore: number;
+
   pociatocnyKod: {
     /**
      * Počiatočný HTML kód editora. Ak je `null`, editor sa nezobrazí.

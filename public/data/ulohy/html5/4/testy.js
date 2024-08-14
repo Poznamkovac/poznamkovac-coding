@@ -35,7 +35,7 @@ export default class HTMLChallengeTester {
       };
 
     return {
-      skore: 2,
+      skore: 15,
       detaily_ok: "Výborne! Vytvoril si správny kontaktný formulár s povinnými poliami.",
     };
   }

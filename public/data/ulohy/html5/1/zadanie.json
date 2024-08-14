@@ -1,6 +1,7 @@
 {
     "nazov": "Jednoduchá stránka",
     "zadanie": "Vytvor základnú webovú stránku s 1 odstavcom ktorý bude obsahovať text \"ahoj\".",
+    "maxSkore": 1,
     "pociatocnyKod": {
         "html": "<!-- Sem napíšte svoj kód: -->\n\n",
         "css": null,

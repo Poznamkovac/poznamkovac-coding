@@ -15,7 +15,7 @@ const ChallengeEditor: React.FC<ChallengeEditorProps> = ({ language, codeState, 
   if (!codeState) return null;
   const [code, readOnly] = codeState;
 
-  const localStorageKey = `challenge_${categoryId}_${challengeId}_${language}`;
+  const localStorageKey = `uloha_${categoryId}_${challengeId}_${language}`;
   useEffect(() => {
     const storedValue = localStorage.getItem(localStorageKey);
     if (storedValue) {

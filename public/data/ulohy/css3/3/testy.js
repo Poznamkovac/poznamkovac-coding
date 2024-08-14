@@ -38,7 +38,7 @@ export default class HTMLChallengeTester {
       };
 
     return {
-      skore: 3,
+      skore: 15,
       detaily_ok: "Výborne! Vytvoril si správny responzívny layout s troma stĺpcami.",
     };
   }

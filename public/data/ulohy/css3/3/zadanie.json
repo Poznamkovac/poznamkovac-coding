@@ -1,6 +1,7 @@
 {
     "nazov": "Responzívny layout",
     "zadanie": "Vytvor responzívny layout s tromi stĺpcami. Na širokých obrazovkách (nad 768px) by mali byť stĺpce vedľa seba. Na užších obrazovkách by mali byť pod sebou. Každý stĺpec by mal mať iné pozadie a padding 20px.",
+    "maxSkore": 15,
     "pociatocnyKod": {
         "html": [
             "<div class=\"container\">\n  <div class=\"column\">Prvý stĺpec</div>\n  <div class=\"column\">Druhý stĺpec</div>\n  <div class=\"column\">Tretí stĺpec</div>\n</div>",

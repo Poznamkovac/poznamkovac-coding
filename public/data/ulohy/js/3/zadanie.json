@@ -1,6 +1,7 @@
 {
     "nazov": "Todo List",
     "zadanie": "Vytvor jednoduchý Todo List. Implementuj funkcie <code>addTodo(text)</code> na pridanie novej úlohy, <code>removeTodo(id)</code> na odstránenie úlohy podľa ID, a <code>getTodos()</code> na získanie zoznamu všetkých úloh. Každá úloha by mala mať unikátne ID, text a stav (boolean `completed`).",
+    "maxSkore": 25,
     "pociatocnyKod": {
         "html": null,
         "css": null,

@@ -1,6 +1,7 @@
 {
     "nazov": "Jednoduchá funkcia",
     "zadanie": "Vytvor funkciu <code>pozdrav</code> ktorá vráti text \"ahoj\".",
+    "maxSkore": 1,
     "pociatocnyKod": {
         "html": null,
         "css": null,
