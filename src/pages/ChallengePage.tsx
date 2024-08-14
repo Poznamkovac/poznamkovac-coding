@@ -26,7 +26,7 @@ const ChallengePage: React.FC = () => {
   return (
     <div className="min-h-screen text-white">
       <main className="container p-4 mx-auto">
-        <h2 className="mb-4 text-3xl font-bold">
+        <h2 className="my-4 text-3xl font-bold">
           {currentScore === challengeData.maxSkore && "✅ "}
           {currentScore > challengeData.maxSkore && "(si veľmi šikovný :D)"}
           {challengeData.nazov}
@@ -34,15 +34,14 @@ const ChallengePage: React.FC = () => {
             (Skóre: {currentScore} / {challengeData.maxSkore})
           </span>
         </h2>
-        <p className="mb-6" dangerouslySetInnerHTML={{ __html: challengeData.zadanie }} />
 
-        
+        <p className="mb-6" dangerouslySetInnerHTML={{ __html: challengeData.zadanie }} />
         <div className="mb-6">
           <img
             src={`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`}
             alt="Obrázok k úlohe"
             className="h-auto max-w-full"
-            onError={(e) => (e.currentTarget.remove())}
+            onError={(e) => e.currentTarget.remove()}
           />
         </div>
 

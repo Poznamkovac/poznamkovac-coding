@@ -16,7 +16,7 @@ export default class HTMLChallengeTester {
 
     if (!nameInput || !nameInput.required)
       return {
-        detaily_zle: 'Chýba povinné pole pre meno (input s type="text" a name="meno").',
+        detaily_zle: 'Chýba <b>povinné</b> (<code>required</code>) pole pre meno (input s type="text" a name="meno").',
       };
 
     if (!emailInput || !emailInput.required)

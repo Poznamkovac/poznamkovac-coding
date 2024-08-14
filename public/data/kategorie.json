@@ -1,5 +1,23 @@
-{
-    "html5": "HTML",
-    "css3": "CSS",
-    "js": "JavaScript"
-}
+[
+    {
+      "id": "html5",
+      "nazov": "HTML",
+      "ikona": "html5",
+      "ikonaFarba": "#ffffff",
+      "farba": "#E34F26"
+    },
+    {
+      "id": "css3",
+      "nazov": "CSS",
+      "ikona": "css3",
+      "ikonaFarba": "#ffffff",
+      "farba": "#1572B6"
+    },
+    {
+      "id": "js",
+      "nazov": "JavaScript",
+      "ikona": "js",
+      "ikonaFarba": "#FFF56B",
+      "farba": "#ebab34"
+    }
+  ]

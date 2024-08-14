@@ -3,12 +3,16 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-interface Categories {
-  [key: string]: string;
+interface Category {
+  id: string;
+  nazov: string;
+  ikona: string;
+  ikonaFarba: string;
+  farba: string;
 }
 
 const HomePage: React.FC = () => {
-  const [categories, setCategories] = useState<Categories>({});
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     fetch("/data/kategorie.json")
@@ -17,25 +21,27 @@ const HomePage: React.FC = () => {
       .catch((error) => console.error("Chyba pri načítaní kategórií:", error));
   }, []);
 
-  if (categories === null) return <div>Nie sú tu žiadne kategórie na zobrazenie.</div>;
+  if (categories.length === 0) return <div>Nie sú tu žiadne kategórie na zobrazenie.</div>;
 
   return (
     <div>
       <h1 className="mb-6 text-3xl font-bold">Vitajte v Poznámkovač (Webúlohy)!</h1>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {Object.entries(categories).map(([id, name]) => (
+        {categories.map((category) => (
           <Link
-            key={id}
-            to={`/ulohy/${id}`}
-            className="px-6 py-4 font-bold text-white transition duration-300 bg-blue-500 rounded shadow hover:bg-blue-700"
+            key={category.id}
+            to={`/ulohy/${category.id}`}
+            className="flex flex-row items-center justify-start gap-4 px-6 py-4 font-bold text-white transition duration-300 rounded shadow hover:opacity-80"
+            style={{ backgroundColor: category.farba }}
           >
             <FontAwesomeIcon
               size="2x"
               // @ts-ignore
-              icon={["fab", id]}
+              icon={["fab", category.ikona]}
               className="mr-2"
+              style={{ color: category.ikonaFarba }}
             />
-            {name}
+            {category.nazov}
           </Link>
         ))}
       </div>
