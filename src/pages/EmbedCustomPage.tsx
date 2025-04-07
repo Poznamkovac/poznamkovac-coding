@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
 import EmbedLayout from "../components/EmbedLayout";
@@ -14,17 +14,23 @@ interface TestResult {
 
 const EmbedCustomPage: React.FC = () => {
   const { options, customData } = useQueryParams();
+  const optionsRef = useRef(options);
   const [fileSystem, setFileSystem] = useState<VirtualFileSystem | null>(null);
   const fileSystemRef = useRef<VirtualFileSystem | null>(null);
   const [assignmentData, setAssignmentData] = useState<ChallengeData | null>(null);
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [needsTestRun, setNeedsTestRun] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const initializedRef = useRef(false);
 
-  // Process custom assignment data from URL parameter
+  // Update optionsRef when options change
   useEffect(() => {
-    if (!customData) {
-      console.error("No custom data provided");
+    optionsRef.current = options;
+  }, [options]);
+
+  // Process custom assignment data from URL parameter - only run once
+  useEffect(() => {
+    if (initializedRef.current || !customData) {
       return;
     }
 
@@ -73,24 +79,22 @@ const EmbedCustomPage: React.FC = () => {
       setAssignmentData(assignmentData);
       setFileSystem(fs);
       fileSystemRef.current = fs;
+      initializedRef.current = true;
     } catch (error) {
       console.error("Error processing custom data:", error);
     }
   }, [customData]);
 
-  // Update ref when fileSystem changes
-  useEffect(() => {
-    fileSystemRef.current = fileSystem;
-  }, [fileSystem]);
-
   // Set up event listeners only once
   useEffect(() => {
-    // Listen for file changes that require test runs
+    // Skip if no file system yet
+    if (!fileSystem) return;
+
+    // Function to handle file changes
     const handleFileChange = (event: Event) => {
       const { shouldReload } = (event as CustomEvent<FileChangeEvent>).detail;
-      const currentOptions = options; // Capture current options value
 
-      if (!shouldReload && !currentOptions.autoReload) {
+      if (!shouldReload && !optionsRef.current.autoReload) {
         // If the file doesn't auto-reload, the user should run tests
         setNeedsTestRun(true);
       }
@@ -103,10 +107,10 @@ const EmbedCustomPage: React.FC = () => {
     return () => {
       window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
     };
-  }, [options.autoReload]); // Only depend on the autoReload option, not the entire fileSystem
+  }, [fileSystem]); // Only re-run when fileSystem changes
 
   // Run tests for the custom assignment
-  const runTests = async () => {
+  const runTests = useCallback(async () => {
     if (!fileSystem || !assignmentData) return;
 
     setNeedsTestRun(false);
@@ -160,7 +164,7 @@ const EmbedCustomPage: React.FC = () => {
         },
       ]);
     }
-  };
+  }, [fileSystem, assignmentData]);
 
   if (!fileSystem || !assignmentData) {
     return (

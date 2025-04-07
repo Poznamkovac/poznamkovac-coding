@@ -15,6 +15,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
   const [needsManualReload, setNeedsManualReload] = useState(false);
   const [shouldRefreshPreview, setShouldRefreshPreview] = useState(false);
   const fileSystemRef = useRef(fileSystem);
+  const autoReloadRef = useRef(autoReload);
 
   // Track file changes to force full reloads when needed
   const fileContentRef = useRef<Record<string, string>>({});
@@ -23,6 +24,11 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
   useEffect(() => {
     fileSystemRef.current = fileSystem;
   }, [fileSystem]);
+
+  // Update autoReloadRef when autoReload changes
+  useEffect(() => {
+    autoReloadRef.current = autoReload;
+  }, [autoReload]);
 
   // Process the HTML to resolve file references
   const processHTML = (html: string): string => {
@@ -189,10 +195,9 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     // Handle file change events
     const handleFileChange = (event: Event) => {
       const { filename, shouldReload } = (event as CustomEvent<FileChangeEvent>).detail;
-      const currentAutoReload = autoReload; // Capture current value
 
-      // Check if we should auto-reload based on the file and global settings
-      const shouldAutoReload = shouldReload && currentAutoReload;
+      // Use the ref instead of capturing in closure
+      const shouldAutoReload = shouldReload && autoReloadRef.current;
 
       if (shouldAutoReload) {
         // HTML changes need a full refresh
@@ -218,7 +223,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     return () => {
       window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
     };
-  }, [mainFile, autoReload]);
+  }, [mainFile]); // Remove autoReload from the dependency array
 
   // Force reload the preview
   const reloadPreview = () => {
