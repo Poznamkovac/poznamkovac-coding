@@ -77,7 +77,7 @@ const EmbedCustomPage: React.FC = () => {
             parameter.
           </p>
           <p className="mt-4">
-            <a href="/embed/create" className="text-blue-400 underline">
+            <a href="#/embed/create" className="text-blue-400 underline">
               Create a custom assignment
             </a>
           </p>

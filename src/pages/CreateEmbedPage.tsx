@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useQueryParams, EmbedOptions, DEFAULT_OPTIONS } from "../hooks/useQueryParams";
+import { useQueryParams, EmbedOptions, DEFAULT_OPTIONS, toUrlSafeBase64 } from "../hooks/useQueryParams";
 import { ChallengeFile } from "../types/challenge";
 
 // Default file templates
@@ -76,11 +76,13 @@ const CreateEmbedPage: React.FC = () => {
     try {
       const jsonData = JSON.stringify(assignment);
       const b64 = btoa(jsonData);
-      setB64Data(b64);
+      // Convert to URL-safe base64
+      const urlSafeB64 = toUrlSafeBase64(b64);
+      setB64Data(urlSafeB64);
 
       // Construct query parameters
       const queryParams = new URLSearchParams();
-      queryParams.append("data", b64);
+      queryParams.append("data", urlSafeB64);
 
       if (!displayOptions.autoReload) queryParams.append("autoReload", "false");
       if (!displayOptions.showAssignment) queryParams.append("showAssignment", "false");
@@ -201,7 +203,7 @@ const CreateEmbedPage: React.FC = () => {
               name="title"
               value={assignment.title}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 text-gray-300 rounded"
+              className="w-full px-3 py-2 text-gray-200 rounded"
             />
           </div>
 
@@ -212,7 +214,7 @@ const CreateEmbedPage: React.FC = () => {
               value={assignment.assignment}
               onChange={handleInputChange}
               rows={4}
-              className="w-full px-3 py-2 text-gray-300 rounded"
+              className="w-full px-3 py-2 text-gray-200 rounded"
             />
           </div>
 
@@ -224,7 +226,7 @@ const CreateEmbedPage: React.FC = () => {
               value={assignment.maxScore}
               onChange={handleInputChange}
               min="0"
-              className="w-full px-3 py-2 text-gray-300 rounded"
+              className="w-full px-3 py-2 text-gray-200 rounded"
             />
           </div>
         </div>
@@ -240,7 +242,7 @@ const CreateEmbedPage: React.FC = () => {
                 name="autoReload"
                 checked={displayOptions.autoReload}
                 onChange={handleOptionChange}
-                className="mr-2 text-white"
+                className="mr-2"
               />
               Auto-reload preview
             </label>
@@ -253,7 +255,7 @@ const CreateEmbedPage: React.FC = () => {
                 name="showAssignment"
                 checked={displayOptions.showAssignment}
                 onChange={handleOptionChange}
-                className="mr-2 text-white"
+                className="mr-2"
               />
               Show assignment title and description
             </label>
@@ -266,7 +268,7 @@ const CreateEmbedPage: React.FC = () => {
                 name="isScored"
                 checked={displayOptions.isScored}
                 onChange={handleOptionChange}
-                className="mr-2 text-white"
+                className="mr-2"
               />
               Enable scoring and tests
             </label>
@@ -279,7 +281,7 @@ const CreateEmbedPage: React.FC = () => {
                 name="showEditors"
                 checked={displayOptions.showEditors}
                 onChange={handleOptionChange}
-                className="mr-2 text-white"
+                className="mr-2"
               />
               Show code editors
             </label>
