@@ -160,6 +160,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
         }
       });
 
+      /*
       // Find all CSS files that aren't explicitly included
       const cssFiles = Array.from(fileSystem.files.values()).filter(
         (file) =>
@@ -219,6 +220,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
           iframeDoc.body.appendChild(scriptElement);
         }
       }
+      */
     };
 
     // Handle file change events
