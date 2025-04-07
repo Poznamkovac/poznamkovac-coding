@@ -3,6 +3,7 @@ import type { ChallengeList } from "../types/challenge";
 import { useState, useMemo, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useFetchChallenges } from "../hooks/useFetchChallenges";
+import { storageService } from "../services/storageService";
 
 // Custom event name for score updates
 const SCORE_UPDATE_EVENT = "scoreUpdate";
@@ -15,9 +16,9 @@ interface ScoreUpdateDetail {
 }
 
 // Helper to emit score update events
-export const emitScoreUpdate = (categoryId: string, challengeId: string, score: number) => {
-  // Save to localStorage
-  localStorage.setItem(`uloha_${categoryId}_${challengeId}_skore`, score.toString());
+export const emitScoreUpdate = async (categoryId: string, challengeId: string, score: number) => {
+  // Save to IndexedDB
+  await storageService.setChallengeScore(categoryId, challengeId, score);
 
   // Dispatch custom event with proper type declaration
   window.dispatchEvent(
@@ -29,20 +30,27 @@ export const emitScoreUpdate = (categoryId: string, challengeId: string, score: 
 
 const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }> = ({ challenges, categoryId }) => {
   const [completionStatus, setCompletionStatus] = useState<{ [key: string]: { completed: boolean; score: number } }>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Initial load from localStorage
-    const loadCompletionStatus = () => {
+    // Initial load from IndexedDB
+    const loadCompletionStatus = async () => {
+      setIsLoading(true);
       const newCompletionStatus: { [key: string]: { completed: boolean; score: number } } = {};
-      Object.entries(challenges).forEach(([id, challenge]) => {
-        const storedScore = localStorage.getItem(`uloha_${categoryId}_${id}_skore`);
-        const score = storedScore ? parseInt(storedScore, 10) : 0;
-        newCompletionStatus[id] = {
-          completed: score === challenge.maxSkore,
-          score: score,
-        };
-      });
+
+      // Load scores for all challenges
+      await Promise.all(
+        Object.entries(challenges).map(async ([id, challenge]) => {
+          const score = await storageService.getChallengeScore(categoryId, id);
+          newCompletionStatus[id] = {
+            completed: score === challenge.maxSkore,
+            score: score,
+          };
+        })
+      );
+
       setCompletionStatus(newCompletionStatus);
+      setIsLoading(false);
     };
 
     // Load initial status
@@ -74,6 +82,10 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
     };
   }, [challenges, categoryId]);
 
+  if (isLoading) {
+    return <div>Načítavam stav úloh...</div>;
+  }
+
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
       {Object.entries(challenges).map(([id, challenge]) => (
@@ -85,7 +97,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
           <h2 className="text-xl font-semibold">
             <div className="inline-block px-2 py-1 mr-2 text-white bg-blue-900 rounded-full text-bold">{id}.</div>
             {completionStatus[id]?.completed && "✅ "} {challenge.nazov}
-            <span className="inline-block px-2 py-1 ml-2 text-sm bg-gray-700 rounded-lg white">
+            <span className="ml-2 text-sm inline-block px-2 py-1 bg-gray-700 rounded-lg white">
               <b>Skóre:</b> {completionStatus[id]?.score || 0} / {challenge.maxSkore}
               {(completionStatus[id]?.score || 0) > challenge.maxSkore && " (si veľmi šikovný :D)"}
             </span>

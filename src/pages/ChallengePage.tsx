@@ -5,7 +5,7 @@ import ChallengeEditor from "../components/ChallengeEditor";
 import ChallengePreview from "../components/ChallengePreview";
 import ChallengeTests from "../components/ChallengeTests";
 import { useEffect, useState } from "react";
-import { emitScoreUpdate } from "./CategoryPage";
+import { storageService } from "../services/storageService";
 
 const ChallengePage: React.FC = () => {
   const { categoryId, challengeId } = useParams();
@@ -14,11 +14,18 @@ const ChallengePage: React.FC = () => {
     challengeId!
   );
   const [currentScore, setCurrentScore] = useState<number>(0);
+  const [isScoreLoading, setIsScoreLoading] = useState(true);
 
   useEffect(() => {
     if (challengeData) {
-      const storedScore = localStorage.getItem(`uloha_${categoryId}_${challengeId}_skore`);
-      setCurrentScore(storedScore ? parseInt(storedScore, 10) : 0);
+      const loadScore = async () => {
+        setIsScoreLoading(true);
+        const score = await storageService.getChallengeScore(categoryId!, challengeId!);
+        setCurrentScore(score);
+        setIsScoreLoading(false);
+      };
+
+      loadScore();
 
       // Set up event listener for score updates
       const handleScoreUpdate = (event: Event) => {
@@ -40,7 +47,7 @@ const ChallengePage: React.FC = () => {
     }
   }, [challengeData, categoryId, challengeId]);
 
-  if (!challengeData) return <div>Načítavam...</div>;
+  if (!challengeData || isScoreLoading) return <div>Načítavam...</div>;
 
   return (
     <div className="min-h-screen text-white">

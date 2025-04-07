@@ -2,6 +2,7 @@ import type React from "react";
 import type { Test } from "../types/test";
 import { useState, useEffect } from "react";
 import { emitScoreUpdate } from "../pages/CategoryPage";
+import { storageService } from "../services/storageService";
 
 interface ChallengeTestsProps {
   categoryId: string;
@@ -13,18 +14,25 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
   const [testResults, setTestResults] = useState<Array<{ name: string; result: Test }>>([]);
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [allTestsPassed, setAllTestsPassed] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedScore = localStorage.getItem(`uloha_${categoryId}_${challengeId}_skore`);
-    if (storedScore) {
-      setCurrentScore(parseInt(storedScore, 10));
-    }
+    // Load score from IndexedDB
+    const loadScore = async () => {
+      setIsLoading(true);
+      const score = await storageService.getChallengeScore(categoryId, challengeId);
+      setCurrentScore(score);
+      setIsLoading(false);
+    };
+
+    loadScore();
   }, [categoryId, challengeId]);
 
-  const saveHighestScore = (newScore: number) => {
+  const saveHighestScore = async (newScore: number) => {
     if (newScore > currentScore) {
       setCurrentScore(newScore);
-      emitScoreUpdate(categoryId, challengeId, newScore);
+      // Use emitScoreUpdate to save to IndexedDB and broadcast the change
+      await emitScoreUpdate(categoryId, challengeId, newScore);
     }
   };
 
@@ -58,7 +66,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
 
       const passedTests = results.filter((result) => result.result.detaily_ok).length;
       const newScore = Math.round((passedTests / results.length) * maxScore);
-      saveHighestScore(newScore);
+      await saveHighestScore(newScore);
 
       setAllTestsPassed(passedTests === results.length);
     } catch (error: any) {
@@ -71,6 +79,10 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
       ]);
     }
   };
+
+  if (isLoading) {
+    return <div>Načítavam...</div>;
+  }
 
   return (
     <div>
