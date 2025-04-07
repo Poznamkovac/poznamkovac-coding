@@ -87,7 +87,7 @@ const ChallengeIDE: React.FC<ChallengeIDEProps> = ({ fileSystem }) => {
           />
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center text-gray-400">No file selected</div>
+        <div className="flex items-center justify-center flex-1 text-gray-400">No file selected</div>
       )}
     </div>
   );
