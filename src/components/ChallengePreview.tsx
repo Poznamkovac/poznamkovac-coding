@@ -159,68 +159,6 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
           }
         }
       });
-
-      /*
-      // Find all CSS files that aren't explicitly included
-      const cssFiles = Array.from(fileSystem.files.values()).filter(
-        (file) =>
-          file.filename.endsWith(".css") &&
-          !file.filename.includes("/") && // Only top-level files
-          !Array.from(iframeDoc.querySelectorAll("style[data-source-file]")).some(
-            (style) => style.getAttribute("data-source-file") === file.filename
-          )
-      );
-
-      // Inject any remaining CSS files
-      for (const cssFile of cssFiles) {
-        if (cssFile.content) {
-          let styleElement = iframeDoc.getElementById(`injected-${cssFile.filename}`);
-          if (!styleElement) {
-            styleElement = iframeDoc.createElement("style");
-            styleElement.id = `injected-${cssFile.filename}`;
-            styleElement.setAttribute("data-source-file", cssFile.filename);
-            iframeDoc.head.appendChild(styleElement);
-          }
-          styleElement.textContent = cssFile.content;
-        }
-      }
-
-      // Find all JS files that aren't explicitly included
-      const jsFiles = Array.from(fileSystem.files.values()).filter(
-        (file) =>
-          file.filename.endsWith(".js") &&
-          !file.filename.includes("/") && // Only top-level files
-          !Array.from(iframeDoc.querySelectorAll("script[data-source-file]")).some(
-            (script) => script.getAttribute("data-source-file") === file.filename
-          )
-      );
-
-      // Inject any remaining JS files
-      for (const jsFile of jsFiles) {
-        if (jsFile.content) {
-          // Always create a new script element to ensure execution
-          const scriptElement = iframeDoc.createElement("script");
-          scriptElement.id = `injected-${jsFile.filename}`;
-          scriptElement.setAttribute("data-source-file", jsFile.filename);
-
-          scriptElement.textContent = `
-            try {
-              ${jsFile.content}
-            } catch (error) {
-              document.body.innerHTML = '<pre id="chyba" style="color: red;">' + error.toString() + '</pre>' + document.body.innerHTML;
-            }
-          `;
-
-          // Remove any existing script with the same ID
-          const existingScript = iframeDoc.getElementById(`injected-${jsFile.filename}`);
-          if (existingScript) {
-            existingScript.remove();
-          }
-
-          iframeDoc.body.appendChild(scriptElement);
-        }
-      }
-      */
     };
 
     // Handle file change events
