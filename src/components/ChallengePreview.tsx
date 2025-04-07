@@ -7,9 +7,10 @@ interface ChallengePreviewProps {
   fileSystem: VirtualFileSystem;
   mainFile: string;
   previewType: string;
+  autoReload?: boolean;
 }
 
-const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFile, previewType }) => {
+const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFile, previewType, autoReload = true }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [needsManualReload, setNeedsManualReload] = useState(false);
   const [shouldRefreshPreview, setShouldRefreshPreview] = useState(false);
@@ -165,13 +166,16 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     const handleFileChange = (event: Event) => {
       const { filename, shouldReload } = (event as CustomEvent<FileChangeEvent>).detail;
 
-      if (shouldReload) {
+      // Check if we should auto-reload based on the file and global settings
+      const shouldAutoReload = shouldReload && autoReload;
+
+      if (shouldAutoReload) {
         // HTML changes need a full refresh
         if (filename === mainFile || filename.toLowerCase().endsWith(".html")) {
           setShouldRefreshPreview(true);
         }
 
-        // If the file should auto-reload, refresh the preview
+        // Refresh the preview
         if (iframe.contentDocument) {
           updateIframeContent();
         }
@@ -196,19 +200,10 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
       }
     });
 
-    // Currently works without this:
-    // Update preview when file system changes (manual interval as fallback)
-    /*const updateInterval = setInterval(() => {
-      if (iframe.contentDocument) {
-        updateIframeContent();
-      }
-    }, 2000);*/
-
     return () => {
-      //clearInterval(updateInterval);
       window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
     };
-  }, [fileSystem, mainFile, previewType]);
+  }, [fileSystem, mainFile, previewType, autoReload]);
 
   // Force reload the preview
   const reloadPreview = () => {

@@ -1,16 +1,16 @@
-import type React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useChallengeData } from "../hooks/useChallengeData";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
 import ChallengeTests from "../components/ChallengeTests";
-import { useEffect, useState } from "react";
+import { useChallengeData } from "../hooks/useChallengeData";
+import { useQueryParams } from "../hooks/useQueryParams";
 import { storageService } from "../services/storageService";
 import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
-import { useQueryParams } from "../hooks/useQueryParams";
+import EmbedLayout from "../components/EmbedLayout";
 
-const ChallengePage: React.FC = () => {
-  const { categoryId, challengeId } = useParams();
+const EmbedChallengePage: React.FC = () => {
+  const { categoryId, challengeId } = useParams<{ categoryId: string; challengeId: string }>();
   const { challengeData, fileSystem, isLoading } = useChallengeData(categoryId!, challengeId!);
   const { options } = useQueryParams();
   const [currentScore, setCurrentScore] = useState<number>(0);
@@ -67,61 +67,40 @@ const ChallengePage: React.FC = () => {
   if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>Loading...</div>;
 
   return (
-    <div className="min-h-screen text-white">
-      <main className="container p-4 mx-auto">
-        {options.showAssignment && (
-          <>
-            <h2 className="my-4 text-3xl font-bold">
-              {options.isScored && currentScore === challengeData.maxScore && "✅ "}
-              {options.isScored && currentScore > challengeData.maxScore && "(si veľmi šikovný :D)"}
-              {challengeData.title}
-              {options.isScored && (
-                <span className="ml-2 text-xl font-normal">
-                  (Score: {currentScore} / {challengeData.maxScore})
-                </span>
-              )}
-            </h2>
-
-            <p className="mb-6" dangerouslySetInnerHTML={{ __html: challengeData.assignment }} />
-            <div className="mb-6">
-              <img
-                src={`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`}
-                alt="Assignment image"
-                className="h-auto max-w-full"
-                onError={(e) => e.currentTarget.remove()}
-              />
-            </div>
-          </>
+    <EmbedLayout
+      title={challengeData.title}
+      description={challengeData.assignment}
+      score={currentScore}
+      maxScore={challengeData.maxScore}
+      options={options}
+    >
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {options.showEditors && (
+          <div className="flex flex-col h-[500px]">
+            <ChallengeIDE fileSystem={fileSystem} />
+          </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {options.showEditors && (
-            <div className="flex flex-col h-[500px]">
-              <ChallengeIDE fileSystem={fileSystem} />
-            </div>
-          )}
-
-          <div className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}>
-            <ChallengePreview
-              fileSystem={fileSystem}
-              mainFile={challengeData.mainFile}
-              previewType={challengeData.previewType}
-              autoReload={options.autoReload}
+        <div className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}>
+          <ChallengePreview
+            fileSystem={fileSystem}
+            mainFile={challengeData.mainFile}
+            previewType={challengeData.previewType}
+            autoReload={options.autoReload}
+          />
+          {options.isScored && (
+            <ChallengeTests
+              categoryId={categoryId!}
+              challengeId={challengeId!}
+              maxScore={challengeData.maxScore}
+              onTestRun={handleTestRun}
+              needsTestRun={needsTestRun}
             />
-            {options.isScored && (
-              <ChallengeTests
-                categoryId={categoryId!}
-                challengeId={challengeId!}
-                maxScore={challengeData.maxScore}
-                onTestRun={handleTestRun}
-                needsTestRun={needsTestRun}
-              />
-            )}
-          </div>
+          )}
         </div>
-      </main>
-    </div>
+      </div>
+    </EmbedLayout>
   );
 };
 
-export default ChallengePage;
+export default EmbedChallengePage;
