@@ -3,7 +3,6 @@ import type { ChallengeList } from "../types/challenge";
 import { useState, useMemo, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useFetchChallenges } from "../hooks/useFetchChallenges";
-import { SCORE_UPDATE_EVENT, ScoreUpdateDetail } from "../services/scoreService";
 import { storageService } from "../services/storageService";
 
 // Custom event name for score updates
@@ -98,7 +97,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
           <h2 className="text-xl font-semibold">
             <div className="inline-block px-2 py-1 mr-2 text-white bg-blue-900 rounded-full text-bold">{id}.</div>
             {completionStatus[id]?.completed && "✅ "} {challenge.title}
-            <span className="ml-2 text-sm inline-block px-2 py-1 bg-gray-700 rounded-lg white">
+            <span className="inline-block px-2 py-1 ml-2 text-sm bg-gray-700 rounded-lg white">
               <b>Skóre:</b> {completionStatus[id]?.score || 0} / {challenge.maxScore}
               {(completionStatus[id]?.score || 0) > challenge.maxScore && " (si veľmi šikovný :D)"}
             </span>
