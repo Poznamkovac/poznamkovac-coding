@@ -1,0 +1,17 @@
+{
+    "title": "Jednoduchá funkcia",
+    "assignment": "Vytvor funkciu <code>hello</code> ktorá vráti text \"hello\".",
+    "maxScore": 1,
+    "files": [
+        {
+            "filename": "index.html",
+            "readonly": true, // allow/disallow the user to edit the file
+            "hidden": true // hide it from the user, but include in the virtual FS
+        },
+        {
+            "filename": "index.js",
+            "readonly": false,
+            "hidden": false
+        }
+    ]
+}

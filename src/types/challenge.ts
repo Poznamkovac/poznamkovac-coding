@@ -3,12 +3,13 @@
  */
 export interface ChallengeData {
   /** Názov/nadpis úlohy. Nepodporuje HTML tagy. */
-  nazov: string;
+  title: string;
   /** Zadanie úlohy. Môže obsahovať HTML tagy. */
-  zadanie: string;
+  assignment: string;
   /** Maximálne skóre ktoré možno za túto úlohu dostať. */
-  maxSkore: number;
+  maxScore: number;
 
+  // TODO: change to `files`
   pociatocnyKod: {
     /**
      * Počiatočný HTML kód editora. Ak je `null`, editor sa nezobrazí.

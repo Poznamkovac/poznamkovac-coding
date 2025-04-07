@@ -1,7 +1,7 @@
 {
-    "nazov": "Nadpisy",
-    "zadanie": "Vytvorte webovú stránku s 3 nadpismi rôznej veľkosti. Každý nadpis (alebo podnadpis) bude obsahovať jeden paragraf s ľubovoľným textom.",
-    "maxSkore": 5,
+    "title": "Nadpisy",
+    "assignment": "Vytvorte webovú stránku s 3 nadpismi rôznej veľkosti. Každý nadpis (alebo podnadpis) bude obsahovať jeden paragraf s ľubovoľným textom.",
+    "maxScore": 5,
     "pociatocnyKod": {
         "html": "<!-- Sem napíšte svoj kód: -->\n\n",
         "css": null,

@@ -39,11 +39,12 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
     // Načíta dáta o úlohe
     const loadChallengeData = async () => {
       try {
-        const response = await fetch(`/data/ulohy/${categoryId}/${challengeId}/zadanie.json`);
+        const response = await fetch(`/data/ulohy/${categoryId}/${challengeId}/assignment.json`);
         const data: ChallengeData = await response.json();
         setChallengeData(data);
 
         // Load code from IndexedDB or use initial code
+        // TODO: change to `files`
         const html = await loadSavedOrInitialCode("html", data.pociatocnyKod.html);
         const css = await loadSavedOrInitialCode("css", data.pociatocnyKod.css);
         const js = await loadSavedOrInitialCode("js", data.pociatocnyKod.js);

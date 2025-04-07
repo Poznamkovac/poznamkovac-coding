@@ -1,9 +1,12 @@
 {
-    "nazov": "Štýlovanie textu",
-    "zadanie": "Uprav štýl odstavca s id <code>specialny-text</code>. Zmeň farbu textu na modrú, veľkosť písma na 18 pixelov a nastav tučné písmo.",
-    "maxSkore": 5,
+    "title": "Štýlovanie textu",
+    "assignment": "Uprav štýl odstavca s id <code>specialny-text</code>. Zmeň farbu textu na modrú, veľkosť písma na 18 pixelov a nastav tučné písmo.",
+    "maxScore": 5,
     "pociatocnyKod": {
-        "html": ["<p id=\"specialny-text\">Tento text potrebuje štýl!</p>", true],
+        "html": [
+            "<p id=\"specialny-text\">Tento text potrebuje štýl!</p>",
+            true
+        ],
         "css": "/* Sem napíšte svoj kód */\n\n",
         "js": null
     }

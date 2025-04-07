@@ -1,5 +1,5 @@
-import type { ChallengeList, ChallengeData } from '../types/challenge';
-import { useState, useCallback, useEffect } from 'react';
+import type { ChallengeList, ChallengeData } from "../types/challenge";
+import { useState, useCallback, useEffect } from "react";
 
 const CHALLENGES_PER_PAGE = 6;
 
@@ -9,17 +9,20 @@ export const useFetchChallenges = (categoryId: string, currentPage: number) => {
   const [isLastPage, setIsLastPage] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const fetchChallenge = useCallback(async (index: number): Promise<ChallengeData | null> => {
-    try {
-      const response = await fetch(`/data/ulohy/${categoryId}/${index}/zadanie.json`);
-      if (!response.ok) {
+  const fetchChallenge = useCallback(
+    async (index: number): Promise<ChallengeData | null> => {
+      try {
+        const response = await fetch(`/data/ulohy/${categoryId}/${index}/assignment.json`);
+        if (!response.ok) {
+          return null;
+        }
+        return await response.json();
+      } catch (error) {
         return null;
       }
-      return await response.json();
-    } catch (error) {
-      return null;
-    }
-  }, [categoryId]);
+    },
+    [categoryId]
+  );
 
   const fetchChallenges = useCallback(async () => {
     setIsLoading(true);

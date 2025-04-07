@@ -53,15 +53,15 @@ const ChallengePage: React.FC = () => {
     <div className="min-h-screen text-white">
       <main className="container p-4 mx-auto">
         <h2 className="my-4 text-3xl font-bold">
-          {currentScore === challengeData.maxSkore && "✅ "}
-          {currentScore > challengeData.maxSkore && "(si veľmi šikovný :D)"}
-          {challengeData.nazov}
+          {currentScore === challengeData.maxScore && "✅ "}
+          {currentScore > challengeData.maxScore && "(si veľmi šikovný :D)"}
+          {challengeData.title}
           <span className="ml-2 text-xl font-normal">
-            (Skóre: {currentScore} / {challengeData.maxSkore})
+            (Skóre: {currentScore} / {challengeData.maxScore})
           </span>
         </h2>
 
-        <p className="mb-6" dangerouslySetInnerHTML={{ __html: challengeData.zadanie }} />
+        <p className="mb-6" dangerouslySetInnerHTML={{ __html: challengeData.assignment }} />
         <div className="mb-6">
           <img
             src={`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`}
@@ -100,7 +100,7 @@ const ChallengePage: React.FC = () => {
 
           <div className="h-[500px] flex flex-col">
             <ChallengePreview htmlKod={htmlCode?.[0] || ""} cssKod={cssCode?.[0] || ""} jsKod={jsCode?.[0] || ""} />
-            <ChallengeTests categoryId={categoryId!} challengeId={challengeId!} maxScore={challengeData.maxSkore} />
+            <ChallengeTests categoryId={categoryId!} challengeId={challengeId!} maxScore={challengeData.maxScore} />
           </div>
         </div>
       </main>

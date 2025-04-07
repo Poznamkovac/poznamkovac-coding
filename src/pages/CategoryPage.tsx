@@ -43,7 +43,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
         Object.entries(challenges).map(async ([id, challenge]) => {
           const score = await storageService.getChallengeScore(categoryId, id);
           newCompletionStatus[id] = {
-            completed: score === challenge.maxSkore,
+            completed: score === challenge.maxScore,
             score: score,
           };
         })
@@ -66,7 +66,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
         setCompletionStatus((prevStatus) => ({
           ...prevStatus,
           [challengeId]: {
-            completed: score === challenges[challengeId].maxSkore,
+            completed: score === challenges[challengeId].maxScore,
             score: score,
           },
         }));
@@ -96,16 +96,16 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
         >
           <h2 className="text-xl font-semibold">
             <div className="inline-block px-2 py-1 mr-2 text-white bg-blue-900 rounded-full text-bold">{id}.</div>
-            {completionStatus[id]?.completed && "✅ "} {challenge.nazov}
+            {completionStatus[id]?.completed && "✅ "} {challenge.title}
             <span className="ml-2 text-sm inline-block px-2 py-1 bg-gray-700 rounded-lg white">
-              <b>Skóre:</b> {completionStatus[id]?.score || 0} / {challenge.maxSkore}
-              {(completionStatus[id]?.score || 0) > challenge.maxSkore && " (si veľmi šikovný :D)"}
+              <b>Skóre:</b> {completionStatus[id]?.score || 0} / {challenge.maxScore}
+              {(completionStatus[id]?.score || 0) > challenge.maxScore && " (si veľmi šikovný :D)"}
             </span>
           </h2>
           <p
             className="mt-2 text-sm"
             dangerouslySetInnerHTML={{
-              __html: challenge.zadanie.split(" ").slice(0, 15).join(" ") + "...",
+              __html: challenge.assignment.split(" ").slice(0, 15).join(" ") + "...",
             }}
           />
           <div className="mt-2 text-sm"></div>

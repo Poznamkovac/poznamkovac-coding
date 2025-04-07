@@ -38,7 +38,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
 
   const runTests = async () => {
     try {
-      const testModule = await import(/* @vite-ignore */ `/data/ulohy/${categoryId}/${challengeId}/testy.js`);
+      const testModule = await import(/* @vite-ignore */ `/data/ulohy/${categoryId}/${challengeId}/tests.js`);
       const tester = new testModule.default();
       const previewWindow = (document.getElementById("preview") as HTMLIFrameElement)?.contentWindow;
       previewWindow?.location.reload();

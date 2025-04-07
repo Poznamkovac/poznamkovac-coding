@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface Category {
   id: string;
-  nazov: string;
+  title: string;
   ikona: string;
   ikonaFarba: string;
   farba: string;
@@ -41,7 +41,7 @@ const HomePage: React.FC = () => {
               className="mr-2"
               style={{ color: category.ikonaFarba }}
             />
-            {category.nazov}
+            {category.title}
           </Link>
         ))}
       </div>
