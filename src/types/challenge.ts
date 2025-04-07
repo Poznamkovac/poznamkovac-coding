@@ -5,6 +5,7 @@ export interface ChallengeFile {
   filename: string;
   readonly: boolean;
   hidden: boolean;
+  autoreload?: boolean; // If true, preview will update automatically when this file changes
   content?: string; // Content loaded from the file
 }
 
@@ -15,6 +16,10 @@ export interface ChallengeData {
   assignment: string;
   /** Maximálne skóre ktoré možno za túto úlohu dostať. */
   maxScore: number;
+  /** Type of preview to use: "html", "console", etc. */
+  previewType: string;
+  /** The main file to execute or display in preview */
+  mainFile: string;
   files: ChallengeFile[];
   // Keep for backward compatibility, will be removed later
   pociatocnyKod?: {

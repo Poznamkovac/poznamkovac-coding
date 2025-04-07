@@ -8,9 +8,17 @@ interface ChallengeTestsProps {
   categoryId: string;
   challengeId: string;
   maxScore: number;
+  needsTestRun?: boolean;
+  onTestRun?: () => void;
 }
 
-const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId, maxScore }) => {
+const ChallengeTests: React.FC<ChallengeTestsProps> = ({
+  categoryId,
+  challengeId,
+  maxScore,
+  needsTestRun = false,
+  onTestRun = () => {},
+}) => {
   const [testResults, setTestResults] = useState<Array<{ name: string; result: Test }>>([]);
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [allTestsPassed, setAllTestsPassed] = useState<boolean>(false);
@@ -39,6 +47,9 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
   };
 
   const runTests = async () => {
+    // Call the onTestRun callback to reset the needsTestRun flag
+    onTestRun();
+
     try {
       const testModule = await import(/* @vite-ignore */ `/data/ulohy/${categoryId}/${challengeId}/tests.js`);
       const tester = new testModule.default();
@@ -94,7 +105,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
     try {
       // TODO: fetch file list for the assignment from the assignment.json metadata: ['index.html', 'index.js']
       // show files that have OK response and aren't hidden or readonly, if no files, display text "No solutions available."
-      const files = [''];
+      const files = [""];
       for (const filename of files) {
         // Fetch the solution files
         const response = await fetch(`/data/ulohy/${categoryId}/${challengeId}/solution/${filename}`);
@@ -117,8 +128,13 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
 
   return (
     <div>
-      <button onClick={runTests} className="px-4 py-2 mt-4 font-bold text-white bg-blue-600 rounded hover:bg-blue-700">
-        {allTestsPassed ? "🔁 Try Again" : "⏯️ Run Tests"}
+      <button
+        onClick={runTests}
+        className={`px-4 py-2 mt-4 font-bold text-white rounded hover:bg-blue-700 ${
+          needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"
+        }`}
+      >
+        {needsTestRun ? "🔄 Run Tests (changes need testing)" : allTestsPassed ? "🔁 Try Again" : "⏯️ Run Tests"}
       </button>
 
       {allTestsPassed && (

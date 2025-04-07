@@ -32,6 +32,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
           filename: "index.html",
           readonly,
           hidden: false,
+          autoreload: true,
           content,
         });
       }
@@ -52,6 +53,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
           filename: "style.css",
           readonly,
           hidden: false,
+          autoreload: true,
           content,
         });
       }
@@ -72,6 +74,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
           filename: "script.js",
           readonly,
           hidden: false,
+          autoreload: true,
           content,
         });
       }
@@ -79,6 +82,8 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
       return {
         ...data,
         files,
+        previewType: "html",
+        mainFile: "index.html",
       };
     };
 
@@ -93,6 +98,27 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
         if (!data.files || data.files.length === 0) {
           data = processLegacyCode(data);
         }
+
+        // Set defaults if properties are missing
+        if (!data.previewType) {
+          data.previewType = "html";
+        }
+
+        if (!data.mainFile) {
+          // Default to index.html or first file if not specified
+          data.mainFile = data.files.find((f) => f.filename === "index.html")
+            ? "index.html"
+            : data.files.length > 0
+            ? data.files[0].filename
+            : "";
+        }
+
+        // Default autoreload property
+        data.files.forEach((file) => {
+          if (file.autoreload === undefined) {
+            file.autoreload = true; // Default to true for backward compatibility
+          }
+        });
 
         setChallengeData(data);
 

@@ -1,6 +1,17 @@
 import { ChallengeFile, VirtualFileSystem } from "../types/challenge";
 import { storageService } from "./storageService";
 
+// Custom event for file change notifications
+export const FILE_CHANGE_EVENT = "fileChange";
+
+export interface FileChangeEvent {
+  categoryId: string;
+  challengeId: string;
+  filename: string;
+  content: string;
+  shouldReload: boolean;
+}
+
 /**
  * Creates a virtual file system for managing assignment files
  */
@@ -86,6 +97,19 @@ export const createVirtualFileSystem = (
 
         // Save to IndexedDB
         storageService.setEditorCode(categoryId, challengeId, filename, content);
+
+        // Dispatch custom event for file changes
+        window.dispatchEvent(
+          new CustomEvent<FileChangeEvent>(FILE_CHANGE_EVENT, {
+            detail: {
+              categoryId,
+              challengeId,
+              filename,
+              content,
+              shouldReload: !!file.autoreload,
+            },
+          })
+        );
       }
     },
 

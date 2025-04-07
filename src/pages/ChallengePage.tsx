@@ -6,12 +6,14 @@ import ChallengePreview from "../components/ChallengePreview";
 import ChallengeTests from "../components/ChallengeTests";
 import { useEffect, useState } from "react";
 import { storageService } from "../services/storageService";
+import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 
 const ChallengePage: React.FC = () => {
   const { categoryId, challengeId } = useParams();
   const { challengeData, fileSystem, isLoading } = useChallengeData(categoryId!, challengeId!);
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [isScoreLoading, setIsScoreLoading] = useState(true);
+  const [needsTestRun, setNeedsTestRun] = useState(false);
 
   useEffect(() => {
     if (challengeData) {
@@ -34,15 +36,31 @@ const ChallengePage: React.FC = () => {
         }
       };
 
-      // Add event listener
+      // Listen for file changes that require test runs
+      const handleFileChange = (event: Event) => {
+        const { shouldReload } = (event as CustomEvent<FileChangeEvent>).detail;
+
+        if (!shouldReload) {
+          // If the file doesn't auto-reload, the user should run tests
+          setNeedsTestRun(true);
+        }
+      };
+
+      // Add event listeners
       window.addEventListener("scoreUpdate", handleScoreUpdate);
+      window.addEventListener(FILE_CHANGE_EVENT, handleFileChange);
 
       // Cleanup
       return () => {
         window.removeEventListener("scoreUpdate", handleScoreUpdate);
+        window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
       };
     }
   }, [challengeData, categoryId, challengeId]);
+
+  const handleTestRun = () => {
+    setNeedsTestRun(false);
+  };
 
   if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>Loading...</div>;
 
@@ -74,8 +92,14 @@ const ChallengePage: React.FC = () => {
           </div>
 
           <div className="h-[500px] flex flex-col">
-            <ChallengePreview fileSystem={fileSystem} />
-            <ChallengeTests categoryId={categoryId!} challengeId={challengeId!} maxScore={challengeData.maxScore} />
+            <ChallengePreview fileSystem={fileSystem} mainFile={challengeData.mainFile} previewType={challengeData.previewType} />
+            <ChallengeTests
+              categoryId={categoryId!}
+              challengeId={challengeId!}
+              maxScore={challengeData.maxScore}
+              onTestRun={handleTestRun}
+              needsTestRun={needsTestRun}
+            />
           </div>
         </div>
       </main>
