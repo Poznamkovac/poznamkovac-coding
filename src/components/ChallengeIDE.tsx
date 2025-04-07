@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { VirtualFileSystem } from "../types/challenge";
 import CodeEditor from "./CodeEditor";
 import FileTabs from "./FileTabs";
@@ -39,8 +39,14 @@ const ChallengeIDE: React.FC<ChallengeIDEProps> = ({ fileSystem }) => {
   const [activeFilename, setActiveFilename] = useState<string | null>(null);
   const [activeFileContent, setActiveFileContent] = useState<string>("");
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
+  const fileSystemRef = useRef(fileSystem);
 
-  // Initialize the editor with the active file
+  // Update fileSystemRef when fileSystem prop changes
+  useEffect(() => {
+    fileSystemRef.current = fileSystem;
+  }, [fileSystem]);
+
+  // Initialize the editor with the active file once
   useEffect(() => {
     // Get the current active file
     const currentActiveFile = fileSystem.activeFile;
@@ -60,9 +66,10 @@ const ChallengeIDE: React.FC<ChallengeIDEProps> = ({ fileSystem }) => {
   useEffect(() => {
     const handleActiveFileChange = (event: Event) => {
       const { filename } = (event as CustomEvent<ActiveFileChangeEvent>).detail;
+      const fs = fileSystemRef.current;
 
       // Get current file data
-      const currentFileData = fileSystem.files.get(filename);
+      const currentFileData = fs.files.get(filename);
       if (currentFileData) {
         setActiveFilename(filename);
         setActiveFileContent(currentFileData.content || "");
@@ -77,12 +84,12 @@ const ChallengeIDE: React.FC<ChallengeIDEProps> = ({ fileSystem }) => {
     return () => {
       window.removeEventListener(ACTIVE_FILE_CHANGE_EVENT, handleActiveFileChange);
     };
-  }, [fileSystem]);
+  }, []);
 
   const handleEditorChange = (newContent?: string) => {
     if (activeFilename && !isReadOnly && newContent) {
       setActiveFileContent(newContent);
-      fileSystem.updateFileContent(activeFilename, newContent);
+      fileSystemRef.current.updateFileContent(activeFilename, newContent);
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
 import EmbedLayout from "../components/EmbedLayout";
@@ -15,6 +15,7 @@ interface TestResult {
 const EmbedCustomPage: React.FC = () => {
   const { options, customData } = useQueryParams();
   const [fileSystem, setFileSystem] = useState<VirtualFileSystem | null>(null);
+  const fileSystemRef = useRef<VirtualFileSystem | null>(null);
   const [assignmentData, setAssignmentData] = useState<ChallengeData | null>(null);
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [needsTestRun, setNeedsTestRun] = useState(false);
@@ -71,20 +72,25 @@ const EmbedCustomPage: React.FC = () => {
 
       setAssignmentData(assignmentData);
       setFileSystem(fs);
+      fileSystemRef.current = fs;
     } catch (error) {
       console.error("Error processing custom data:", error);
     }
   }, [customData]);
 
-  // Listen for file changes only when fileSystem is initialized
+  // Update ref when fileSystem changes
   useEffect(() => {
-    if (!fileSystem) return;
+    fileSystemRef.current = fileSystem;
+  }, [fileSystem]);
 
+  // Set up event listeners only once
+  useEffect(() => {
     // Listen for file changes that require test runs
     const handleFileChange = (event: Event) => {
       const { shouldReload } = (event as CustomEvent<FileChangeEvent>).detail;
+      const currentOptions = options; // Capture current options value
 
-      if (!shouldReload && !options.autoReload) {
+      if (!shouldReload && !currentOptions.autoReload) {
         // If the file doesn't auto-reload, the user should run tests
         setNeedsTestRun(true);
       }
@@ -97,7 +103,7 @@ const EmbedCustomPage: React.FC = () => {
     return () => {
       window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
     };
-  }, [fileSystem, options.autoReload]);
+  }, [options.autoReload]); // Only depend on the autoReload option, not the entire fileSystem
 
   // Run tests for the custom assignment
   const runTests = async () => {
