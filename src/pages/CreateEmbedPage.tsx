@@ -37,12 +37,12 @@ const DEFAULT_TEST = `// Test file
 // This file allows you to define tests for the assignment
 // You can use regular JavaScript assertions
 
-function runTests() {
+function runTests(window) {
   const tests = [
     {
       name: "Test 1: Page contains h1 element",
-      test: function() {
-        const h1 = document.querySelector('h1');
+      test: function(window) {
+        const h1 = window.document.querySelector('h1');
         return { 
           success: !!h1,
           message: h1 ? "Success: H1 found" : "Failure: No H1 element found" 
@@ -51,8 +51,8 @@ function runTests() {
     },
     {
       name: "Test 2: App div contains text",
-      test: function() {
-        const app = document.getElementById('app');
+      test: function(window) {
+        const app = window.document.getElementById('app');
         return { 
           success: app && app.textContent && app.textContent.length > 0,
           message: app?.textContent ? "Success: App has content" : "Failure: App missing or empty" 
@@ -62,7 +62,7 @@ function runTests() {
   ];
   
   return tests.map(t => {
-    const result = t.test();
+    const result = t.test(window);
     return {
       name: t.name,
       success: result.success,

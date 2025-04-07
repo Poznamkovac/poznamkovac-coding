@@ -139,7 +139,7 @@ const EmbedCustomPage: React.FC = () => {
         "window",
         `
         ${testCode}
-        return typeof runTests === 'function' ? runTests() : [];
+        return typeof runTests === 'function' ? runTests(window) : [];
       `
       );
 
