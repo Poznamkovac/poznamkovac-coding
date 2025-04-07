@@ -1,5 +1,5 @@
 import React from "react";
-import { ChallengeFile, VirtualFileSystem } from "../types/challenge";
+import { VirtualFileSystem } from "../types/challenge";
 
 interface FileTabsProps {
   fileSystem: VirtualFileSystem;

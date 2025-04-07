@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useRef, useState, useLayoutEffect } from "react";
+import { useEffect, useRef, useState, useLayoutEffect, useCallback } from "react";
 import { VirtualFileSystem } from "../types/challenge";
 import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 
@@ -10,7 +10,7 @@ interface ChallengePreviewProps {
   autoReload?: boolean;
 }
 
-const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFile, previewType, autoReload = true }) => {
+const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFile, autoReload = true }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [needsManualReload, setNeedsManualReload] = useState(false);
   const [shouldRefreshPreview, setShouldRefreshPreview] = useState(false);
@@ -31,7 +31,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
   }, [autoReload]);
 
   // Process the HTML to resolve file references
-  const processHTML = (html: string): string => {
+  const processHTML = useCallback((html: string): string => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
     const fs = fileSystemRef.current;
@@ -73,10 +73,10 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     });
 
     return doc.documentElement.outerHTML;
-  };
+  }, []);
 
   // Update iframe content
-  const updateIframeContent = () => {
+  const updateIframeContent = useCallback(() => {
     const iframe = iframeRef.current;
     const fs = fileSystemRef.current;
     if (!iframe || !iframe.contentDocument) return;
@@ -152,7 +152,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
         }
       }
     });
-  };
+  }, [mainFile, shouldRefreshPreview, processHTML]);
 
   // Initialize the iframe with HTML content
   useLayoutEffect(() => {
@@ -188,7 +188,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
         fileContentRef.current[file.filename] = file.content;
       }
     });
-  }, [mainFile, fileSystem]);
+  }, [mainFile, fileSystem, processHTML]);
 
   // Listen for file changes
   useEffect(() => {
@@ -223,7 +223,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     return () => {
       window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
     };
-  }, [mainFile]); // Remove autoReload from the dependency array
+  }, [mainFile, updateIframeContent]);
 
   // Force reload the preview
   const reloadPreview = () => {

@@ -36,7 +36,7 @@ const HomePage: React.FC = () => {
           >
             <FontAwesomeIcon
               size="2x"
-              // @ts-ignore
+              // @ts-expect-error FontAwesome icon prop expects a different type but our API returns string array
               icon={["fab", category.ikona]}
               className="mr-2"
               style={{ color: category.ikonaFarba }}

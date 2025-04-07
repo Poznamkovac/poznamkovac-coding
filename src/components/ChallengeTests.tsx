@@ -1,7 +1,7 @@
 import type React from "react";
 import type { Test } from "../types/test";
 import { useState, useEffect } from "react";
-import { emitScoreUpdate } from "../pages/CategoryPage";
+import { emitScoreUpdate } from "../services/scoreService";
 import { storageService } from "../services/storageService";
 
 interface ChallengeTestsProps {
@@ -57,13 +57,13 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       previewWindow?.location.reload();
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
-        (prop) => prop.startsWith("test_") && typeof tester[prop] === "function"
+        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function"
       );
 
       const results = await Promise.all(
         testMethods.map(async (method) => {
           try {
-            const result: Test = await tester[method](previewWindow);
+            const result: Test = await tester[method as keyof typeof tester](previewWindow);
             return { name: method, result };
           } catch (error) {
             console.error(`Error in method: ${method}:`, error);
@@ -90,7 +90,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       }
 
       setAllTestsPassed(passedTests === results.length);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error running tests", error);
       setTestResults([
         {
@@ -114,7 +114,9 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
           return;
         }
 
-        const solution = await response.text();
+        // Use the solution content to set the display state
+        await response.text(); // Fetching the content but not using it yet
+        setShowSolution(true);
         // TODO: display contents of solution files
       }
     } catch (error) {

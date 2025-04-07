@@ -3,6 +3,7 @@ import type { ChallengeList } from "../types/challenge";
 import { useState, useMemo, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useFetchChallenges } from "../hooks/useFetchChallenges";
+import { SCORE_UPDATE_EVENT, ScoreUpdateDetail } from "../services/scoreService";
 import { storageService } from "../services/storageService";
 
 // Custom event name for score updates
@@ -15,18 +16,18 @@ interface ScoreUpdateDetail {
   score: number;
 }
 
-// Helper to emit score update events
-export const emitScoreUpdate = async (categoryId: string, challengeId: string, score: number) => {
-  // Save to IndexedDB
-  await storageService.setChallengeScore(categoryId, challengeId, score);
+// Helper to emit score update events - Moved to scoreService.ts
+// export const emitScoreUpdate = async (categoryId: string, challengeId: string, score: number) => {
+//   // Save to IndexedDB
+//   await storageService.setChallengeScore(categoryId, challengeId, score);
 
-  // Dispatch custom event with proper type declaration
-  window.dispatchEvent(
-    new CustomEvent(SCORE_UPDATE_EVENT, {
-      detail: { categoryId, challengeId, score },
-    })
-  );
-};
+//   // Dispatch custom event with proper type declaration
+//   window.dispatchEvent(
+//     new CustomEvent(SCORE_UPDATE_EVENT, {
+//       detail: { categoryId, challengeId, score },
+//     })
+//   );
+// };
 
 const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }> = ({ challenges, categoryId }) => {
   const [completionStatus, setCompletionStatus] = useState<{ [key: string]: { completed: boolean; score: number } }>({});

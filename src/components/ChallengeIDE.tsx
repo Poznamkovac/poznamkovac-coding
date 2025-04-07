@@ -60,7 +60,7 @@ const ChallengeIDE: React.FC<ChallengeIDEProps> = ({ fileSystem }) => {
         setIsReadOnly(currentFileData.readonly);
       }
     }
-  }, []);
+  }, [fileSystem.activeFile, fileSystem.files]);
 
   // Listen for active file changes
   useEffect(() => {

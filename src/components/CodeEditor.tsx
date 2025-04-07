@@ -7,6 +7,11 @@ import { emmetHTML, emmetCSS } from "emmet-monaco-es";
 
 import useAutoCloseTags from "../hooks/useAutoCloseTags";
 
+// Define a specific type for the emmet disposable functions
+interface DisposableFunction {
+  (): void;
+}
+
 interface CodeEditorProps {
   language: string;
   value: string;
@@ -17,8 +22,8 @@ interface CodeEditorProps {
 
 const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, readOnly = false, height = "200px" }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const disposeEmmetHtmlRef = useRef<any>(null);
-  const disposeEmmetCssRef = useRef<any>(null);
+  const disposeEmmetHtmlRef = useRef<DisposableFunction | null>(null);
+  const disposeEmmetCssRef = useRef<DisposableFunction | null>(null);
 
   const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;
@@ -34,8 +39,12 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
   useEffect(() => {
     return () => {
       editorRef.current?.dispose();
-      disposeEmmetHtmlRef.current?.dispose?.();
-      disposeEmmetCssRef.current?.dispose?.();
+      if (typeof disposeEmmetHtmlRef.current === "function") {
+        disposeEmmetHtmlRef.current();
+      }
+      if (typeof disposeEmmetCssRef.current === "function") {
+        disposeEmmetCssRef.current();
+      }
     };
   }, []);
 

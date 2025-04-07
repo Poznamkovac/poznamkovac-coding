@@ -103,10 +103,10 @@ const CreateEmbedPage: React.FC = () => {
   // Load data from URL if provided
   useEffect(() => {
     if (customData) {
-      setAssignment({
-        ...assignment,
+      setAssignment((prevAssignment) => ({
+        ...prevAssignment,
         ...customData,
-      });
+      }));
     }
   }, [customData]);
 

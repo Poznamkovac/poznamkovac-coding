@@ -14,6 +14,9 @@ export const DEFAULT_OPTIONS: EmbedOptions = {
   showEditors: true,
 };
 
+// Custom data can contain arbitrary JSON data
+export type CustomData = Record<string, unknown>;
+
 // Convert standard base64 to URL-safe base64
 export const toUrlSafeBase64 = (base64: string): string => {
   return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -32,7 +35,7 @@ export const fromUrlSafeBase64 = (safe: string): string => {
 
 export function useQueryParams(): {
   options: EmbedOptions;
-  customData: any | null;
+  customData: CustomData | null;
 } {
   const [searchParams] = useSearchParams();
 
