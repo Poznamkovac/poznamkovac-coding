@@ -42,7 +42,9 @@ class StorageService {
   async getValue(key: string): Promise<string | number | null> {
     try {
       const db = await this.dbPromise;
-      return await db.get(STORE_NAME, key);
+      const value = await db.get(STORE_NAME, key);
+      // Handle undefined (not found) case
+      return value !== undefined ? value : null;
     } catch (error) {
       console.error("Error getting value from IndexedDB:", error);
       // Fallback to localStorage if IndexedDB fails
@@ -132,11 +134,11 @@ class StorageService {
    * Get editor code
    * @param categoryId The category ID
    * @param challengeId The challenge ID
-   * @param language The code language (html, css, js)
+   * @param filename The filename to retrieve
    * @returns The stored code or null if not found
    */
-  async getEditorCode(categoryId: string, challengeId: string, language: string): Promise<string | null> {
-    const key = `uloha_${categoryId}_${challengeId}_${language}`;
+  async getEditorCode(categoryId: string, challengeId: string, filename: string): Promise<string | null> {
+    const key = `uloha_${categoryId}_${challengeId}_${filename}`;
     const code = await this.getValue(key);
     return typeof code === "string" ? code : null;
   }
@@ -145,12 +147,45 @@ class StorageService {
    * Set editor code
    * @param categoryId The category ID
    * @param challengeId The challenge ID
-   * @param language The code language (html, css, js)
+   * @param filename The filename to save
    * @param code The code to save
    */
-  async setEditorCode(categoryId: string, challengeId: string, language: string, code: string): Promise<void> {
-    const key = `uloha_${categoryId}_${challengeId}_${language}`;
+  async setEditorCode(categoryId: string, challengeId: string, filename: string, code: string): Promise<void> {
+    const key = `uloha_${categoryId}_${challengeId}_${filename}`;
     await this.setValue(key, code);
+  }
+
+  /**
+   * Get all saved files for a challenge
+   * @param categoryId The category ID
+   * @param challengeId The challenge ID
+   * @returns Object with filenames as keys and content as values
+   */
+  async getAllChallengeFiles(categoryId: string, challengeId: string): Promise<Record<string, string>> {
+    try {
+      const db = await this.dbPromise;
+      const allKeys = await db.getAllKeys(STORE_NAME);
+      const prefix = `uloha_${categoryId}_${challengeId}_`;
+
+      const fileKeys = allKeys.filter(
+        (key) => key.startsWith(prefix) && key !== `${prefix}skore` // Exclude score
+      );
+
+      const result: Record<string, string> = {};
+
+      for (const key of fileKeys) {
+        const filename = key.substring(prefix.length);
+        const content = await db.get(STORE_NAME, key);
+        if (typeof content === "string") {
+          result[filename] = content;
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error getting all challenge files:", error);
+      return {};
+    }
   }
 }
 

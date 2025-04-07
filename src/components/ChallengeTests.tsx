@@ -15,6 +15,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [allTestsPassed, setAllTestsPassed] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [failedAttempts, setFailedAttempts] = useState<number>(0);
+  const [showSolution, setShowSolution] = useState<boolean>(false);
 
   useEffect(() => {
     // Load score from IndexedDB
@@ -53,10 +55,10 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
             const result: Test = await tester[method](previewWindow);
             return { name: method, result };
           } catch (error) {
-            console.error(`Chyba v metóde: ${method}:`, error);
+            console.error(`Error in method: ${method}:`, error);
             return {
               name: method,
-              result: { detaily_zle: `Chyba pri spúštaní testov: ${error}` },
+              result: { detaily_zle: `Test execution error: ${error}` },
             };
           }
         })
@@ -68,26 +70,55 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
       const newScore = Math.round((passedTests / results.length) * maxScore);
       await saveHighestScore(newScore);
 
+      // Track failed attempts to show solution
+      if (newScore < maxScore / 2) {
+        setFailedAttempts((prev) => prev + 1);
+      } else {
+        // Reset failed attempts if they're doing well
+        setFailedAttempts(0);
+      }
+
       setAllTestsPassed(passedTests === results.length);
     } catch (error: any) {
-      console.error("Chyba pri spúštaní testov", error);
+      console.error("Error running tests", error);
       setTestResults([
         {
           name: "Error",
-          result: { detaily_zle: "Nastala chyba pri testovaní." },
+          result: { detaily_zle: "An error occurred during testing." },
         },
       ]);
     }
   };
 
+  const loadSolution = async () => {
+    try {
+      // TODO: fetch file list for the assignment from the assignment.json metadata: ['index.html', 'index.js']
+      // show files that have OK response and aren't hidden or readonly, if no files, display text "No solutions available."
+      const files = [''];
+      for (const filename of files) {
+        // Fetch the solution files
+        const response = await fetch(`/data/ulohy/${categoryId}/${challengeId}/solution/${filename}`);
+        if (!response.ok) {
+          console.error("Solution not available");
+          return;
+        }
+
+        const solution = await response.text();
+        // TODO: display contents of solution files
+      }
+    } catch (error) {
+      console.error("Error loading solutions:", error);
+    }
+  };
+
   if (isLoading) {
-    return <div>Načítavam...</div>;
+    return <div>Loading...</div>;
   }
 
   return (
     <div>
       <button onClick={runTests} className="px-4 py-2 mt-4 font-bold text-white bg-blue-600 rounded hover:bg-blue-700">
-        {allTestsPassed ? "🔁 Skúsiť znovu" : "⏯️ Overiť riešenie"}
+        {allTestsPassed ? "🔁 Try Again" : "⏯️ Run Tests"}
       </button>
 
       {allTestsPassed && (
@@ -98,7 +129,16 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
           }}
           className="px-4 py-2 mt-4 ml-2 font-bold text-white bg-green-600 rounded hover:bg-green-700"
         >
-          Ďalšia úloha
+          Next Challenge
+        </button>
+      )}
+
+      {failedAttempts >= 5 && (
+        <button
+          onClick={loadSolution}
+          className="px-4 py-2 mt-4 ml-2 font-bold text-white bg-yellow-600 rounded hover:bg-yellow-700"
+        >
+          Show Solution
         </button>
       )}
 
@@ -108,7 +148,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
             <b>
               {result.detaily_ok ? "✓" : "✗"} {name}
             </b>
-            {result.detaily_ok ? ` - ok!` : ` - zle!`}
+            {result.detaily_ok ? ` - ok!` : ` - failed!`}
             <br />
 
             <span className="text-sm text-gray-300 font-italic">
@@ -118,6 +158,18 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
           </div>
         ))}
       </div>
+
+      {showSolution && (
+        <div className="p-4 mt-4 bg-yellow-800 rounded">
+          <h3 className="mb-2 font-bold">Solution</h3>
+          <p>
+            Here's how this challenge can be solved. Study the solution to understand the concepts, then try implementing it
+            yourself.
+          </p>
+
+          {/* TODO: display contents of solution files */}
+        </div>
+      )}
     </div>
   );
 };

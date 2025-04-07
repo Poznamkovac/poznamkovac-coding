@@ -1,59 +1,108 @@
-import type { ChallengeData } from "../types/challenge";
+import type { ChallengeData, VirtualFileSystem } from "../types/challenge";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { storageService } from "../services/storageService";
-
-type CodeState = [string, boolean] | null;
+import { createVirtualFileSystem } from "../services/virtualFileSystemService";
 
 export const useChallengeData = (categoryId: string, challengeId: string) => {
   const navigate = useNavigate();
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
-  const [htmlCode, setHtmlCode] = useState<CodeState>(null);
-  const [cssCode, setCssCode] = useState<CodeState>(null);
-  const [jsCode, setJsCode] = useState<CodeState>(null);
+  const [fileSystem, setFileSystem] = useState<VirtualFileSystem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    /** Spracuje dáta o počiatočnom kóde */
-    const processInitialCode = (code: string | string[] | null | undefined): CodeState => {
-      if (Array.isArray(code)) {
-        if (code.length === 0) return null;
-        return code.length === 1 ? [code[0], false] : [code[0], !!code[1]];
-      }
-      if (typeof code === "string") return [code, false];
-      return null;
-    };
+    // Handle legacy code format for backward compatibility
+    const processLegacyCode = (data: ChallengeData) => {
+      if (!data.pociatocnyKod) return data;
 
-    /** Načíta rozpracovaný kód alebo počiatočný stav (na začiatku úlohy) */
-    const loadSavedOrInitialCode = async (language: string, initialCode: string | string[] | null | undefined) => {
-      try {
-        const savedCode = await storageService.getEditorCode(categoryId, challengeId, language);
-        if (savedCode !== null) {
-          return [savedCode, false] as CodeState;
+      const files: ChallengeData["files"] = [];
+
+      // Convert HTML file
+      if (data.pociatocnyKod.html) {
+        let content = "";
+        let readonly = false;
+
+        if (Array.isArray(data.pociatocnyKod.html)) {
+          content = data.pociatocnyKod.html[0] || "";
+          readonly = data.pociatocnyKod.html.length > 1 ? !!data.pociatocnyKod.html[1] : false;
+        } else {
+          content = data.pociatocnyKod.html;
         }
-      } catch (error) {
-        console.error(`Error loading code for ${language}:`, error);
+
+        files.push({
+          filename: "index.html",
+          readonly,
+          hidden: false,
+          content,
+        });
       }
-      return processInitialCode(initialCode);
+
+      // Convert CSS file
+      if (data.pociatocnyKod.css) {
+        let content = "";
+        let readonly = false;
+
+        if (Array.isArray(data.pociatocnyKod.css)) {
+          content = data.pociatocnyKod.css[0] || "";
+          readonly = data.pociatocnyKod.css.length > 1 ? !!data.pociatocnyKod.css[1] : false;
+        } else {
+          content = data.pociatocnyKod.css;
+        }
+
+        files.push({
+          filename: "style.css",
+          readonly,
+          hidden: false,
+          content,
+        });
+      }
+
+      // Convert JS file
+      if (data.pociatocnyKod.js) {
+        let content = "";
+        let readonly = false;
+
+        if (Array.isArray(data.pociatocnyKod.js)) {
+          content = data.pociatocnyKod.js[0] || "";
+          readonly = data.pociatocnyKod.js.length > 1 ? !!data.pociatocnyKod.js[1] : false;
+        } else {
+          content = data.pociatocnyKod.js;
+        }
+
+        files.push({
+          filename: "script.js",
+          readonly,
+          hidden: false,
+          content,
+        });
+      }
+
+      return {
+        ...data,
+        files,
+      };
     };
 
-    // Načíta dáta o úlohe
+    // Load challenge data
     const loadChallengeData = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(`/data/ulohy/${categoryId}/${challengeId}/assignment.json`);
-        const data: ChallengeData = await response.json();
+        let data: ChallengeData = await response.json();
+
+        // Handle legacy format if needed
+        if (!data.files || data.files.length === 0) {
+          data = processLegacyCode(data);
+        }
+
         setChallengeData(data);
 
-        // Load code from IndexedDB or use initial code
-        // TODO: change to `files`
-        const html = await loadSavedOrInitialCode("html", data.pociatocnyKod.html);
-        const css = await loadSavedOrInitialCode("css", data.pociatocnyKod.css);
-        const js = await loadSavedOrInitialCode("js", data.pociatocnyKod.js);
+        // Create virtual file system
+        const fs = createVirtualFileSystem(categoryId, challengeId, data.files);
+        setFileSystem(fs);
 
-        setHtmlCode(html);
-        setCssCode(css);
-        setJsCode(js);
+        setIsLoading(false);
       } catch (error) {
-        console.error("Chyba pri načítavaní údajov úlohy:", error);
+        console.error("Error loading challenge data:", error);
         navigate(`/ulohy/${categoryId}`);
       }
     };
@@ -61,5 +110,9 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
     loadChallengeData();
   }, [categoryId, challengeId, navigate]);
 
-  return { challengeData, htmlCode, cssCode, jsCode, setHtmlCode, setCssCode, setJsCode };
+  return {
+    challengeData,
+    fileSystem,
+    isLoading,
+  };
 };

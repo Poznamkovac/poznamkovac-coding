@@ -1,6 +1,13 @@
 /**
  * Dáta o úlohe.
  */
+export interface ChallengeFile {
+  filename: string;
+  readonly: boolean;
+  hidden: boolean;
+  content?: string; // Content loaded from the file
+}
+
 export interface ChallengeData {
   /** Názov/nadpis úlohy. Nepodporuje HTML tagy. */
   title: string;
@@ -8,9 +15,9 @@ export interface ChallengeData {
   assignment: string;
   /** Maximálne skóre ktoré možno za túto úlohu dostať. */
   maxScore: number;
-
-  // TODO: change to `files`
-  pociatocnyKod: {
+  files: ChallengeFile[];
+  // Keep for backward compatibility, will be removed later
+  pociatocnyKod?: {
     /**
      * Počiatočný HTML kód editora. Ak je `null`, editor sa nezobrazí.
      * Prvý element je kód, druhý element je, či je editor read-only.
@@ -33,6 +40,19 @@ export interface ChallengeData {
  * Zoznam úloh v kategórii.
  */
 export interface ChallengeList {
-  /** ID úlohy => dáta o úlohe. */
-  [id: string]: ChallengeData;
+  [id: string]: {
+    title: string;
+    assignment: string;
+    maxScore: number;
+  };
+}
+
+export interface VirtualFileSystem {
+  files: Map<string, ChallengeFile>;
+  activeFile: string | null;
+  setActiveFile: (filename: string) => void;
+  updateFileContent: (filename: string, content: string) => void;
+  getFileContent: (filename: string) => string | undefined;
+  getVisibleFiles: () => ChallengeFile[];
+  getAllFiles: () => ChallengeFile[];
 }

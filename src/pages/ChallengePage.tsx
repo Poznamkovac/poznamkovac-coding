@@ -1,7 +1,7 @@
 import type React from "react";
 import { useParams } from "react-router-dom";
 import { useChallengeData } from "../hooks/useChallengeData";
-import ChallengeEditor from "../components/ChallengeEditor";
+import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
 import ChallengeTests from "../components/ChallengeTests";
 import { useEffect, useState } from "react";
@@ -9,10 +9,7 @@ import { storageService } from "../services/storageService";
 
 const ChallengePage: React.FC = () => {
   const { categoryId, challengeId } = useParams();
-  const { challengeData, htmlCode, cssCode, jsCode, setHtmlCode, setCssCode, setJsCode } = useChallengeData(
-    categoryId!,
-    challengeId!
-  );
+  const { challengeData, fileSystem, isLoading } = useChallengeData(categoryId!, challengeId!);
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [isScoreLoading, setIsScoreLoading] = useState(true);
 
@@ -47,7 +44,7 @@ const ChallengePage: React.FC = () => {
     }
   }, [challengeData, categoryId, challengeId]);
 
-  if (!challengeData || isScoreLoading) return <div>Načítavam...</div>;
+  if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>Loading...</div>;
 
   return (
     <div className="min-h-screen text-white">
@@ -57,7 +54,7 @@ const ChallengePage: React.FC = () => {
           {currentScore > challengeData.maxScore && "(si veľmi šikovný :D)"}
           {challengeData.title}
           <span className="ml-2 text-xl font-normal">
-            (Skóre: {currentScore} / {challengeData.maxScore})
+            (Score: {currentScore} / {challengeData.maxScore})
           </span>
         </h2>
 
@@ -65,7 +62,7 @@ const ChallengePage: React.FC = () => {
         <div className="mb-6">
           <img
             src={`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`}
-            alt="Obrázok k úlohe"
+            alt="Assignment image"
             className="h-auto max-w-full"
             onError={(e) => e.currentTarget.remove()}
           />
@@ -73,33 +70,11 @@ const ChallengePage: React.FC = () => {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="flex flex-col h-[500px]">
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <ChallengeEditor
-                language="html"
-                codeState={htmlCode}
-                setCode={setHtmlCode}
-                categoryId={categoryId!}
-                challengeId={challengeId!}
-              />
-              <ChallengeEditor
-                language="css"
-                codeState={cssCode}
-                setCode={setCssCode}
-                categoryId={categoryId!}
-                challengeId={challengeId!}
-              />
-              <ChallengeEditor
-                language="javascript"
-                codeState={jsCode}
-                setCode={setJsCode}
-                categoryId={categoryId!}
-                challengeId={challengeId!}
-              />
-            </div>
+            <ChallengeIDE fileSystem={fileSystem} />
           </div>
 
           <div className="h-[500px] flex flex-col">
-            <ChallengePreview htmlKod={htmlCode?.[0] || ""} cssKod={cssCode?.[0] || ""} jsKod={jsCode?.[0] || ""} />
+            <ChallengePreview fileSystem={fileSystem} />
             <ChallengeTests categoryId={categoryId!} challengeId={challengeId!} maxScore={challengeData.maxScore} />
           </div>
         </div>
