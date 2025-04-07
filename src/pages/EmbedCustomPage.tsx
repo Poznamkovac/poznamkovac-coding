@@ -76,7 +76,7 @@ const EmbedCustomPage: React.FC = () => {
     }
   }, [customData]);
 
-  // Listen for file changes
+  // Listen for file changes only when fileSystem is initialized
   useEffect(() => {
     if (!fileSystem) return;
 

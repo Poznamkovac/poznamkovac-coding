@@ -3,6 +3,7 @@ import { storageService } from "./storageService";
 
 // Custom event for file change notifications
 export const FILE_CHANGE_EVENT = "fileChange";
+export const ACTIVE_FILE_CHANGE_EVENT = "activeFileChange";
 
 export interface FileChangeEvent {
   categoryId: string;
@@ -10,6 +11,12 @@ export interface FileChangeEvent {
   filename: string;
   content: string;
   shouldReload: boolean;
+}
+
+export interface ActiveFileChangeEvent {
+  categoryId: string;
+  challengeId: string;
+  filename: string;
 }
 
 /**
@@ -93,8 +100,19 @@ export const createVirtualFileSystem = (
 
     // Set the active file
     setActiveFile(filename: string) {
-      if (filesMap.has(filename)) {
+      if (filesMap.has(filename) && currentActiveFile !== filename) {
         currentActiveFile = filename;
+
+        // Dispatch an event to notify components that the active file has changed
+        window.dispatchEvent(
+          new CustomEvent<ActiveFileChangeEvent>(ACTIVE_FILE_CHANGE_EVENT, {
+            detail: {
+              categoryId,
+              challengeId,
+              filename,
+            },
+          })
+        );
       }
     },
 

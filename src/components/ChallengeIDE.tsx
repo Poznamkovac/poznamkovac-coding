@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { VirtualFileSystem } from "../types/challenge";
 import CodeEditor from "./CodeEditor";
 import FileTabs from "./FileTabs";
+import { ACTIVE_FILE_CHANGE_EVENT, ActiveFileChangeEvent } from "../services/virtualFileSystemService";
 
 interface ChallengeIDEProps {
   fileSystem: VirtualFileSystem;
@@ -53,38 +54,30 @@ const ChallengeIDE: React.FC<ChallengeIDEProps> = ({ fileSystem }) => {
         setIsReadOnly(currentFileData.readonly);
       }
     }
-  }, [fileSystem]);
+  }, []);
 
-  // Handle file tab changes - update when activeFile changes
+  // Listen for active file changes
   useEffect(() => {
-    const handleActiveFileChange = () => {
-      const currentActiveFile = fileSystem.activeFile;
-      if (currentActiveFile && currentActiveFile !== activeFilename) {
-        setActiveFilename(currentActiveFile);
+    const handleActiveFileChange = (event: Event) => {
+      const { filename } = (event as CustomEvent<ActiveFileChangeEvent>).detail;
 
-        // Get current file data
-        const currentFileData = fileSystem.files.get(currentActiveFile);
-        if (currentFileData) {
-          setActiveFileContent(currentFileData.content || "");
-          setIsReadOnly(currentFileData.readonly);
-        }
+      // Get current file data
+      const currentFileData = fileSystem.files.get(filename);
+      if (currentFileData) {
+        setActiveFilename(filename);
+        setActiveFileContent(currentFileData.content || "");
+        setIsReadOnly(currentFileData.readonly);
       }
     };
 
-    // Create a MutationObserver to watch for changes to the DOM
-    const observer = new MutationObserver(handleActiveFileChange);
+    // Add event listener for active file changes
+    window.addEventListener(ACTIVE_FILE_CHANGE_EVENT, handleActiveFileChange);
 
-    // This is a hack to detect file tab changes since we don't have a direct event
-    // In a real app, you would implement a proper event system
-    const fileTabs = document.querySelector(".file-tabs");
-    if (fileTabs) {
-      observer.observe(fileTabs, { childList: true, subtree: true });
-    }
-
+    // Cleanup
     return () => {
-      observer.disconnect();
+      window.removeEventListener(ACTIVE_FILE_CHANGE_EVENT, handleActiveFileChange);
     };
-  }, [fileSystem, activeFilename]);
+  }, [fileSystem]);
 
   const handleEditorChange = (newContent?: string) => {
     if (activeFilename && !isReadOnly && newContent) {

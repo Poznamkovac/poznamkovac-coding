@@ -85,6 +85,43 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
       return doc.documentElement.outerHTML;
     };
 
+    // Set initial HTML
+    iframe.srcdoc = processHTML(htmlContent);
+
+    // Initial file content snapshot
+    const initialFiles = fileSystem.getAllFiles();
+    initialFiles.forEach((file) => {
+      if (file.content) {
+        fileContentRef.current[file.filename] = file.content;
+      }
+    });
+
+    // Handle file change events
+    const handleFileChange = (event: Event) => {
+      const { filename, shouldReload } = (event as CustomEvent<FileChangeEvent>).detail;
+
+      // Check if we should auto-reload based on the file and global settings
+      const shouldAutoReload = shouldReload && autoReload;
+
+      if (shouldAutoReload) {
+        // HTML changes need a full refresh
+        if (filename === mainFile || filename.toLowerCase().endsWith(".html")) {
+          setShouldRefreshPreview(true);
+
+          // Update the preview
+          updateIframeContent();
+        } else if (iframe.contentDocument) {
+          // For non-HTML files, just update the content
+          updateIframeContent();
+        }
+
+        setNeedsManualReload(false);
+      } else {
+        // If the file shouldn't auto-reload, show indication that manual reload is needed
+        setNeedsManualReload(true);
+      }
+    };
+
     // Update iframe content
     const updateIframeContent = () => {
       const iframeDoc = iframe.contentDocument;
@@ -104,7 +141,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
       });
 
       // Update content references for future change detection
-      fileContentRef.current = currentFileContents;
+      fileContentRef.current = { ...currentFileContents };
 
       // Force a complete reload if there are significant changes
       if (shouldRefreshPreview || hasSignificantChanges) {
@@ -162,43 +199,8 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
       });
     };
 
-    // Handle file change events
-    const handleFileChange = (event: Event) => {
-      const { filename, shouldReload } = (event as CustomEvent<FileChangeEvent>).detail;
-
-      // Check if we should auto-reload based on the file and global settings
-      const shouldAutoReload = shouldReload && autoReload;
-
-      if (shouldAutoReload) {
-        // HTML changes need a full refresh
-        if (filename === mainFile || filename.toLowerCase().endsWith(".html")) {
-          setShouldRefreshPreview(true);
-        }
-
-        // Refresh the preview
-        if (iframe.contentDocument) {
-          updateIframeContent();
-        }
-        setNeedsManualReload(false);
-      } else {
-        // If the file shouldn't auto-reload, show indication that manual reload is needed
-        setNeedsManualReload(true);
-      }
-    };
-
-    // Set initial HTML
-    iframe.srcdoc = processHTML(htmlContent);
-    iframe.onload = updateIframeContent;
-
-    // Listen for file changes
+    // Add event listener for file changes
     window.addEventListener(FILE_CHANGE_EVENT, handleFileChange);
-
-    // Initial file content snapshot
-    fileSystem.getAllFiles().forEach((file) => {
-      if (file.content) {
-        fileContentRef.current[file.filename] = file.content;
-      }
-    });
 
     return () => {
       window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);

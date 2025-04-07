@@ -35,6 +35,14 @@ const FileTabs: React.FC<FileTabsProps> = ({ fileSystem }) => {
   const visibleFiles = fileSystem.getVisibleFiles();
   const activeFile = fileSystem.activeFile;
 
+  const handleTabClick = (filename: string) => {
+    if (activeFile !== filename) {
+      fileSystem.setActiveFile(filename);
+      // Force a re-render or state update if needed
+      // This is a controlled component so React will handle re-rendering
+    }
+  };
+
   return (
     <div className="flex text-white bg-gray-800 file-tabs">
       {visibleFiles.map((file) => (
@@ -42,7 +50,7 @@ const FileTabs: React.FC<FileTabsProps> = ({ fileSystem }) => {
           key={file.filename}
           className={`px-3 py-2 cursor-pointer border-r border-gray-700 flex items-center
             ${activeFile === file.filename ? "bg-gray-700" : "hover:bg-gray-700"}`}
-          onClick={() => fileSystem.setActiveFile(file.filename)}
+          onClick={() => handleTabClick(file.filename)}
         >
           <span className="mr-2">{getFileIcon(file.filename)}</span>
           <span>{file.filename}</span>
