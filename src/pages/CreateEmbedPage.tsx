@@ -33,6 +33,44 @@ document.addEventListener('DOMContentLoaded', () => {
   app.textContent = 'Hello from JavaScript!';
 });`;
 
+const DEFAULT_TEST = `// Test file 
+// This file allows you to define tests for the assignment
+// You can use regular JavaScript assertions
+
+function runTests() {
+  const tests = [
+    {
+      name: "Test 1: Page contains h1 element",
+      test: function() {
+        const h1 = document.querySelector('h1');
+        return { 
+          success: !!h1,
+          message: h1 ? "Success: H1 found" : "Failure: No H1 element found" 
+        };
+      }
+    },
+    {
+      name: "Test 2: App div contains text",
+      test: function() {
+        const app = document.getElementById('app');
+        return { 
+          success: app && app.textContent && app.textContent.length > 0,
+          message: app?.textContent ? "Success: App has content" : "Failure: App missing or empty" 
+        };
+      }
+    }
+  ];
+  
+  return tests.map(t => {
+    const result = t.test();
+    return {
+      name: t.name,
+      success: result.success,
+      message: result.message
+    };
+  });
+}`;
+
 interface CustomAssignment {
   title: string;
   assignment: string;
@@ -47,11 +85,12 @@ const CreateEmbedPage: React.FC = () => {
   const [assignment, setAssignment] = useState<CustomAssignment>({
     title: "Custom Assignment",
     assignment: "<p>Description of your assignment</p>",
-    maxScore: 0,
+    maxScore: 2, // Default to 2 points for the two default tests
     files: [
       { filename: "index.html", readonly: false, hidden: false, autoreload: true, content: DEFAULT_HTML },
       { filename: "style.css", readonly: false, hidden: false, autoreload: true, content: DEFAULT_CSS },
       { filename: "script.js", readonly: false, hidden: false, autoreload: true, content: DEFAULT_JS },
+      { filename: "test.js", readonly: false, hidden: true, autoreload: false, content: DEFAULT_TEST },
     ],
     mainFile: "index.html",
     previewType: "html",
@@ -113,6 +152,34 @@ const CreateEmbedPage: React.FC = () => {
     updatedFiles[currentFile] = {
       ...updatedFiles[currentFile],
       content: e.target.value,
+    };
+
+    setAssignment((prev) => ({
+      ...prev,
+      files: updatedFiles,
+    }));
+  };
+
+  // Toggle file visibility
+  const toggleFileVisibility = () => {
+    const updatedFiles = [...assignment.files];
+    updatedFiles[currentFile] = {
+      ...updatedFiles[currentFile],
+      hidden: !updatedFiles[currentFile].hidden,
+    };
+
+    setAssignment((prev) => ({
+      ...prev,
+      files: updatedFiles,
+    }));
+  };
+
+  // Toggle file autoReload
+  const toggleFileAutoReload = () => {
+    const updatedFiles = [...assignment.files];
+    updatedFiles[currentFile] = {
+      ...updatedFiles[currentFile],
+      autoreload: !updatedFiles[currentFile].autoreload,
     };
 
     setAssignment((prev) => ({
@@ -310,7 +377,7 @@ const CreateEmbedPage: React.FC = () => {
               onClick={() => setCurrentFile(index)}
               className={`px-3 py-1 mr-2 text-sm rounded-t ${index === currentFile ? "bg-blue-600" : "bg-gray-700"} ${
                 file.filename === assignment.mainFile ? "font-bold" : ""
-              }`}
+              } ${file.hidden ? "opacity-50" : ""}`}
             >
               {file.filename}
             </button>
@@ -324,11 +391,23 @@ const CreateEmbedPage: React.FC = () => {
               {assignment.files[currentFile].filename !== assignment.mainFile && (
                 <button
                   onClick={handleSetMainFile}
-                  className="px-2 py-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700"
+                  className="px-2 py-1 mx-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700"
                 >
                   Set as Main File
                 </button>
               )}
+              <button
+                onClick={toggleFileVisibility}
+                className="px-2 py-1 mx-1 text-xs text-white bg-purple-600 rounded hover:bg-purple-700"
+              >
+                {assignment.files[currentFile].hidden ? "Show File" : "Hide File"}
+              </button>
+              <button
+                onClick={toggleFileAutoReload}
+                className="px-2 py-1 mx-1 text-xs text-white bg-yellow-600 rounded hover:bg-yellow-700"
+              >
+                {assignment.files[currentFile].autoreload ? "Disable Auto-reload" : "Enable Auto-reload"}
+              </button>
             </div>
             <textarea
               value={assignment.files[currentFile].content || ""}

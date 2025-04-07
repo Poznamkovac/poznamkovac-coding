@@ -36,7 +36,7 @@ const FileTabs: React.FC<FileTabsProps> = ({ fileSystem }) => {
   const activeFile = fileSystem.activeFile;
 
   return (
-    <div className="flex bg-gray-800 text-white">
+    <div className="flex text-white bg-gray-800 file-tabs">
       {visibleFiles.map((file) => (
         <div
           key={file.filename}
@@ -46,7 +46,7 @@ const FileTabs: React.FC<FileTabsProps> = ({ fileSystem }) => {
         >
           <span className="mr-2">{getFileIcon(file.filename)}</span>
           <span>{file.filename}</span>
-          {file.readonly && <span className="ml-2 text-xs bg-gray-600 px-1 rounded">(read-only)</span>}
+          {file.readonly && <span className="px-1 ml-2 text-xs bg-gray-600 rounded">(read-only)</span>}
         </div>
       ))}
     </div>

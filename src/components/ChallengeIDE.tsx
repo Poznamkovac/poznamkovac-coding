@@ -39,11 +39,27 @@ const ChallengeIDE: React.FC<ChallengeIDEProps> = ({ fileSystem }) => {
   const [activeFileContent, setActiveFileContent] = useState<string>("");
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
 
-  // Listen for changes in the active file
+  // Initialize the editor with the active file
   useEffect(() => {
-    const handleFileChange = () => {
+    // Get the current active file
+    const currentActiveFile = fileSystem.activeFile;
+    if (currentActiveFile) {
+      setActiveFilename(currentActiveFile);
+
+      // Get current file data
+      const currentFileData = fileSystem.files.get(currentActiveFile);
+      if (currentFileData) {
+        setActiveFileContent(currentFileData.content || "");
+        setIsReadOnly(currentFileData.readonly);
+      }
+    }
+  }, [fileSystem]);
+
+  // Handle file tab changes - update when activeFile changes
+  useEffect(() => {
+    const handleActiveFileChange = () => {
       const currentActiveFile = fileSystem.activeFile;
-      if (currentActiveFile) {
+      if (currentActiveFile && currentActiveFile !== activeFilename) {
         setActiveFilename(currentActiveFile);
 
         // Get current file data
@@ -55,16 +71,20 @@ const ChallengeIDE: React.FC<ChallengeIDEProps> = ({ fileSystem }) => {
       }
     };
 
-    // Initial setup
-    handleFileChange();
+    // Create a MutationObserver to watch for changes to the DOM
+    const observer = new MutationObserver(handleActiveFileChange);
 
-    // Setup listener for future changes - in a real app, you might want a pub/sub system
-    const checkActiveFile = setInterval(handleFileChange, 100);
+    // This is a hack to detect file tab changes since we don't have a direct event
+    // In a real app, you would implement a proper event system
+    const fileTabs = document.querySelector(".file-tabs");
+    if (fileTabs) {
+      observer.observe(fileTabs, { childList: true, subtree: true });
+    }
 
     return () => {
-      clearInterval(checkActiveFile);
+      observer.disconnect();
     };
-  }, [fileSystem]);
+  }, [fileSystem, activeFilename]);
 
   const handleEditorChange = (newContent?: string) => {
     if (activeFilename && !isReadOnly && newContent) {

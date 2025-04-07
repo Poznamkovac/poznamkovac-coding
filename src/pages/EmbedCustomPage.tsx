@@ -3,13 +3,22 @@ import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
 import EmbedLayout from "../components/EmbedLayout";
 import { useQueryParams } from "../hooks/useQueryParams";
-import { createVirtualFileSystem } from "../services/virtualFileSystemService";
+import { createVirtualFileSystem, FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 import { ChallengeData, VirtualFileSystem } from "../types/challenge";
+
+interface TestResult {
+  name: string;
+  success: boolean;
+  message: string;
+}
 
 const EmbedCustomPage: React.FC = () => {
   const { options, customData } = useQueryParams();
   const [fileSystem, setFileSystem] = useState<VirtualFileSystem | null>(null);
   const [assignmentData, setAssignmentData] = useState<ChallengeData | null>(null);
+  const [currentScore, setCurrentScore] = useState<number>(0);
+  const [needsTestRun, setNeedsTestRun] = useState(false);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
 
   // Process custom assignment data from URL parameter
   useEffect(() => {
@@ -67,6 +76,86 @@ const EmbedCustomPage: React.FC = () => {
     }
   }, [customData]);
 
+  // Listen for file changes
+  useEffect(() => {
+    if (!fileSystem) return;
+
+    // Listen for file changes that require test runs
+    const handleFileChange = (event: Event) => {
+      const { shouldReload } = (event as CustomEvent<FileChangeEvent>).detail;
+
+      if (!shouldReload && !options.autoReload) {
+        // If the file doesn't auto-reload, the user should run tests
+        setNeedsTestRun(true);
+      }
+    };
+
+    // Add event listener
+    window.addEventListener(FILE_CHANGE_EVENT, handleFileChange);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
+    };
+  }, [fileSystem, options.autoReload]);
+
+  // Run tests for the custom assignment
+  const runTests = async () => {
+    if (!fileSystem || !assignmentData) return;
+
+    setNeedsTestRun(false);
+
+    try {
+      // Find test.js file
+      const testFile = Array.from(fileSystem.files.values()).find((file) => file.filename === "test.js");
+
+      if (!testFile || !testFile.content) {
+        console.error("No test.js file found");
+        return;
+      }
+
+      // Get the preview iframe
+      const iframe = document.getElementById("preview") as HTMLIFrameElement;
+      if (!iframe || !iframe.contentWindow) {
+        console.error("Preview iframe not found");
+        return;
+      }
+
+      // Prepare the test file for execution
+      const testCode = testFile.content;
+
+      // Create a function from the test code
+      const testFunction = new Function(
+        "window",
+        `
+        ${testCode}
+        return typeof runTests === 'function' ? runTests() : [];
+      `
+      );
+
+      // Execute the tests in the iframe context
+      const results = testFunction(iframe.contentWindow) as TestResult[];
+
+      setTestResults(results || []);
+
+      // Calculate score based on passed tests
+      const passedTests = results.filter((result) => result.success).length;
+      if (results.length > 0) {
+        const calculatedScore = Math.round((passedTests / results.length) * assignmentData.maxScore);
+        setCurrentScore(calculatedScore);
+      }
+    } catch (error) {
+      console.error("Error running tests:", error);
+      setTestResults([
+        {
+          name: "Error",
+          success: false,
+          message: `Test execution error: ${error}`,
+        },
+      ]);
+    }
+  };
+
   if (!fileSystem || !assignmentData) {
     return (
       <div className="min-h-screen text-white bg-gray-900">
@@ -87,7 +176,13 @@ const EmbedCustomPage: React.FC = () => {
   }
 
   return (
-    <EmbedLayout title={assignmentData.title} description={assignmentData.assignment} options={options}>
+    <EmbedLayout
+      title={assignmentData.title}
+      description={assignmentData.assignment}
+      score={currentScore}
+      maxScore={assignmentData.maxScore}
+      options={options}
+    >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {options.showEditors && (
           <div className="flex flex-col h-[500px]">
@@ -102,6 +197,31 @@ const EmbedCustomPage: React.FC = () => {
             previewType={assignmentData.previewType}
             autoReload={options.autoReload}
           />
+
+          {options.isScored && (
+            <div className="mt-4">
+              <button
+                onClick={runTests}
+                className={`px-4 py-2 font-bold text-white rounded hover:bg-blue-700 ${
+                  needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"
+                }`}
+              >
+                {needsTestRun ? "🔄 Run Tests (changes need testing)" : "⏯️ Run Tests"}
+              </button>
+
+              <div className="mt-4">
+                {testResults.map(({ name, success, message }, index) => (
+                  <div key={index} className={`p-2 mb-2 rounded ${success ? "bg-green-800" : "bg-red-800"}`}>
+                    <b>
+                      {success ? "✓" : "✗"} {name}
+                    </b>
+                    <br />
+                    <span className="text-sm text-gray-300">{message}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </EmbedLayout>

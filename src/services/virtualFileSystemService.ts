@@ -40,6 +40,15 @@ export const createVirtualFileSystem = (
     // Load file contents from storage or from API
     await Promise.all(
       initialFiles.map(async (file) => {
+        // If content is already provided in the file, use it directly
+        if (file.content) {
+          const currentFile = filesMap.get(file.filename);
+          if (currentFile) {
+            filesMap.set(file.filename, { ...currentFile, content: file.content });
+            return; // Skip further processing
+          }
+        }
+
         // Try to get content from IndexedDB first
         const storedContent = await storageService.getEditorCode(categoryId, challengeId, file.filename);
 
@@ -49,7 +58,8 @@ export const createVirtualFileSystem = (
           if (currentFile) {
             filesMap.set(file.filename, { ...currentFile, content: storedContent });
           }
-        } else {
+        } else if (categoryId !== "custom") {
+          // Only fetch from server for non-custom assignments
           // Otherwise, fetch from the server
           try {
             const response = await fetch(`/data/ulohy/${categoryId}/${challengeId}/files/${file.filename}`);
