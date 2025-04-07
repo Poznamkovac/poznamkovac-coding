@@ -31,9 +31,11 @@ const ChallengeEditor: React.FC<ChallengeEditorProps> = ({ language, codeState, 
   };
 
   return (
-    <div className="mb-4">
-      <h2 className="mb-2 text-xl font-semibold">{language.toUpperCase()}</h2>
-      <CodeEditor readOnly={readOnly} language={language} value={code} onChange={handleEditorChange} />
+    <div className="flex-1 flex flex-col mb-2">
+      <h2 className="mb-1 text-xl font-semibold">{language.toUpperCase()}</h2>
+      <div className="flex-1 min-h-0">
+        <CodeEditor readOnly={readOnly} language={language} value={code} onChange={handleEditorChange} height="100%" />
+      </div>
     </div>
   );
 };

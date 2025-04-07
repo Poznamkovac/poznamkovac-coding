@@ -4,20 +4,74 @@ import { useState, useMemo, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useFetchChallenges } from "../hooks/useFetchChallenges";
 
+// Custom event name for score updates
+const SCORE_UPDATE_EVENT = "scoreUpdate";
+
+// Custom event for score updates
+interface ScoreUpdateDetail {
+  categoryId: string;
+  challengeId: string;
+  score: number;
+}
+
+// Helper to emit score update events
+export const emitScoreUpdate = (categoryId: string, challengeId: string, score: number) => {
+  // Save to localStorage
+  localStorage.setItem(`uloha_${categoryId}_${challengeId}_skore`, score.toString());
+
+  // Dispatch custom event with proper type declaration
+  window.dispatchEvent(
+    new CustomEvent(SCORE_UPDATE_EVENT, {
+      detail: { categoryId, challengeId, score },
+    })
+  );
+};
+
 const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }> = ({ challenges, categoryId }) => {
   const [completionStatus, setCompletionStatus] = useState<{ [key: string]: { completed: boolean; score: number } }>({});
 
   useEffect(() => {
-    const newCompletionStatus: { [key: string]: { completed: boolean; score: number } } = {};
-    Object.entries(challenges).forEach(([id, challenge]) => {
-      const storedScore = localStorage.getItem(`uloha_${categoryId}_${id}_skore`);
-      const score = storedScore ? parseInt(storedScore, 10) : 0;
-      newCompletionStatus[id] = {
-        completed: score === challenge.maxSkore,
-        score: score,
-      };
-    });
-    setCompletionStatus(newCompletionStatus);
+    // Initial load from localStorage
+    const loadCompletionStatus = () => {
+      const newCompletionStatus: { [key: string]: { completed: boolean; score: number } } = {};
+      Object.entries(challenges).forEach(([id, challenge]) => {
+        const storedScore = localStorage.getItem(`uloha_${categoryId}_${id}_skore`);
+        const score = storedScore ? parseInt(storedScore, 10) : 0;
+        newCompletionStatus[id] = {
+          completed: score === challenge.maxSkore,
+          score: score,
+        };
+      });
+      setCompletionStatus(newCompletionStatus);
+    };
+
+    // Load initial status
+    loadCompletionStatus();
+
+    // Set up event listener for score updates
+    const handleScoreUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<ScoreUpdateDetail>;
+      const { categoryId: updatedCategoryId, challengeId, score } = customEvent.detail;
+
+      // Only update if it's for our category
+      if (updatedCategoryId === categoryId && challenges[challengeId]) {
+        setCompletionStatus((prevStatus) => ({
+          ...prevStatus,
+          [challengeId]: {
+            completed: score === challenges[challengeId].maxSkore,
+            score: score,
+          },
+        }));
+      }
+    };
+
+    // Add event listener
+    window.addEventListener(SCORE_UPDATE_EVENT, handleScoreUpdate);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener(SCORE_UPDATE_EVENT, handleScoreUpdate);
+    };
   }, [challenges, categoryId]);
 
   return (
@@ -31,6 +85,10 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
           <h2 className="text-xl font-semibold">
             <div className="inline-block px-2 py-1 mr-2 text-white bg-blue-900 rounded-full text-bold">{id}.</div>
             {completionStatus[id]?.completed && "✅ "} {challenge.nazov}
+            <span className="inline-block px-2 py-1 ml-2 text-sm bg-gray-700 rounded-lg white">
+              <b>Skóre:</b> {completionStatus[id]?.score || 0} / {challenge.maxSkore}
+              {(completionStatus[id]?.score || 0) > challenge.maxSkore && " (si veľmi šikovný :D)"}
+            </span>
           </h2>
           <p
             className="mt-2 text-sm"
@@ -38,12 +96,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
               __html: challenge.zadanie.split(" ").slice(0, 15).join(" ") + "...",
             }}
           />
-          <div className="mt-2 text-sm">
-            <div className="inline-block px-2 py-1 text-xs bg-gray-700 rounded-lg white">
-              <b>Skóre:</b> {completionStatus[id]?.score || 0} / {challenge.maxSkore}
-              {(completionStatus[id]?.score || 0) > challenge.maxSkore && " (si veľmi šikovný :D)"}
-            </div>
-          </div>
+          <div className="mt-2 text-sm"></div>
         </Link>
       ))}
     </div>

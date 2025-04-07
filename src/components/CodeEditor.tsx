@@ -42,7 +42,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
   return (
     <Editor
       loading={<div>Načítavam editor kódu...</div>}
-      height={height}
+      height={height || "100%"}
       defaultLanguage={language}
       theme="vs-dark"
       value={value}

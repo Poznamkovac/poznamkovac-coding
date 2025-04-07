@@ -1,6 +1,7 @@
 import type React from "react";
 import type { Test } from "../types/test";
 import { useState, useEffect } from "react";
+import { emitScoreUpdate } from "../pages/CategoryPage";
 
 interface ChallengeTestsProps {
   categoryId: string;
@@ -23,7 +24,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({ categoryId, challengeId
   const saveHighestScore = (newScore: number) => {
     if (newScore > currentScore) {
       setCurrentScore(newScore);
-      localStorage.setItem(`uloha_${categoryId}_${challengeId}_skore`, newScore.toString());
+      emitScoreUpdate(categoryId, challengeId, newScore);
     }
   };
 

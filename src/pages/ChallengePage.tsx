@@ -5,6 +5,7 @@ import ChallengeEditor from "../components/ChallengeEditor";
 import ChallengePreview from "../components/ChallengePreview";
 import ChallengeTests from "../components/ChallengeTests";
 import { useEffect, useState } from "react";
+import { emitScoreUpdate } from "./CategoryPage";
 
 const ChallengePage: React.FC = () => {
   const { categoryId, challengeId } = useParams();
@@ -18,6 +19,24 @@ const ChallengePage: React.FC = () => {
     if (challengeData) {
       const storedScore = localStorage.getItem(`uloha_${categoryId}_${challengeId}_skore`);
       setCurrentScore(storedScore ? parseInt(storedScore, 10) : 0);
+
+      // Set up event listener for score updates
+      const handleScoreUpdate = (event: Event) => {
+        const customEvent = event as CustomEvent<{ categoryId: string; challengeId: string; score: number }>;
+        const { categoryId: updatedCategoryId, challengeId: updatedChallengeId, score } = customEvent.detail;
+
+        if (updatedCategoryId === categoryId && updatedChallengeId === challengeId) {
+          setCurrentScore(score);
+        }
+      };
+
+      // Add event listener
+      window.addEventListener("scoreUpdate", handleScoreUpdate);
+
+      // Cleanup
+      return () => {
+        window.removeEventListener("scoreUpdate", handleScoreUpdate);
+      };
     }
   }, [challengeData, categoryId, challengeId]);
 
@@ -46,31 +65,33 @@ const ChallengePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <ChallengeEditor
-              language="html"
-              codeState={htmlCode}
-              setCode={setHtmlCode}
-              categoryId={categoryId!}
-              challengeId={challengeId!}
-            />
-            <ChallengeEditor
-              language="css"
-              codeState={cssCode}
-              setCode={setCssCode}
-              categoryId={categoryId!}
-              challengeId={challengeId!}
-            />
-            <ChallengeEditor
-              language="javascript"
-              codeState={jsCode}
-              setCode={setJsCode}
-              categoryId={categoryId!}
-              challengeId={challengeId!}
-            />
+          <div className="flex flex-col h-[500px]">
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <ChallengeEditor
+                language="html"
+                codeState={htmlCode}
+                setCode={setHtmlCode}
+                categoryId={categoryId!}
+                challengeId={challengeId!}
+              />
+              <ChallengeEditor
+                language="css"
+                codeState={cssCode}
+                setCode={setCssCode}
+                categoryId={categoryId!}
+                challengeId={challengeId!}
+              />
+              <ChallengeEditor
+                language="javascript"
+                codeState={jsCode}
+                setCode={setJsCode}
+                categoryId={categoryId!}
+                challengeId={challengeId!}
+              />
+            </div>
           </div>
 
-          <div>
+          <div className="h-[500px] flex flex-col">
             <ChallengePreview htmlKod={htmlCode?.[0] || ""} cssKod={cssCode?.[0] || ""} jsKod={jsCode?.[0] || ""} />
             <ChallengeTests categoryId={categoryId!} challengeId={challengeId!} maxScore={challengeData.maxSkore} />
           </div>

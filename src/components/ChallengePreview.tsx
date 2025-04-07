@@ -48,9 +48,9 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ htmlKod, cssKod, js
   }, [htmlKod, cssKod, jsKod]);
 
   return (
-    <div>
-      <h2 className="mb-2 text-xl font-semibold">Náhľad</h2>
-      <div className="border border-gray-700 p-4 h-[400px] overflow-auto bg-white">
+    <div className="flex-1 flex flex-col mb-4">
+      <h2 className="mb-1 text-xl font-semibold">Náhľad</h2>
+      <div className="flex-1 border border-gray-700 p-4 bg-white overflow-auto min-h-0">
         <iframe ref={iframeRef} id="preview" title="preview" className="w-full h-full" />
       </div>
     </div>
