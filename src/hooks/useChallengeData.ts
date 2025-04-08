@@ -123,7 +123,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
         setChallengeData(data);
 
         // Create virtual file system
-        const fs = createVirtualFileSystem(categoryId, challengeId, data.files);
+        const fs = await createVirtualFileSystem(categoryId, challengeId, data.files);
         setFileSystem(fs);
 
         setIsLoading(false);

@@ -22,11 +22,11 @@ export interface ActiveFileChangeEvent {
 /**
  * Creates a virtual file system for managing assignment files
  */
-export const createVirtualFileSystem = (
+export const createVirtualFileSystem = async (
   categoryId: string,
   challengeId: string,
   initialFiles: ChallengeFile[]
-): VirtualFileSystem => {
+): Promise<VirtualFileSystem> => {
   // Create a map of filenames to file data
   const filesMap = new Map<string, ChallengeFile>();
   let currentActiveFile: string | null = null;
@@ -88,7 +88,7 @@ export const createVirtualFileSystem = (
   };
 
   // Initialize the file system
-  init();
+  await init();
 
   return {
     files: filesMap,
