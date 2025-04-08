@@ -14,7 +14,7 @@ interface EmbedLayoutProps {
 const EmbedLayout: React.FC<EmbedLayoutProps> = ({ children, title, description, score, maxScore, options, className }) => {
   return (
     <div className={`min-h-screen text-indigo-300 ${className || ""}`}>
-      <main className="w-full m-4">
+      <main className="w-full">
         {options.showAssignment && title && (
           <div className="px-4 py-1 bg-black/60">
             <h2 className="my-2 text-2xl font-bold text-yellow-500">
