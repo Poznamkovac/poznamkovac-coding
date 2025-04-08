@@ -203,7 +203,7 @@ const EmbedCustomPage: React.FC = () => {
       options={options}
       className="bg-transparent"
     >
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className={options.showPreview ? "grid grid-cols-1 gap-4 md:grid-cols-2" : ""}>
         {options.showEditors && (
           <div className="flex flex-col h-[500px]">
             <ChallengeIDE fileSystem={fileSystem} />
