@@ -74,12 +74,21 @@ const EmbedCustomPage: React.FC = () => {
       }
 
       // Create file system
-      const fs = createVirtualFileSystem("custom", "embed", assignmentData.files);
-
       setAssignmentData(assignmentData);
-      setFileSystem(fs);
-      fileSystemRef.current = fs;
-      initializedRef.current = true;
+
+      // Properly handle the Promise returned by createVirtualFileSystem
+      const initializeFileSystem = async () => {
+        try {
+          const fs = await createVirtualFileSystem("custom", "embed", assignmentData.files);
+          setFileSystem(fs);
+          fileSystemRef.current = fs;
+          initializedRef.current = true;
+        } catch (error) {
+          console.error("Error initializing file system:", error);
+        }
+      };
+
+      initializeFileSystem();
     } catch (error) {
       console.error("Error processing custom data:", error);
     }
@@ -133,6 +142,7 @@ const EmbedCustomPage: React.FC = () => {
 
       // Prepare the test file for execution
       const testCode = testFile.content;
+
 
       // Create a function from the test code
       const testFunction = new Function(

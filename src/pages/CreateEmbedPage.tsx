@@ -2,6 +2,11 @@ import React, { useEffect, useState, useRef } from "react";
 import { useQueryParams, EmbedOptions, DEFAULT_OPTIONS, toUrlSafeBase64 } from "../hooks/useQueryParams";
 import { ChallengeFile } from "../types/challenge";
 
+// Function to safely encode UTF-8 strings to base64
+const utf8ToBase64 = (str: string): string => {
+  return window.btoa(unescape(encodeURIComponent(str)));
+};
+
 // Default file templates
 const DEFAULT_HTML = `<!DOCTYPE html>
 <html>
@@ -132,7 +137,7 @@ const CreateEmbedPage: React.FC = () => {
   useEffect(() => {
     try {
       const jsonData = JSON.stringify(assignment);
-      const b64 = btoa(jsonData);
+      const b64 = utf8ToBase64(jsonData); // Use UTF-8 safe encoding
       // Convert to URL-safe base64
       const urlSafeB64 = toUrlSafeBase64(b64);
       setB64Data(urlSafeB64);

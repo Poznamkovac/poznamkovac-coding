@@ -33,6 +33,11 @@ export const fromUrlSafeBase64 = (safe: string): string => {
   return base64;
 };
 
+// Convert base64 to UTF-8 string (handles non-ASCII characters)
+export const base64ToUtf8 = (base64: string): string => {
+  return decodeURIComponent(escape(window.atob(base64)));
+};
+
 export function useQueryParams(): {
   options: EmbedOptions;
   customData: CustomData | null;
@@ -57,7 +62,7 @@ export function useQueryParams(): {
     try {
       // Decode URL component and convert URL-safe base64 to standard base64
       const fixedBase64 = fromUrlSafeBase64(decodeURIComponent(dataParam));
-      const decodedData = atob(fixedBase64);
+      const decodedData = base64ToUtf8(fixedBase64); // Use UTF-8 safe decoding
       customData = JSON.parse(decodedData);
     } catch (error) {
       console.error("Failed to parse custom data", error);
