@@ -158,7 +158,7 @@ const CreateEmbedPage: React.FC = () => {
       setFullEmbedUrl(fullUrl);
       setFullEditUrl(editUrl);
 
-      const iframeHtml = `<iframe allowtransparency="true" src="${embedUrl}" style="width: 100%; height: 600px; border: none; background: transparent;"></iframe>`;
+      const iframeHtml = `<iframe allowtransparency="true" src="${embedUrl}" style="width: 100%; height: 850px; border: none; background: transparent;"></iframe>`;
 
       setIframeCode(iframeHtml);
     } catch (error) {
