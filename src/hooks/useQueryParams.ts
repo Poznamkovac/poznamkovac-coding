@@ -36,6 +36,7 @@ export const fromUrlSafeBase64 = (safe: string): string => {
 export function useQueryParams(): {
   options: EmbedOptions;
   customData: CustomData | null;
+  parseError: string | null;
 } {
   const [searchParams] = useSearchParams();
 
@@ -49,6 +50,7 @@ export function useQueryParams(): {
 
   // Parse custom data (if any)
   let customData = null;
+  let parseError = null;
   const dataParam = searchParams.get("data");
 
   if (dataParam) {
@@ -59,8 +61,9 @@ export function useQueryParams(): {
       customData = JSON.parse(decodedData);
     } catch (error) {
       console.error("Failed to parse custom data", error);
+      parseError = `Failed to parse custom data: ${error instanceof Error ? error.message : String(error)}`;
     }
   }
 
-  return { options, customData };
+  return { options, customData, parseError };
 }

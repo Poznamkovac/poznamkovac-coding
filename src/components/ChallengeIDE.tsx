@@ -27,6 +27,8 @@ const getLanguageFromFilename = (filename: string): string => {
       return "json";
     case "md":
       return "markdown";
+    case "py":
+      return "python";
     default:
       return "plaintext";
   }

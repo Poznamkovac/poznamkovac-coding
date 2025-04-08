@@ -30,8 +30,25 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
   };
 
   const handleEditorWillMount: BeforeMount = (m: Monaco) => {
-    disposeEmmetHtmlRef.current = emmetHTML(m, ["html"]);
-    disposeEmmetCssRef.current = emmetCSS(m, ["css"]);
+    // Configure available languages and emmet support
+    disposeEmmetHtmlRef.current = emmetHTML(m, ["html", "jsx", "tsx"]);
+    disposeEmmetCssRef.current = emmetCSS(m, ["css", "scss"]);
+
+    // Enable typescript intellisense features
+    m.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation: false,
+    });
+
+    // Add basic libraries for JavaScript/TypeScript
+    m.languages.typescript.javascriptDefaults.setCompilerOptions({
+      target: m.languages.typescript.ScriptTarget.Latest,
+      allowNonTsExtensions: true,
+      moduleResolution: m.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: m.languages.typescript.ModuleKind.CommonJS,
+      noEmit: true,
+      typeRoots: ["node_modules/@types"],
+    });
   };
 
   useAutoCloseTags(editorRef.current);
@@ -52,7 +69,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
     <Editor
       loading={<div>Načítavam editor kódu...</div>}
       height={height || "100%"}
-      defaultLanguage={language}
+      language={language}
       theme="vs-dark"
       value={value}
       onChange={onChange}
@@ -68,6 +85,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
         autoClosingQuotes: "always",
         formatOnPaste: true,
         formatOnType: true,
+        tabSize: 2,
+        wordWrap: "on",
+        suggest: {
+          showWords: true,
+        },
       }}
     />
   );

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useQueryParams, EmbedOptions, DEFAULT_OPTIONS, toUrlSafeBase64 } from "../hooks/useQueryParams";
 import { ChallengeFile } from "../types/challenge";
 
@@ -81,7 +81,7 @@ interface CustomAssignment {
 }
 
 const CreateEmbedPage: React.FC = () => {
-  const { customData } = useQueryParams();
+  const { customData, parseError: queryParseError } = useQueryParams();
   const [assignment, setAssignment] = useState<CustomAssignment>({
     title: "Custom Assignment",
     assignment: "<p>Description of your assignment</p>",
@@ -99,14 +99,32 @@ const CreateEmbedPage: React.FC = () => {
   const [iframeCode, setIframeCode] = useState<string>("");
   const [displayOptions, setDisplayOptions] = useState<EmbedOptions>(DEFAULT_OPTIONS);
   const [currentFile, setCurrentFile] = useState<number>(0);
+  const [parseError, setParseError] = useState<string>("");
+  const initializedRef = useRef(false);
+
+  // Display parse error from query params
+  useEffect(() => {
+    if (queryParseError) {
+      setParseError(queryParseError);
+    }
+  }, [queryParseError]);
 
   // Load data from URL if provided
   useEffect(() => {
-    if (customData) {
+    if (initializedRef.current || !customData) {
+      return;
+    }
+
+    try {
       setAssignment((prevAssignment) => ({
         ...prevAssignment,
         ...customData,
       }));
+      setParseError("");
+      initializedRef.current = true;
+    } catch (error) {
+      console.error("Error loading custom data:", error);
+      setParseError("Failed to parse the provided data. The URL may contain invalid data.");
     }
   }, [customData]);
 
@@ -257,6 +275,13 @@ const CreateEmbedPage: React.FC = () => {
   return (
     <div className="min-h-screen p-6 text-white bg-gray-900">
       <h1 className="mb-8 text-3xl font-bold">Create Custom Embeddable Assignment</h1>
+
+      {parseError && (
+        <div className="p-4 mb-6 text-white bg-red-600 rounded-lg">
+          <h3 className="mb-2 text-lg font-bold">Error</h3>
+          <p>{parseError}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2">
         {/* Assignment Details */}
