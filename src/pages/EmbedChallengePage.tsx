@@ -92,25 +92,27 @@ const EmbedChallengePage: React.FC = () => {
           </div>
         )}
 
-        {options.showPreview && (
-          <div className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}>
-            <ChallengePreview
-              fileSystem={fileSystem}
-              mainFile={challengeData.mainFile}
-              previewType={challengeData.previewType}
-              autoReload={options.autoReload}
+        <div
+          className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""} ${
+            !options.showPreview ? "hidden" : ""
+          }`}
+        >
+          <ChallengePreview
+            fileSystem={fileSystem}
+            mainFile={challengeData.mainFile}
+            previewType={challengeData.previewType}
+            autoReload={options.autoReload}
+          />
+          {options.isScored && (
+            <ChallengeTests
+              categoryId={categoryId!}
+              challengeId={challengeId!}
+              maxScore={challengeData.maxScore}
+              onTestRun={handleTestRun}
+              needsTestRun={needsTestRun}
             />
-            {options.isScored && (
-              <ChallengeTests
-                categoryId={categoryId!}
-                challengeId={challengeId!}
-                maxScore={challengeData.maxScore}
-                onTestRun={handleTestRun}
-                needsTestRun={needsTestRun}
-              />
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </EmbedLayout>
   );

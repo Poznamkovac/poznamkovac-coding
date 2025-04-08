@@ -235,41 +235,43 @@ const EmbedCustomPage: React.FC = () => {
           </div>
         )}
 
-        {options.showPreview && (
-          <div className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}>
-            <ChallengePreview
-              fileSystem={fileSystem}
-              mainFile={assignmentData.mainFile}
-              previewType={assignmentData.previewType}
-              autoReload={options.autoReload}
-            />
+        <div
+          className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""} ${
+            !options.showPreview ? "hidden" : ""
+          }`}
+        >
+          <ChallengePreview
+            fileSystem={fileSystem}
+            mainFile={assignmentData.mainFile}
+            previewType={assignmentData.previewType}
+            autoReload={options.autoReload}
+          />
 
-            {options.isScored && (
+          {options.isScored && (
+            <div className="mt-4">
+              <button
+                onClick={runTests}
+                className={`px-4 py-2 font-bold text-white rounded hover:bg-blue-700 ${
+                  needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"
+                }`}
+              >
+                {needsTestRun ? "🔄 Run Tests (changes need testing)" : "⏯️ Run Tests"}
+              </button>
+
               <div className="mt-4">
-                <button
-                  onClick={runTests}
-                  className={`px-4 py-2 font-bold text-white rounded hover:bg-blue-700 ${
-                    needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  {needsTestRun ? "🔄 Run Tests (changes need testing)" : "⏯️ Run Tests"}
-                </button>
-
-                <div className="mt-4">
-                  {testResults.map(({ name, success, message }, index) => (
-                    <div key={index} className={`p-2 mb-2 rounded ${success ? "bg-green-800" : "bg-red-800"}`}>
-                      <b>
-                        {success ? "✓" : "✗"} {name}
-                      </b>
-                      <br />
-                      <span className="text-sm text-gray-300">{message}</span>
-                    </div>
-                  ))}
-                </div>
+                {testResults.map(({ name, success, message }, index) => (
+                  <div key={index} className={`p-2 mb-2 rounded ${success ? "bg-green-800" : "bg-red-800"}`}>
+                    <b>
+                      {success ? "✓" : "✗"} {name}
+                    </b>
+                    <br />
+                    <span className="text-sm text-gray-300">{message}</span>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </EmbedLayout>
   );

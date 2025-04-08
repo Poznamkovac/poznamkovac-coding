@@ -101,15 +101,17 @@ const ChallengePage: React.FC = () => {
             </div>
           )}
 
-          <div className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}>
-            {options.showPreview && (
-              <ChallengePreview
-                fileSystem={fileSystem}
-                mainFile={challengeData.mainFile}
-                previewType={challengeData.previewType}
-                autoReload={options.autoReload}
-              />
-            )}
+          <div
+            className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""} ${
+              !options.showPreview ? "hidden" : ""
+            }`}
+          >
+            <ChallengePreview
+              fileSystem={fileSystem}
+              mainFile={challengeData.mainFile}
+              previewType={challengeData.previewType}
+              autoReload={options.autoReload}
+            />
 
             {options.isScored && (
               <ChallengeTests
