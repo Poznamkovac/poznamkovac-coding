@@ -12,7 +12,7 @@ interface EmbedLayoutProps {
 }
 
 const EmbedLayout: React.FC<EmbedLayoutProps> = ({ children, title, description, score, maxScore, options, className }) => {
-  const themeStyles = options.theme === "light" ? "bg-white text-gray-900" : "bg-black text-indigo-200";
+  const themeStyles = options.theme === "light" ? "bg-white text-gray-900" : "bg-black text-gray-100";
 
   return (
     <div className={`min-h-screen ${themeStyles} ${className || ""}`}>
@@ -28,7 +28,7 @@ const EmbedLayout: React.FC<EmbedLayoutProps> = ({ children, title, description,
                 </span>
               )}
             </h2>
-            {description && <p className="mb-4" dangerouslySetInnerHTML={{ __html: description }} />}
+            {description && <p className="mb-4 space-y-2" dangerouslySetInnerHTML={{ __html: description }} />}
           </div>
         )}
         {children}
