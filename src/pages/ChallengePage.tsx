@@ -120,8 +120,8 @@ const ChallengePage: React.FC = () => {
                 maxScore={challengeData.maxScore}
                 onTestRun={handleTestRun}
                 needsTestRun={needsTestRun}
-                files={challengeData.files}
-                readonlyFiles={challengeData.readonly}
+                files={challengeData.files.map((file) => file.filename)}
+                readonlyFiles={challengeData.files.filter((file) => file.readonly).map((file) => file.filename)}
               />
             )}
           </div>
