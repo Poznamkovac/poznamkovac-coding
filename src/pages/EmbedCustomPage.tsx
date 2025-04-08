@@ -209,7 +209,7 @@ const EmbedCustomPage: React.FC = () => {
             <ChallengeIDE fileSystem={fileSystem} />
 
             {options.isScored && !options.showPreview && (
-              <div className="mt-4">
+              <div className="mx-4 mt-4">
                 <button
                   onClick={runTests}
                   className={`px-4 py-2 font-bold text-white rounded hover:bg-blue-700 ${
