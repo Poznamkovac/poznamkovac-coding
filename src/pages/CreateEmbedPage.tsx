@@ -100,7 +100,6 @@ const CreateEmbedPage: React.FC = () => {
     mainFile: "index.html",
     previewType: "html",
   });
-  const [b64Data, setB64Data] = useState<string>("");
   const [iframeCode, setIframeCode] = useState<string>("");
   const [fullEmbedUrl, setFullEmbedUrl] = useState<string>("");
   const [fullEditUrl, setFullEditUrl] = useState<string>("");
@@ -142,7 +141,6 @@ const CreateEmbedPage: React.FC = () => {
       const b64 = utf8ToBase64(jsonData); // Use UTF-8 safe encoding
       // Convert to URL-safe base64
       const urlSafeB64 = toUrlSafeBase64(b64);
-      setB64Data(urlSafeB64);
 
       // Construct query parameters
       const queryParams = new URLSearchParams();
