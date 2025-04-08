@@ -102,6 +102,8 @@ const CreateEmbedPage: React.FC = () => {
   });
   const [b64Data, setB64Data] = useState<string>("");
   const [iframeCode, setIframeCode] = useState<string>("");
+  const [fullEmbedUrl, setFullEmbedUrl] = useState<string>("");
+  const [fullEditUrl, setFullEditUrl] = useState<string>("");
   const [displayOptions, setDisplayOptions] = useState<EmbedOptions>(DEFAULT_OPTIONS);
   const [currentFile, setCurrentFile] = useState<number>(0);
   const [parseError, setParseError] = useState<string>("");
@@ -153,6 +155,11 @@ const CreateEmbedPage: React.FC = () => {
       if (!displayOptions.showPreview) queryParams.append("showPreview", "false");
 
       const embedUrl = `${window.location.origin}/#/embed/custom?${queryParams.toString()}`;
+      const fullUrl = `/#/embed/custom?${queryParams.toString()}`;
+      const editUrl = `/#/embed/create?${queryParams.toString()}`;
+      setFullEmbedUrl(fullUrl);
+      setFullEditUrl(editUrl);
+
       const iframeHtml = `<iframe allowtransparency="true" src="${embedUrl}" style="width: 100%; height: 600px; border: none; background: transparent;"></iframe>`;
 
       setIframeCode(iframeHtml);
@@ -477,7 +484,7 @@ const CreateEmbedPage: React.FC = () => {
 
         <div className="flex flex-wrap gap-4">
           <a
-            href={`/#/embed/custom?data=${b64Data}`}
+            href={fullEmbedUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
@@ -485,7 +492,7 @@ const CreateEmbedPage: React.FC = () => {
             Preview Assignment
           </a>
 
-          <a href={`/#/embed/create?data=${b64Data}`} className="px-4 py-2 text-white bg-purple-600 rounded hover:bg-purple-700">
+          <a href={fullEditUrl} className="px-4 py-2 text-white bg-purple-600 rounded hover:bg-purple-700">
             Get Shareable Edit Link
           </a>
         </div>
