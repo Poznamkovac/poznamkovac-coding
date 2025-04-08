@@ -7,7 +7,7 @@ interface AppDB extends DBSchema {
   };
 }
 
-const DB_NAME = "poznamkovac-webulohy-db";
+const DB_NAME = "poznamkovac-coding-db";
 const DB_VERSION = 1;
 const STORE_NAME = "challenge-data";
 

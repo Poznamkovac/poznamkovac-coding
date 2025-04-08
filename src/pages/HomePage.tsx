@@ -15,7 +15,7 @@ const HomePage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    fetch("/data/kategorie.json")
+    fetch("/data/categories.json")
       .then((response) => response.json())
       .then((data) => setCategories(data))
       .catch((error) => console.error("Chyba pri načítaní kategórií:", error));
@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
         {categories.map((category) => (
           <Link
             key={category.id}
-            to={`/ulohy/${category.id}`}
+            to={`/challenges/${category.id}`}
             className="flex flex-row items-center justify-start gap-4 px-6 py-4 font-bold text-white transition duration-300 rounded shadow hover:opacity-80"
             style={{ backgroundColor: category.farba }}
           >

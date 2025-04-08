@@ -66,10 +66,10 @@ export const createVirtualFileSystem = (
             filesMap.set(file.filename, { ...currentFile, content: storedContent });
           }
         } else if (categoryId !== "custom") {
-          // Only fetch from server for non-custom assignments
+          // Only fetch from server for non-custom challenges
           // Otherwise, fetch from the server
           try {
-            const response = await fetch(`/data/ulohy/${categoryId}/${challengeId}/files/${file.filename}`);
+            const response = await fetch(`/data/challenges/${categoryId}/${challengeId}/files/${file.filename}`);
             if (response.ok) {
               const content = await response.text();
               const currentFile = filesMap.get(file.filename);

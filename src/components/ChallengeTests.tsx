@@ -51,7 +51,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     onTestRun();
 
     try {
-      const testModule = await import(/* @vite-ignore */ `/data/ulohy/${categoryId}/${challengeId}/tests.js`);
+      const testModule = await import(/* @vite-ignore */ `/data/challenges/${categoryId}/${challengeId}/tests.js`);
       const tester = new testModule.default();
       const previewWindow = (document.getElementById("preview") as HTMLIFrameElement)?.contentWindow;
       previewWindow?.location.reload();
@@ -108,7 +108,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       const files = [""];
       for (const filename of files) {
         // Fetch the solution files
-        const response = await fetch(`/data/ulohy/${categoryId}/${challengeId}/solution/${filename}`);
+        const response = await fetch(`/data/challenges/${categoryId}/${challengeId}/solution/${filename}`);
         if (!response.ok) {
           console.error("Solution not available");
           return;
@@ -142,7 +142,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       {allTestsPassed && (
         <button
           onClick={() => {
-            window.location.hash = `#/ulohy/${categoryId}/${parseInt(challengeId, 10) + 1}`;
+            window.location.hash = `#/challenges/${categoryId}/${parseInt(challengeId, 10) + 1}`;
             window.location.reload();
           }}
           className="px-4 py-2 mt-4 ml-2 font-bold text-white bg-green-600 rounded hover:bg-green-700"

@@ -78,7 +78,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
       {Object.entries(challenges).map(([id, challenge]) => (
         <Link
           key={id}
-          to={`/ulohy/${categoryId}/${id}`}
+          to={`/challenges/${categoryId}/${id}`}
           className="p-6 transition duration-300 bg-blue-700 rounded-lg shadow-md hover:shadow-lg"
         >
           <h2 className="text-xl font-semibold">

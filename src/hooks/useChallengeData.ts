@@ -91,7 +91,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
     const loadChallengeData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/data/ulohy/${categoryId}/${challengeId}/assignment.json`);
+        const response = await fetch(`/data/challenges/${categoryId}/${challengeId}/assignment.json`);
         let data: ChallengeData = await response.json();
 
         // Handle legacy format if needed
@@ -129,7 +129,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
         setIsLoading(false);
       } catch (error) {
         console.error("Error loading challenge data:", error);
-        navigate(`/ulohy/${categoryId}`);
+        navigate(`/challenges/${categoryId}`);
       }
     };
 

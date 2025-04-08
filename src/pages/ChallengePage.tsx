@@ -85,7 +85,7 @@ const ChallengePage: React.FC = () => {
             <p className="mb-6" dangerouslySetInnerHTML={{ __html: challengeData.assignment }} />
             <div className="mb-6">
               <img
-                src={`/data/ulohy/${categoryId}/${challengeId}/obrazok.png`}
+                src={`/data/challenges/${categoryId}/${challengeId}/obrazok.png`}
                 alt="Assignment image"
                 className="h-auto max-w-full"
                 onError={(e) => e.currentTarget.remove()}

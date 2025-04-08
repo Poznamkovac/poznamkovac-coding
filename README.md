@@ -1,3 +1,3 @@
-# Poznámkovač Webúlohy
+# Poznámkovač Coding
 
-Zdrojový kód pre [Poznámkovač Webúlohy](https://webulohy.poznamkovac.eu).
+Zdrojový kód pre [Poznámkovač Coding](https://coding.poznamkovac.eu).

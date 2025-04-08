@@ -12,7 +12,7 @@ export const useFetchChallenges = (categoryId: string, currentPage: number) => {
   const fetchChallenge = useCallback(
     async (index: number): Promise<ChallengeData | null> => {
       try {
-        const response = await fetch(`/data/ulohy/${categoryId}/${index}/assignment.json`);
+        const response = await fetch(`/data/challenges/${categoryId}/${index}/assignment.json`);
         if (!response.ok) {
           return null;
         }
