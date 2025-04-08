@@ -1,0 +1,15 @@
+{
+    "title": "Jednoduchá funkcia",
+    "assignment": "Vytvor funkciu <code>hello</code> ktorá vráti text \"hello\".",
+    "maxScore": 1,
+    "previewType": "console",
+    "mainFile": "main.py",
+    "files": [
+        {
+            "filename": "main.py",
+            "autoreload": false,
+            "readonly": false,
+            "hidden": false
+        }
+    ]
+}
