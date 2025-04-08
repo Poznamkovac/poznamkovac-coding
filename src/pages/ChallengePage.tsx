@@ -77,7 +77,7 @@ const ChallengePage: React.FC = () => {
               {challengeData.title}
               {options.isScored && (
                 <span className="ml-2 text-xl font-normal">
-                  (Score: {currentScore} / {challengeData.maxScore})
+                  ({currentScore} / {challengeData.maxScore})
                 </span>
               )}
             </h2>

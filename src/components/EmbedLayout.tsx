@@ -12,17 +12,19 @@ interface EmbedLayoutProps {
 }
 
 const EmbedLayout: React.FC<EmbedLayoutProps> = ({ children, title, description, score, maxScore, options, className }) => {
+  const themeStyles = options.theme === "light" ? "bg-white text-gray-900" : "bg-black text-indigo-200";
+
   return (
-    <div className={`min-h-screen text-indigo-300 ${className || ""}`}>
+    <div className={`min-h-screen ${themeStyles} ${className || ""}`}>
       <main className="w-full">
         {options.showAssignment && title && (
-          <div className="px-4 py-1 bg-black/60">
-            <h2 className="my-2 text-2xl font-bold text-yellow-500">
+          <div className={`px-4 py-1 ${options.theme === "light" ? "bg-gray-100/60" : "bg-black/60"}`}>
+            <h2 className={`my-2 text-2xl font-bold ${options.theme === "light" ? "text-orange-600" : "text-yellow-400"}`}>
               {options.isScored && score === maxScore && "✅ "}
               {title}
               {options.isScored && maxScore !== undefined && (
                 <span className="ml-2 text-xl font-normal">
-                  (Score: {score ?? 0} / {maxScore})
+                  ({score ?? 0} / {maxScore})
                 </span>
               )}
             </h2>
@@ -34,7 +36,7 @@ const EmbedLayout: React.FC<EmbedLayoutProps> = ({ children, title, description,
       <style>
         {`
           :root {
-            color-scheme: unset !important;
+            color-scheme: ${options.theme === "light" ? "light" : "dark"} !important;
           }
         `}
       </style>

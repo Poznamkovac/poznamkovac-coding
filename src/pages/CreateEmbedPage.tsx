@@ -151,6 +151,7 @@ const CreateEmbedPage: React.FC = () => {
       if (!displayOptions.isScored) queryParams.append("isScored", "false");
       if (!displayOptions.showEditors) queryParams.append("showEditors", "false");
       if (!displayOptions.showPreview) queryParams.append("showPreview", "false");
+      if (displayOptions.theme === "light") queryParams.append("theme", "light");
 
       const embedUrl = `${window.location.origin}/#/embed/custom?${queryParams.toString()}`;
       const fullUrl = `/#/embed/custom?${queryParams.toString()}`;
@@ -158,7 +159,7 @@ const CreateEmbedPage: React.FC = () => {
       setFullEmbedUrl(fullUrl);
       setFullEditUrl(editUrl);
 
-      const iframeHtml = `<iframe allowtransparency="true" src="${embedUrl}" style="width: 100%; height: 850px; border: none; background: transparent;"></iframe>`;
+      const iframeHtml = `<iframe src="${embedUrl}" style="width: 100%; height: 850px; border: none;"></iframe>`;
 
       setIframeCode(iframeHtml);
     } catch (error) {
@@ -400,6 +401,24 @@ const CreateEmbedPage: React.FC = () => {
                 className="mr-2"
               />
               Show preview
+            </label>
+          </div>
+
+          <div className="mb-3">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                name="theme"
+                checked={displayOptions.theme === "light"}
+                onChange={(e) =>
+                  setDisplayOptions((prev) => ({
+                    ...prev,
+                    theme: e.target.checked ? "light" : "dark",
+                  }))
+                }
+                className="mr-2"
+              />
+              Light theme (default is dark)
             </label>
           </div>
         </div>

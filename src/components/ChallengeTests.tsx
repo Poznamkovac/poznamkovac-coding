@@ -136,7 +136,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
           needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
-        {needsTestRun ? "🔄 Run Tests (changes need testing)" : allTestsPassed ? "🔁 Try Again" : "⏯️ Run Tests"}
+        {needsTestRun ? "🔄" : allTestsPassed ? "🔁" : "⏯️"}
       </button>
 
       {allTestsPassed && (

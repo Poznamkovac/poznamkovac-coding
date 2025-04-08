@@ -6,6 +6,7 @@ export interface EmbedOptions {
   isScored: boolean;
   showEditors: boolean;
   showPreview: boolean;
+  theme: "light" | "dark";
 }
 
 export const DEFAULT_OPTIONS: EmbedOptions = {
@@ -14,6 +15,7 @@ export const DEFAULT_OPTIONS: EmbedOptions = {
   isScored: true,
   showEditors: true,
   showPreview: true,
+  theme: "dark",
 };
 
 // Custom data can contain arbitrary JSON data
@@ -54,6 +56,7 @@ export function useQueryParams(): {
     isScored: searchParams.get("isScored") !== "false",
     showEditors: searchParams.get("showEditors") !== "false",
     showPreview: searchParams.get("showPreview") !== "false",
+    theme: searchParams.get("theme") === "light" ? "light" : "dark",
   };
 
   // Parse custom data (if any)

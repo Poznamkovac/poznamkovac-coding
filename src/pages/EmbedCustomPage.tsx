@@ -216,7 +216,7 @@ const EmbedCustomPage: React.FC = () => {
                     needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"
                   }`}
                 >
-                  {needsTestRun ? "🔄 Run Tests (changes need testing)" : "⏯️ Run Tests"}
+                  {needsTestRun ? "🔄" : "⏯️"}
                 </button>
 
                 <div className="mt-4">
@@ -255,7 +255,7 @@ const EmbedCustomPage: React.FC = () => {
                   needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
-                {needsTestRun ? "🔄 Run Tests (changes need testing)" : "⏯️ Run Tests"}
+                {needsTestRun ? "🔄" : "⏯️"}
               </button>
 
               <div className="mt-4">
