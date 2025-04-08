@@ -168,7 +168,7 @@ const EmbedCustomPage: React.FC = () => {
 
   if (!fileSystem || !assignmentData) {
     return (
-      <div className="min-h-screen text-white bg-gray-900">
+      <div className="min-h-screen text-white">
         <div className="container p-4 mx-auto">
           <h2 className="text-xl font-bold">Error Loading Custom Assignment</h2>
           <p>
@@ -192,6 +192,7 @@ const EmbedCustomPage: React.FC = () => {
       score={currentScore}
       maxScore={assignmentData.maxScore}
       options={options}
+      className="bg-transparent"
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {options.showEditors && (

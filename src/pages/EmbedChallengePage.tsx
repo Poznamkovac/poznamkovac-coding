@@ -73,6 +73,7 @@ const EmbedChallengePage: React.FC = () => {
       score={currentScore}
       maxScore={challengeData.maxScore}
       options={options}
+      className="bg-transparent"
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {options.showEditors && (

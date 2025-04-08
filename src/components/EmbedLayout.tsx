@@ -8,15 +8,16 @@ interface EmbedLayoutProps {
   score?: number;
   maxScore?: number;
   options: EmbedOptions;
+  className?: string;
 }
 
-const EmbedLayout: React.FC<EmbedLayoutProps> = ({ children, title, description, score, maxScore, options }) => {
+const EmbedLayout: React.FC<EmbedLayoutProps> = ({ children, title, description, score, maxScore, options, className }) => {
   return (
-    <div className="min-h-screen text-white bg-gray-900">
-      <main className="container p-4 mx-auto">
+    <div className={`min-h-screen text-indigo-300 ${className || ""}`}>
+      <main className="w-full">
         {options.showAssignment && title && (
-          <div className="mb-4">
-            <h2 className="my-2 text-2xl font-bold">
+          <div className="px-4 py-1 mb-4 rounded-lg bg-black/60">
+            <h2 className="my-2 text-2xl font-bold text-yellow-500">
               {options.isScored && score === maxScore && "✅ "}
               {title}
               {options.isScored && maxScore !== undefined && (
@@ -30,6 +31,13 @@ const EmbedLayout: React.FC<EmbedLayoutProps> = ({ children, title, description,
         )}
         {children}
       </main>
+      <style>
+        {`
+          :root {
+            color-scheme: unset !important;
+          }
+        `}
+      </style>
     </div>
   );
 };

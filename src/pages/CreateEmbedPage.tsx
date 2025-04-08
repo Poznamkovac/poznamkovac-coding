@@ -147,7 +147,7 @@ const CreateEmbedPage: React.FC = () => {
       if (!displayOptions.showEditors) queryParams.append("showEditors", "false");
 
       const embedUrl = `${window.location.origin}/#/embed/custom?${queryParams.toString()}`;
-      const iframeHtml = `<iframe src="${embedUrl}" style="width: 100%; height: 600px; border: none;"></iframe>`;
+      const iframeHtml = `<iframe allowtransparency="true" src="${embedUrl}" style="width: 100%; height: 600px; border: none; background: transparent;"></iframe>`;
 
       setIframeCode(iframeHtml);
     } catch (error) {

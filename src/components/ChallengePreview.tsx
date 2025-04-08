@@ -244,7 +244,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
           </button>
         )}
       </div>
-      <div className="flex-1 min-h-0 p-4 overflow-auto bg-white border border-gray-700">
+      <div className="flex-1 min-h-0 overflow-auto bg-white border border-gray-700">
         <iframe ref={iframeRef} id="preview" title="preview" className="w-full h-full" />
       </div>
     </div>
