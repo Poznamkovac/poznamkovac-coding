@@ -150,6 +150,7 @@ const CreateEmbedPage: React.FC = () => {
       if (!displayOptions.showAssignment) queryParams.append("showAssignment", "false");
       if (!displayOptions.isScored) queryParams.append("isScored", "false");
       if (!displayOptions.showEditors) queryParams.append("showEditors", "false");
+      if (!displayOptions.showPreview) queryParams.append("showPreview", "false");
 
       const embedUrl = `${window.location.origin}/#/embed/custom?${queryParams.toString()}`;
       const iframeHtml = `<iframe allowtransparency="true" src="${embedUrl}" style="width: 100%; height: 600px; border: none; background: transparent;"></iframe>`;
@@ -381,6 +382,19 @@ const CreateEmbedPage: React.FC = () => {
                 className="mr-2"
               />
               Show code editors
+            </label>
+          </div>
+
+          <div className="mb-3">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                name="showPreview"
+                checked={displayOptions.showPreview}
+                onChange={handleOptionChange}
+                className="mr-2"
+              />
+              Show preview
             </label>
           </div>
         </div>

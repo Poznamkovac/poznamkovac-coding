@@ -5,6 +5,7 @@ export interface EmbedOptions {
   showAssignment: boolean;
   isScored: boolean;
   showEditors: boolean;
+  showPreview: boolean;
 }
 
 export const DEFAULT_OPTIONS: EmbedOptions = {
@@ -12,6 +13,7 @@ export const DEFAULT_OPTIONS: EmbedOptions = {
   showAssignment: true,
   isScored: true,
   showEditors: true,
+  showPreview: true,
 };
 
 // Custom data can contain arbitrary JSON data
@@ -51,6 +53,7 @@ export function useQueryParams(): {
     showAssignment: searchParams.get("showAssignment") !== "false",
     isScored: searchParams.get("isScored") !== "false",
     showEditors: searchParams.get("showEditors") !== "false",
+    showPreview: searchParams.get("showPreview") !== "false",
   };
 
   // Parse custom data (if any)

@@ -79,26 +79,38 @@ const EmbedChallengePage: React.FC = () => {
         {options.showEditors && (
           <div className="flex flex-col h-[500px]">
             <ChallengeIDE fileSystem={fileSystem} />
+
+            {options.isScored && !options.showPreview && (
+              <ChallengeTests
+                categoryId={categoryId!}
+                challengeId={challengeId!}
+                maxScore={challengeData.maxScore}
+                onTestRun={handleTestRun}
+                needsTestRun={needsTestRun}
+              />
+            )}
           </div>
         )}
 
-        <div className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}>
-          <ChallengePreview
-            fileSystem={fileSystem}
-            mainFile={challengeData.mainFile}
-            previewType={challengeData.previewType}
-            autoReload={options.autoReload}
-          />
-          {options.isScored && (
-            <ChallengeTests
-              categoryId={categoryId!}
-              challengeId={challengeId!}
-              maxScore={challengeData.maxScore}
-              onTestRun={handleTestRun}
-              needsTestRun={needsTestRun}
+        {options.showPreview && (
+          <div className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}>
+            <ChallengePreview
+              fileSystem={fileSystem}
+              mainFile={challengeData.mainFile}
+              previewType={challengeData.previewType}
+              autoReload={options.autoReload}
             />
-          )}
-        </div>
+            {options.isScored && (
+              <ChallengeTests
+                categoryId={categoryId!}
+                challengeId={challengeId!}
+                maxScore={challengeData.maxScore}
+                onTestRun={handleTestRun}
+                needsTestRun={needsTestRun}
+              />
+            )}
+          </div>
+        )}
       </div>
     </EmbedLayout>
   );
