@@ -64,7 +64,7 @@ const ChallengePage: React.FC = () => {
     setNeedsTestRun(false);
   };
 
-  if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>Loading...</div>;
+  if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>⌛️...</div>;
 
   return (
     <div className="min-h-screen text-white">
@@ -120,6 +120,8 @@ const ChallengePage: React.FC = () => {
                 maxScore={challengeData.maxScore}
                 onTestRun={handleTestRun}
                 needsTestRun={needsTestRun}
+                files={challengeData.files}
+                readonlyFiles={challengeData.readonly}
               />
             )}
           </div>

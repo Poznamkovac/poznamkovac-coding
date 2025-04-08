@@ -10,6 +10,13 @@ interface ChallengeTestsProps {
   maxScore: number;
   needsTestRun?: boolean;
   onTestRun?: () => void;
+  files?: string[];
+  readonlyFiles?: string[];
+}
+
+interface SolutionFile {
+  name: string;
+  content: string;
 }
 
 const ChallengeTests: React.FC<ChallengeTestsProps> = ({
@@ -18,6 +25,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   maxScore,
   needsTestRun = false,
   onTestRun = () => {},
+  files,
+  readonlyFiles,
 }) => {
   const [testResults, setTestResults] = useState<Array<{ name: string; result: Test }>>([]);
   const [currentScore, setCurrentScore] = useState<number>(0);
@@ -25,6 +34,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [failedAttempts, setFailedAttempts] = useState<number>(0);
   const [showSolution, setShowSolution] = useState<boolean>(false);
+  const [solutionFiles, setSolutionFiles] = useState<SolutionFile[]>([]);
+  const [solutionError, setSolutionError] = useState<string | null>(null);
 
   useEffect(() => {
     // Load score from IndexedDB
@@ -103,29 +114,68 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
 
   const loadSolution = async () => {
     try {
-      // TODO: fetch file list for the assignment from the assignment.json metadata: ['index.html', 'index.js']
-      // show files that have OK response and aren't hidden or readonly, if no files, display text "No solutions available."
-      const files = [""];
-      for (const filename of files) {
-        // Fetch the solution files
-        const response = await fetch(`/data/challenges/${categoryId}/${challengeId}/solution/${filename}`);
-        if (!response.ok) {
-          console.error("Solution not available");
+      // Use files from props if available, otherwise attempt to fetch
+      let filesList: string[] = [];
+      let readonlyList: string[] = [];
+
+      if (files && files.length > 0) {
+        filesList = files;
+        readonlyList = readonlyFiles || [];
+      } else {
+        // Fallback to fetching assignment.json if files aren't provided
+        const metadataResponse = await fetch(`/data/challenges/${categoryId}/${challengeId}/assignment.json`);
+        if (!metadataResponse.ok) {
+          setSolutionError("Assignment metadata not available");
+          setShowSolution(true);
           return;
         }
 
-        // Use the solution content to set the display state
-        await response.text(); // Fetching the content but not using it yet
-        setShowSolution(true);
-        // TODO: display contents of solution files
+        const metadata = await metadataResponse.json();
+        filesList = metadata.files || [];
+        readonlyList = metadata.readonly || [];
       }
+
+      if (filesList.length === 0) {
+        setSolutionError("No solution files defined for this challenge");
+        setShowSolution(true);
+        return;
+      }
+
+      const loadedFiles: SolutionFile[] = [];
+
+      for (const filename of filesList) {
+        // Skip hidden or readonly files
+        if (filename.startsWith(".") || readonlyList.includes(filename)) {
+          continue;
+        }
+
+        // Fetch the solution files
+        const response = await fetch(`/data/challenges/${categoryId}/${challengeId}/solution/${filename}`);
+        if (!response.ok) {
+          continue; // Skip files that don't have solutions
+        }
+
+        // Store the solution content
+        const content = await response.text();
+        loadedFiles.push({ name: filename, content });
+      }
+
+      if (loadedFiles.length === 0) {
+        setSolutionError("No solutions available.");
+      } else {
+        setSolutionFiles(loadedFiles);
+      }
+
+      setShowSolution(true);
     } catch (error) {
       console.error("Error loading solutions:", error);
+      setSolutionError("Error loading solutions");
+      setShowSolution(true);
     }
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>⌛️...</div>;
   }
 
   return (
@@ -185,7 +235,18 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
             yourself.
           </p>
 
-          {/* TODO: display contents of solution files */}
+          {solutionError ? (
+            <div className="mt-2 text-yellow-300">{solutionError}</div>
+          ) : (
+            solutionFiles.map((file) => (
+              <div key={file.name} className="mt-4">
+                <div className="mb-1 font-semibold text-yellow-300">{file.name}</div>
+                <pre className="p-3 overflow-auto text-sm bg-gray-900 rounded">
+                  <code>{file.content}</code>
+                </pre>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>

@@ -64,7 +64,7 @@ const EmbedChallengePage: React.FC = () => {
     setNeedsTestRun(false);
   };
 
-  if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>Loading...</div>;
+  if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>⌛️...</div>;
 
   return (
     <EmbedLayout
