@@ -8,9 +8,10 @@ interface ChallengePreviewProps {
   mainFile: string;
   previewType: string;
   autoReload?: boolean;
+  hidden: boolean;
 }
 
-const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFile, autoReload = true }) => {
+const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFile, autoReload = true, hidden = false }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [needsManualReload, setNeedsManualReload] = useState(false);
   const [shouldRefreshPreview, setShouldRefreshPreview] = useState(false);
@@ -235,7 +236,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
   };
 
   return (
-    <div className="flex flex-col flex-1 mb-4">
+    <div className={`flex flex-col flex-1 mb-4 ${hidden ? "hidden" : ""}`}>
       <div className="flex items-center mb-1">
         <h2 className="flex-grow text-xl font-semibold">Preview</h2>
         {needsManualReload && (

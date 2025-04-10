@@ -10,82 +10,6 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Handle legacy code format for backward compatibility
-    const processLegacyCode = (data: ChallengeData) => {
-      if (!data.pociatocnyKod) return data;
-
-      const files: ChallengeData["files"] = [];
-
-      // Convert HTML file
-      if (data.pociatocnyKod.html) {
-        let content = "";
-        let readonly = false;
-
-        if (Array.isArray(data.pociatocnyKod.html)) {
-          content = data.pociatocnyKod.html[0] || "";
-          readonly = data.pociatocnyKod.html.length > 1 ? !!data.pociatocnyKod.html[1] : false;
-        } else {
-          content = data.pociatocnyKod.html;
-        }
-
-        files.push({
-          filename: "index.html",
-          readonly,
-          hidden: false,
-          autoreload: true,
-          content,
-        });
-      }
-
-      // Convert CSS file
-      if (data.pociatocnyKod.css) {
-        let content = "";
-        let readonly = false;
-
-        if (Array.isArray(data.pociatocnyKod.css)) {
-          content = data.pociatocnyKod.css[0] || "";
-          readonly = data.pociatocnyKod.css.length > 1 ? !!data.pociatocnyKod.css[1] : false;
-        } else {
-          content = data.pociatocnyKod.css;
-        }
-
-        files.push({
-          filename: "style.css",
-          readonly,
-          hidden: false,
-          autoreload: true,
-          content,
-        });
-      }
-
-      // Convert JS file
-      if (data.pociatocnyKod.js) {
-        let content = "";
-        let readonly = false;
-
-        if (Array.isArray(data.pociatocnyKod.js)) {
-          content = data.pociatocnyKod.js[0] || "";
-          readonly = data.pociatocnyKod.js.length > 1 ? !!data.pociatocnyKod.js[1] : false;
-        } else {
-          content = data.pociatocnyKod.js;
-        }
-
-        files.push({
-          filename: "script.js",
-          readonly,
-          hidden: false,
-          autoreload: true,
-          content,
-        });
-      }
-
-      return {
-        ...data,
-        files,
-        previewType: "html",
-        mainFile: "index.html",
-      };
-    };
 
     // Load challenge data
     const loadChallengeData = async () => {
@@ -93,11 +17,6 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
       try {
         const response = await fetch(`/data/challenges/${categoryId}/${challengeId}/assignment.json`);
         let data: ChallengeData = await response.json();
-
-        // Handle legacy format if needed
-        if (!data.files || data.files.length === 0) {
-          data = processLegacyCode(data);
-        }
 
         // Set defaults if properties are missing
         if (!data.previewType) {

@@ -36,6 +36,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   const [showSolution, setShowSolution] = useState<boolean>(false);
   const [solutionFiles, setSolutionFiles] = useState<SolutionFile[]>([]);
   const [solutionError, setSolutionError] = useState<string | null>(null);
+  const [solutionLoaded, setSolutionLoaded] = useState<boolean>(false);
 
   useEffect(() => {
     // Load score from IndexedDB
@@ -126,7 +127,6 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         const metadataResponse = await fetch(`/data/challenges/${categoryId}/${challengeId}/assignment.json`);
         if (!metadataResponse.ok) {
           setSolutionError("Assignment metadata not available");
-          setShowSolution(true);
           return;
         }
 
@@ -137,7 +137,6 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
 
       if (filesList.length === 0) {
         setSolutionError("No solution files defined for this challenge");
-        setShowSolution(true);
         return;
       }
 
@@ -166,12 +165,18 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         setSolutionFiles(loadedFiles);
       }
 
-      setShowSolution(true);
+      setSolutionLoaded(true);
     } catch (error) {
       console.error("Error loading solutions:", error);
       setSolutionError("Error loading solutions");
-      setShowSolution(true);
     }
+  };
+
+  const toggleSolution = async () => {
+    if (!solutionLoaded) {
+      await loadSolution();
+    }
+    setShowSolution((prev) => !prev);
   };
 
   if (isLoading) {
@@ -197,16 +202,16 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
           }}
           className="px-4 py-2 mt-4 ml-2 font-bold text-white bg-green-600 rounded hover:bg-green-700"
         >
-          Next Challenge
+          ➡️
         </button>
       )}
 
       {failedAttempts >= 5 && (
         <button
-          onClick={loadSolution}
+          onClick={toggleSolution}
           className="px-4 py-2 mt-4 ml-2 font-bold text-white bg-yellow-600 rounded hover:bg-yellow-700"
         >
-          Show Solution
+          💡
         </button>
       )}
 
@@ -216,7 +221,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
             <b>
               {result.detaily_ok ? "✓" : "✗"} {name}
             </b>
-            {result.detaily_ok ? ` - ok!` : ` - failed!`}
+            {result.detaily_ok ? ` - ok!` : ` - fail!`}
             <br />
 
             <span className="text-sm text-gray-300 font-italic">
@@ -229,21 +234,25 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
 
       {showSolution && (
         <div className="p-4 mt-4 bg-yellow-800 rounded">
-          <h3 className="mb-2 font-bold">Solution</h3>
-          <p>
-            Here's how this challenge can be solved. Study the solution to understand the concepts, then try implementing it
-            yourself.
-          </p>
-
+          <h3 className="mb-2 font-bold">👀</h3>
           {solutionError ? (
             <div className="mt-2 text-yellow-300">{solutionError}</div>
           ) : (
             solutionFiles.map((file) => (
               <div key={file.name} className="mt-4">
-                <div className="mb-1 font-semibold text-yellow-300">{file.name}</div>
-                <pre className="p-3 overflow-auto text-sm bg-gray-900 rounded">
-                  <code>{file.content}</code>
-                </pre>
+                <div className="flex items-center gap-4 mb-2">
+                  <button
+                    title="Copy to clipboard"
+                    className="px-1 mb-1 text-lg font-semibold text-yellow-300 bg-yellow-500 rounded-lg hover:bg-yellow-600 active:bg-yellow-700"
+                    onClick={() => {
+                      navigator.clipboard.writeText(file.content);
+                    }}
+                  >
+                    📋
+                  </button>
+                  <div className="mb-1 font-semibold text-yellow-300">{file.name}:</div>
+                </div>
+                <pre className="p-3 overflow-auto text-sm bg-gray-900 rounded">{file.content}</pre>
               </div>
             ))
           )}

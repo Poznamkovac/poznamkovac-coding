@@ -4,7 +4,6 @@ import { library } from "@fortawesome/fontawesome-svg-core";
 import { faHtml5, faCss3, faJs } from "@fortawesome/free-brands-svg-icons";
 
 import Header from "./components/Header";
-import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
 import CategoryPage from "./pages/CategoryPage";
 import ChallengePage from "./pages/ChallengePage";
@@ -18,12 +17,12 @@ function App() {
   return (
     <HashRouter>
       <Routes>
-        {/* Embed routes without header and footer */}
+        {/* Embed routes without header */}
         <Route path="/embed/:categoryId/:challengeId" element={<EmbedChallengePage />} />
         <Route path="/embed/custom" element={<EmbedCustomPage />} />
         <Route path="/embed/create" element={<CreateEmbedPage />} />
 
-        {/* Regular routes with header and footer */}
+        {/* Regular routes with header */}
         <Route
           path="*"
           element={
@@ -36,7 +35,6 @@ function App() {
                   <Route path="/challenges/:categoryId/:challengeId" element={<ChallengePage />} />
                 </Routes>
               </main>
-              <Footer />
             </div>
           }
         />

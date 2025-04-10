@@ -1,15 +1,16 @@
 {
-    "title": "Jednoduchá funkcia",
-    "assignment": "Vytvor funkciu <code>hello</code> ktorá vráti text \"hello\".",
+    "title": "Bubble Sort",
+    "assignment": "Implementuj Bubble Sort algoritmus pre pole čísiel. Funkcia <code>bubblesort</code> musí akceptovať dva argumenty – jeden pre pole a jeden pre režim (<code>false</code> = vzostupný, <code>true</code> = zostupný). Funkcia musí vrátiť usporiadané pole čísiel.",
     "maxScore": 1,
     "previewType": "html",
+    "showPreview": false,
     "mainFile": "index.html",
     "files": [
         {
             "filename": "index.html",
-            "autoreload": true,
-            "readonly": false,
-            "hidden": false
+            "autoreload": false,
+            "readonly": true,
+            "hidden": true
         },
         {
             "filename": "index.js",

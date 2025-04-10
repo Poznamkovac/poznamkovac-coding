@@ -40,6 +40,7 @@ const EmbedCustomPage: React.FC = () => {
         title: "Custom Assignment",
         assignment: "Custom assignment loaded from URL",
         maxScore: 0,
+        showPreview: true,
         previewType: "html",
         mainFile: "index.html",
         files: [],
@@ -236,15 +237,14 @@ const EmbedCustomPage: React.FC = () => {
         )}
 
         <div
-          className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""} ${
-            !options.showPreview ? "hidden" : ""
-          }`}
+          className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}
         >
           <ChallengePreview
             fileSystem={fileSystem}
             mainFile={assignmentData.mainFile}
             previewType={assignmentData.previewType}
             autoReload={options.autoReload}
+            hidden={!options.showPreview}
           />
 
           {options.isScored && (

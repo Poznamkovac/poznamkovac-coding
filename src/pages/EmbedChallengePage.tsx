@@ -93,15 +93,14 @@ const EmbedChallengePage: React.FC = () => {
         )}
 
         <div
-          className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""} ${
-            !options.showPreview ? "hidden" : ""
-          }`}
+          className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}
         >
           <ChallengePreview
             fileSystem={fileSystem}
             mainFile={challengeData.mainFile}
             previewType={challengeData.previewType}
             autoReload={options.autoReload}
+            hidden={!options.showPreview}
           />
           {options.isScored && (
             <ChallengeTests

@@ -18,27 +18,11 @@ export interface ChallengeData {
   maxScore: number;
   /** Type of preview to use: "html", "console", etc. */
   previewType: string;
+  /** Whether or not to show the preview. */
+  showPreview: boolean;
   /** The main file to execute or display in preview */
   mainFile: string;
   files: ChallengeFile[];
-  // Keep for backward compatibility, will be removed later
-  pociatocnyKod?: {
-    /**
-     * Počiatočný HTML kód editora. Ak je `null`, editor sa nezobrazí.
-     * Prvý element je kód, druhý element je, či je editor read-only.
-     */
-    html?: string | string[];
-    /**
-     * Počiatočný CSS kód editora. Ak je `null`, editor sa nezobrazí.
-     * Prvý element je kód, druhý element je, či je editor read-only.
-     */
-    css?: string | string[];
-    /**
-     * Počiatočný JavaScript kód editora. Ak je `null`, editor sa nezobrazí.
-     * Prvý element je kód, druhý element je, či je editor read-only.
-     */
-    js?: string | string[];
-  };
 }
 
 /**
