@@ -265,6 +265,11 @@ function previewTemplate(mainFile, fileSystem) {
       } catch (error) {
         console.error('Execution error:', error.message);
       }
+
+      // Signal to parent window that the preview is ready for testing
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'PREVIEW_READY', language: 'javascript' }, '*');
+      }
     </script>
   </body>
 </html>

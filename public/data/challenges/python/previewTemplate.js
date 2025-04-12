@@ -5,32 +5,34 @@
  * @returns {string} - HTML content to render in the preview iframe with Python execution via Pyodide
  */
 function previewTemplate(mainFile, fileSystem) {
-  // Get all Python files and their content
-  const pyFiles = Array.from(fileSystem.files.values())
-    .filter(file => file.filename.endsWith('.py'))
+  // Get all files and their content
+  const allFiles = Array.from(fileSystem.files.values())
     .reduce((acc, file) => {
       acc[file.filename] = file.content || '';
       return acc;
     }, {});
 
-  // Escape Python content to prevent HTML parsing issues
-  const escapePy = (py) => {
-    return py
+  // Escape content to prevent HTML parsing issues
+  const escapeContent = (content) => {
+    return content
       .replace(/\\/g, "\\\\")
       .replace(/`/g, "\\`")
       .replace(/\${/g, "\\${");
   };
 
-  // Create a string representation of the Python files object
-  const pyFilesStr = Object.entries(pyFiles)
-    .map(([filename, content]) => `"${filename}": \`${escapePy(content || '')}\``)
+  // Create a string representation of the files object
+  const filesStr = Object.entries(allFiles)
+    .map(([filename, content]) => `"${filename}": \`${escapeContent(content || '')}\``)
     .join(',\n');
+
+  // Get Python files for import path setup
+  const pyFiles = Object.keys(allFiles).filter(file => file.endsWith('.py'));
 
   // Normalize the main file path for Python
   const normalizedMainFile = mainFile.replace(/\\/g, '/');
 
   // Pre-process file directories to avoid scope issues
-  const pythonFilePaths = Object.keys(pyFiles).map(filename => {
+  const pythonFilePaths = pyFiles.map(filename => {
     const normalizedPath = filename.replace(/\\/g, '/');
     const dirParts = normalizedPath.split('/');
     const dir = dirParts.length > 1 ? dirParts.slice(0, -1).join('/') : '';
@@ -61,35 +63,49 @@ function previewTemplate(mainFile, fileSystem) {
     <title>Python Execution</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
     <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
       body {
         font-family: monospace;
-        padding: 1rem;
-        margin: 0;
+        background-color: #000;
+        color: #f0f0f0;
+        display: flex;
+        flex-direction: column;
       }
       #loader {
         display: flex;
         align-items: center;
         justify-content: center;
         flex-direction: column;
-        margin-bottom: 20px;
+        margin: 20px;
+        height: 100%;
       }
       #console {
-        border: 1px solid #ccc;
-        background-color: #f5f5f5;
-        border-radius: 4px;
-        padding: 10px;
         width: 100%;
-        min-height: 200px;
-        max-height: 100%;
+        height: 100%;
         overflow: auto;
-        margin-top: 10px;
+        padding: 10px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+      }
+      #stdout, #stderr {
         white-space: pre-wrap;
+        font-family: 'Courier New', monospace;
+        line-height: 1.4;
+      }
+      #stderr {
+        color: #ff5555;
       }
       .spinner {
         width: 40px;
         height: 40px;
-        border: 4px solid rgba(0, 0, 0, 0.1);
-        border-left-color: #155e75;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-left-color: #0f0;
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin-bottom: 10px;
@@ -100,33 +116,35 @@ function previewTemplate(mainFile, fileSystem) {
     </style>
   </head>
   <body>
-    <h3>Python Output</h3>
     <div id="loader">
       <div class="spinner"></div>
       <p>Loading Pyodide...</p>
     </div>
-    <div id="console"></div>
+    <div id="console">
+      <div id="stdout"></div>
+      <div id="stderr"></div>
+    </div>
     
     <script>
-      // Initialize the virtual file system with all Python files
+      // Initialize the virtual file system with all files
       const files = {
-        ${pyFilesStr}
+        ${filesStr}
       };
       
       // The normalized main file path - defined before evaluation
       const mainFilePath = "${normalizedMainFile}";
       
-      // Set up a virtual console that writes to our console div
-      const consoleOutput = document.getElementById('console');
+      // Set up outputs for stdout and stderr
+      const stdout = document.getElementById('stdout');
+      const stderr = document.getElementById('stderr');
       const loader = document.getElementById('loader');
       
       // Function to add output to the console
-      function addOutput(text, isError = false) {
-        const line = document.createElement('div');
+      function addOutput(text, stream) {
+        const outputElement = document.getElementById(stream);
+        const line = document.createElement('span');
         line.textContent = text;
-        line.style.color = isError ? '#f44336' : '#333';
-        line.style.margin = '2px 0';
-        consoleOutput.appendChild(line);
+        outputElement.appendChild(line);
       }
       
       // Flag to indicate when Pyodide is ready
@@ -155,18 +173,18 @@ function previewTemplate(mainFile, fileSystem) {
             import io
             
             class CaptureIO(io.StringIO):
-                def __init__(self, is_stderr=False):
+                def __init__(self, stream_name):
                     super().__init__()
-                    self.is_stderr = is_stderr
+                    self.stream_name = stream_name
                 
                 def write(self, text):
                     super().write(text)
-                    # Send output to JS
+                    # Send output to JS with stream information
                     from js import addOutput
-                    addOutput(text, self.is_stderr)
+                    addOutput(text, self.stream_name)
             
-            sys.stdout = CaptureIO(is_stderr=False)
-            sys.stderr = CaptureIO(is_stderr=True)
+            sys.stdout = CaptureIO('stdout')
+            sys.stderr = CaptureIO('stderr')
             
             # Set up import paths for modules
             import sys
@@ -175,35 +193,28 @@ function previewTemplate(mainFile, fileSystem) {
           
           // Create a Python virtual filesystem and load all files
           for (const [filename, content] of Object.entries(files)) {
-            if (filename.endsWith('.py')) {
-              // Create file in Pyodide filesystem
-              const pyodideFilename = filename.replace(/\\\\/g, '/');
-              window.pyodide.FS.writeFile(pyodideFilename, content);
-            }
+            // Create file in Pyodide filesystem
+            const pyodideFilename = filename.replace(/\\\\/g, '/');
+            window.pyodide.FS.writeFile(pyodideFilename, content);
           }
           
           // Execute the main Python file
           if (files[mainFilePath]) {
-            addOutput(\`Running \${mainFilePath}...\n\`);
-            
             try {
               // Run the main script
               window.pyodide.runPython(files[mainFilePath]);
-              
-              // Mark execution as completed
-              addOutput('\\nExecution completed');
             } catch (error) {
               // Handle Python execution errors
-              addOutput(\`\\nError: \${error.message}\`, true);
+              addOutput(\`\${error.message}\`, 'stderr');
               console.error(error);
             }
           } else {
-            addOutput(\`Error: Main file "\${mainFilePath}" not found\`, true);
+            addOutput(\`Error: Main file "\${mainFilePath}" not found\`, 'stderr');
           }
         } catch (error) {
           // Handle Pyodide loading errors
           loader.style.display = 'none';
-          addOutput(\`Failed to initialize Python environment: \${error.message}\`, true);
+          addOutput(\`Failed to initialize Python environment: \${error.message}\`, 'stderr');
           console.error('Pyodide initialization error:', error);
         } finally {
           // Notify that we're ready for tests
@@ -220,4 +231,4 @@ function previewTemplate(mainFile, fileSystem) {
 }
 
 // Export using CommonJS style
-exports.default = previewTemplate; 
+exports.default = previewTemplate;
