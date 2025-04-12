@@ -13,7 +13,34 @@ interface ChallengePreviewProps {
   onIframeLoad?: (api: { forceReload: () => Promise<void> }) => void;
 }
 
-const PLACEHOLDER_HTML = `
+// Create dynamic placeholder HTML based on previewType
+const getPlaceholderHTML = (previewType: string) => {
+  // Customize message based on language
+  let languageSpecificMessage = "";
+  let title = "Run Your Code";
+
+  switch (previewType.toLowerCase()) {
+    case "python":
+      title = "Python Code Ready";
+      languageSpecificMessage = `
+        <p>Your Python code will be executed when you click the "Reload" button or run tests.</p>
+        <p class="tech-note">Python code runs in the browser using <a href="https://pyodide.org" target="_blank">Pyodide</a>.</p>
+      `;
+      break;
+    case "js":
+    case "javascript":
+      title = "JavaScript Code Ready";
+      languageSpecificMessage = `
+        <p>Your JavaScript code will be executed when you click the "Reload" button or run tests.</p>
+      `;
+      break;
+    default:
+      languageSpecificMessage = `
+        <p>Auto-reload is disabled for this type of file. Click the "Reload" button above or the "Run Tests" button below when you're ready to see your changes.</p>
+      `;
+  }
+
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -42,6 +69,14 @@ const PLACEHOLDER_HTML = `
       margin-bottom: 1rem;
       color: #666;
     }
+    .tech-note {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 1rem;
+    }
+    .tech-note a {
+      color: #3b82f6;
+    }
     .buttons {
       display: flex;
       gap: 8px;
@@ -64,17 +99,13 @@ const PLACEHOLDER_HTML = `
 <body>
   <div class="message">
     <div class="reload-icon">🔄</div>
-    <h3>Run Your Code</h3>
-    <p>Auto-reload is disabled for this type of file. Click the "Reload" button above or the "Run Tests" button below when you're ready to see your changes.</p>
-    <div class="buttons">
-      <button class="button" onclick="window.parent.document.querySelector('.preview-reload-button')?.click()">
-        Reload Preview
-      </button>
-    </div>
+    <h3>${title}</h3>
+    ${languageSpecificMessage}
   </div>
 </body>
 </html>
-`;
+  `;
+};
 
 const ChallengePreview: React.FC<ChallengePreviewProps> = ({
   fileSystem,
@@ -263,6 +294,12 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
       // Get the latest content
       const fs = fileSystemRef.current;
 
+      // Get file-specific autoreload setting
+      const mainFileData = Array.from(fs.files.values()).find((file) => file.filename === mainFile);
+      const fileAutoreload = mainFileData?.autoreload;
+
+      // If testing a non-autoreload file, ensure we display the result, not the placeholder
+      // Tests should always show the result, not the placeholder
       if (previewTemplateRef.current) {
         // Use the custom preview template if available
         const generatedHTML = previewTemplateRef.current(mainFile, fs);
@@ -296,7 +333,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         resolve();
       }, 5000);
     });
-  }, [mainFile, processHTML]);
+  }, [mainFile, processHTML, previewType]);
 
   // Update fileSystemRef when fileSystem changes
   useEffect(() => {
@@ -360,9 +397,14 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
 
     setIsLoading(true);
 
-    if (!autoReload) {
+    // Check if the main file or the current file type has autoreload disabled
+    const mainFileData = Array.from(fileSystem.files.values()).find((file) => file.filename === mainFile);
+    const fileAutoreload = mainFileData?.autoreload;
+
+    // If explicitly set to false in the file, or global autoReload is false
+    if (fileAutoreload === false || !autoReload) {
       // If autoreload is disabled, show a placeholder initially
-      iframe.srcdoc = PLACEHOLDER_HTML;
+      iframe.srcdoc = getPlaceholderHTML(previewType);
 
       // Initial file content snapshot still needed for change detection
       const initialFiles = fileSystem.getAllFiles();
@@ -409,7 +451,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         fileContentRef.current[file.filename] = file.content;
       }
     });
-  }, [mainFile, fileSystem, processHTML, autoReload]);
+  }, [mainFile, fileSystem, processHTML, autoReload, previewType]);
 
   // Handle iframe load event and expose API
   useEffect(() => {
@@ -435,8 +477,14 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
     const handleFileChange = (event: Event) => {
       const { filename, shouldReload } = (event as CustomEvent<FileChangeEvent>).detail;
 
+      // Get file-specific autoreload setting if available
+      const fileData = Array.from(fileSystemRef.current.files.values()).find((file) => file.filename === filename);
+
+      // Use the file-specific setting if present, fall back to the global setting
+      const fileAutoReload = fileData?.autoreload !== undefined ? fileData.autoreload : autoReloadRef.current;
+
       // Use the ref instead of capturing in closure
-      const shouldAutoReload = shouldReload && autoReloadRef.current;
+      const shouldAutoReload = shouldReload && fileAutoReload;
 
       if (shouldAutoReload) {
         // HTML changes need a full refresh
