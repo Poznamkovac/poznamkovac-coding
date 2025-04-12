@@ -118,7 +118,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   const loadSolution = async () => {
     try {
       // Use files from props if available, otherwise attempt to fetch
-      let filesList: string[] = [];
+      let filesList: string[] | { filename: string }[] = [];
       let readonlyList: string[] = [];
 
       if (files && files.length > 0) {
@@ -144,9 +144,9 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
 
       const loadedFiles: SolutionFile[] = [];
 
-      for (const filename of filesList) {
-        console.log(filesList);
-        console.log(filename);
+      for (const file of filesList) {
+        const filename = typeof file === "string" ? file : file.filename || "";
+
         // Skip hidden or readonly files
         if (filename.startsWith(".") || readonlyList.includes(filename)) {
           continue;
