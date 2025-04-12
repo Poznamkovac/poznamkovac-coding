@@ -72,50 +72,62 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     setIsTestRunning(true);
 
     try {
-      // Force reload the preview if provided
-      if (forceReloadPreview) {
-        await forceReloadPreview();
-      }
-
+      // Get the test module
       const testModule = await import(/* @vite-ignore */ `/data/challenges/${categoryId}/${challengeId}/tests.js`);
       const tester = new testModule.default();
       const previewIframe = document.getElementById("preview") as HTMLIFrameElement;
       previewIframeRef.current = previewIframe;
 
-      // Function to reload iframe and wait for it to load
-      const reloadAndWaitForIframe = () => {
-        return new Promise<Window>((resolve) => {
-          // Set loading state
-          setIframeLoading(true);
+      // Create a variable to store the preview window
+      let previewWindow: Window | null = null;
 
-          // Create one-time load handler
-          const handleLoad = () => {
-            previewIframe.removeEventListener("load", handleLoad);
-            setIframeLoading(false);
-            if (previewIframe.contentWindow) {
-              resolve(previewIframe.contentWindow);
-            }
-          };
+      // If we have a force reload function, use it and wait for it
+      if (forceReloadPreview) {
+        await forceReloadPreview();
+        // Get the window after reload
+        previewWindow = previewIframe.contentWindow;
+      } else {
+        // Otherwise fall back to the old reload mechanism
+        // Function to reload iframe and wait for it to load
+        const reloadAndWaitForIframe = () => {
+          return new Promise<Window>((resolve) => {
+            // Set loading state
+            setIframeLoading(true);
 
-          // Add event listener
-          previewIframe.addEventListener("load", handleLoad);
+            // Create one-time load handler
+            const handleLoad = () => {
+              previewIframe.removeEventListener("load", handleLoad);
+              setIframeLoading(false);
+              if (previewIframe.contentWindow) {
+                resolve(previewIframe.contentWindow);
+              }
+            };
 
-          // Force reload
-          previewIframe.contentWindow?.location.reload();
+            // Add event listener
+            previewIframe.addEventListener("load", handleLoad);
 
-          // If for some reason the load event doesn't fire (fallback)
-          setTimeout(() => {
-            previewIframe.removeEventListener("load", handleLoad);
-            setIframeLoading(false);
-            if (previewIframe.contentWindow) {
-              resolve(previewIframe.contentWindow);
-            }
-          }, 5000); // 5 second fallback timeout
-        });
-      };
+            // Force reload
+            previewIframe.contentWindow?.location.reload();
 
-      // Wait for the iframe to reload and be ready
-      const previewWindow = await reloadAndWaitForIframe();
+            // If for some reason the load event doesn't fire (fallback)
+            setTimeout(() => {
+              previewIframe.removeEventListener("load", handleLoad);
+              setIframeLoading(false);
+              if (previewIframe.contentWindow) {
+                resolve(previewIframe.contentWindow);
+              }
+            }, 5000); // 5 second fallback timeout
+          });
+        };
+
+        // Wait for the iframe to reload and be ready
+        previewWindow = await reloadAndWaitForIframe();
+      }
+
+      // If we have a preview window, run the tests
+      if (!previewWindow) {
+        throw new Error("Preview window not available");
+      }
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
         (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function"

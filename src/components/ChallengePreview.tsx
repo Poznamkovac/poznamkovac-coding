@@ -42,13 +42,35 @@ const PLACEHOLDER_HTML = `
       margin-bottom: 1rem;
       color: #666;
     }
+    .buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 1rem;
+    }
+    .button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .button:hover {
+      background: #2563eb;
+    }
   </style>
 </head>
 <body>
   <div class="message">
     <div class="reload-icon">🔄</div>
-    <h3>Preview Ready</h3>
-    <p>Your code changes will not automatically refresh this preview. Click the "Reload" button above when you're ready to see your changes.</p>
+    <h3>Run Your Code</h3>
+    <p>Auto-reload is disabled for this type of file. Click the "Reload" button above or the "Run Tests" button below when you're ready to see your changes.</p>
+    <div class="buttons">
+      <button class="button" onclick="window.parent.document.querySelector('.preview-reload-button')?.click()">
+        Reload Preview
+      </button>
+    </div>
   </div>
 </body>
 </html>
@@ -73,100 +95,6 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
 
   // Track file changes to force full reloads when needed
   const fileContentRef = useRef<Record<string, string>>({});
-
-  // Force reload the preview
-  const reloadPreview = () => {
-    setShouldRefreshPreview(true);
-    setIsLoading(true);
-    requestAnimationFrame(() => {
-      updateIframeContent();
-      setNeedsManualReload(false);
-    });
-  };
-
-  // Public method to force reload the preview (used by tests)
-  const forceReload = useCallback(() => {
-    return new Promise<void>((resolve) => {
-      // Set up a load handler to resolve the promise
-      const iframe = iframeRef.current;
-      if (!iframe) {
-        resolve();
-        return;
-      }
-
-      const handleLoad = () => {
-        iframe.removeEventListener("load", handleLoad);
-        resolve();
-      };
-
-      // Add event listener for load
-      iframe.addEventListener("load", handleLoad);
-
-      // Force reload
-      reloadPreview();
-
-      // Fallback - resolve after 5 seconds if load event doesn't fire
-      setTimeout(() => {
-        iframe.removeEventListener("load", handleLoad);
-        resolve();
-      }, 5000);
-    });
-  }, []);
-
-  // Update fileSystemRef when fileSystem changes
-  useEffect(() => {
-    fileSystemRef.current = fileSystem;
-  }, [fileSystem]);
-
-  // Update autoReloadRef when autoReload changes
-  useEffect(() => {
-    autoReloadRef.current = autoReload;
-  }, [autoReload]);
-
-  // Load custom preview template if specified
-  useEffect(() => {
-    const loadPreviewTemplate = async () => {
-      if (previewTemplatePath) {
-        try {
-          const response = await fetch(previewTemplatePath);
-          const templateCode = await response.text();
-
-          // Create a wrapper function that can execute the code safely
-          // This approach avoids issues with parsing the function and ensures returns work correctly
-          const wrappedCode = `
-            const module = {}; 
-            (function(exports) { 
-              ${templateCode} 
-            })(module);
-            return module.default || null;
-          `;
-
-          try {
-            // Execute the wrapped code to get the exported function
-            const templateFunction = new Function(wrappedCode)();
-
-            if (typeof templateFunction === "function") {
-              // Use type assertion to ensure TypeScript understands the type
-              previewTemplateRef.current = templateFunction as (mainFile: string, fileSystem: VirtualFileSystem) => string;
-            } else {
-              console.error("Template did not return a function");
-              previewTemplateRef.current = null;
-            }
-          } catch (evalError) {
-            console.error("Error evaluating template:", evalError);
-            previewTemplateRef.current = null;
-          }
-        } catch (error) {
-          console.error("Failed to load preview template:", error);
-          previewTemplateRef.current = null;
-        }
-      } else {
-        previewTemplateRef.current = null;
-      }
-    };
-
-    loadPreviewTemplate();
-  }, [previewTemplatePath]);
 
   // Process the HTML to resolve file references
   const processHTML = useCallback((html: string): string => {
@@ -301,6 +229,130 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
     }
   }, [mainFile, shouldRefreshPreview, processHTML]);
 
+  // Force reload the preview
+  const reloadPreview = () => {
+    setShouldRefreshPreview(true);
+    setIsLoading(true);
+    requestAnimationFrame(() => {
+      updateIframeContent();
+      setNeedsManualReload(false);
+    });
+  };
+
+  // Public method to force reload the preview (used by tests)
+  const forceReload = useCallback(() => {
+    return new Promise<void>((resolve) => {
+      // Set up a load handler to resolve the promise
+      const iframe = iframeRef.current;
+      if (!iframe) {
+        resolve();
+        return;
+      }
+
+      const handleLoad = () => {
+        iframe.removeEventListener("load", handleLoad);
+        resolve();
+      };
+
+      // Add event listener for load
+      iframe.addEventListener("load", handleLoad);
+
+      // Force immediate reload by directly updating content
+      setIsLoading(true);
+
+      // Get the latest content
+      const fs = fileSystemRef.current;
+
+      if (previewTemplateRef.current) {
+        // Use the custom preview template if available
+        const generatedHTML = previewTemplateRef.current(mainFile, fs);
+        iframe.srcdoc = generatedHTML;
+      } else {
+        const htmlFile = Array.from(fs.files.values()).find(
+          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html"
+        );
+
+        if (htmlFile?.content) {
+          const processedHTML = processHTML(htmlFile.content);
+          iframe.srcdoc = processedHTML;
+        }
+      }
+
+      setNeedsManualReload(false);
+      setShouldRefreshPreview(false);
+
+      // Update content references for future change detection
+      const currentFileContents: Record<string, string> = {};
+      fs.getAllFiles().forEach((file) => {
+        if (file.content) {
+          currentFileContents[file.filename] = file.content;
+        }
+      });
+      fileContentRef.current = { ...currentFileContents };
+
+      // Fallback - resolve after 5 seconds if load event doesn't fire
+      setTimeout(() => {
+        iframe.removeEventListener("load", handleLoad);
+        resolve();
+      }, 5000);
+    });
+  }, [mainFile, processHTML]);
+
+  // Update fileSystemRef when fileSystem changes
+  useEffect(() => {
+    fileSystemRef.current = fileSystem;
+  }, [fileSystem]);
+
+  // Update autoReloadRef when autoReload changes
+  useEffect(() => {
+    autoReloadRef.current = autoReload;
+  }, [autoReload]);
+
+  // Load custom preview template if specified
+  useEffect(() => {
+    const loadPreviewTemplate = async () => {
+      if (previewTemplatePath) {
+        try {
+          const response = await fetch(previewTemplatePath);
+          const templateCode = await response.text();
+
+          // Create a wrapper function that can execute the code safely
+          // This approach avoids issues with parsing the function and ensures returns work correctly
+          const wrappedCode = `
+            const module = {}; 
+            (function(exports) { 
+              ${templateCode} 
+            })(module);
+            return module.default || null;
+          `;
+
+          try {
+            // Execute the wrapped code to get the exported function
+            const templateFunction = new Function(wrappedCode)();
+
+            if (typeof templateFunction === "function") {
+              // Use type assertion to ensure TypeScript understands the type
+              previewTemplateRef.current = templateFunction as (mainFile: string, fileSystem: VirtualFileSystem) => string;
+            } else {
+              console.error("Template did not return a function");
+              previewTemplateRef.current = null;
+            }
+          } catch (evalError) {
+            console.error("Error evaluating template:", evalError);
+            previewTemplateRef.current = null;
+          }
+        } catch (error) {
+          console.error("Failed to load preview template:", error);
+          previewTemplateRef.current = null;
+        }
+      } else {
+        previewTemplateRef.current = null;
+      }
+    };
+
+    loadPreviewTemplate();
+  }, [previewTemplatePath]);
+
   // Initialize the iframe with HTML content
   useLayoutEffect(() => {
     const iframe = iframeRef.current;
@@ -418,7 +470,10 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         <h2 className="flex-grow text-xl font-semibold">Preview</h2>
         {isLoading && <span className="mr-2 text-sm text-gray-500">Loading...</span>}
         {needsManualReload && (
-          <button onClick={reloadPreview} className="px-2 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700">
+          <button
+            onClick={reloadPreview}
+            className="px-2 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 preview-reload-button"
+          >
             🔄 Reload
           </button>
         )}

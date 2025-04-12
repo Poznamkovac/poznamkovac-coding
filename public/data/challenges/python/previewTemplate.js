@@ -5,11 +5,6 @@
  * @returns {string} - HTML content to render in the preview iframe with Python execution via Pyodide
  */
 function previewTemplate(mainFile, fileSystem) {
-  // Get main Python file
-  const mainPyFile = Array.from(fileSystem.files.values()).find(
-    (file) => file.filename === mainFile
-  );
-
   // Get all Python files and their content
   const pyFiles = Array.from(fileSystem.files.values())
     .filter(file => file.filename.endsWith('.py'))

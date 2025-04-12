@@ -10,8 +10,7 @@
             "filename": "main.py",
             "readonly": false,
             "hidden": false,
-            "autoreload": false,
-            "content": "# Write your Python code here\n\n"
+            "autoreload": false
         }
     ]
 }
