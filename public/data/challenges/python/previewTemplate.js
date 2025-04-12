@@ -118,7 +118,7 @@ function previewTemplate(mainFile, fileSystem) {
   <body>
     <div id="loader">
       <div class="spinner"></div>
-      <p>Loading Pyodide...</p>
+      <p>⌛️...</p>
     </div>
     <div id="console">
       <div id="stdout"></div>

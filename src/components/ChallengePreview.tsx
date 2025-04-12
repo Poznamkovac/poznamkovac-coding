@@ -49,15 +49,15 @@ const getPlaceholderHTML = (previewType: string) => {
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
-      padding: 2rem;
+      padding: 0 2rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
-      background: #f9f9f9;
-      color: #333;
+      background: black;
+      color: lightgray;
     }
     .message {
       text-align: center;
@@ -75,7 +75,7 @@ const getPlaceholderHTML = (previewType: string) => {
       margin-top: 1rem;
     }
     .tech-note a {
-      color: #3b82f6;
+      color: gainsboro;
     }
     .buttons {
       display: flex;
@@ -469,7 +469,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
     };
 
     // Add handler for preview ready messages
-    const handlePreviewMessages = (event) => {
+    const handlePreviewMessages = (event: MessageEvent) => {
       // Forward messages from iframe to parent window
       if (event.source === iframe.contentWindow && event.data && event.data.type === "PREVIEW_READY") {
         window.dispatchEvent(
