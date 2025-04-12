@@ -77,7 +77,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
   }, []);
 
   // Update iframe content
-  const updateIframeContent = useCallback(() => {
+  const prepareIframeContent = useCallback(() => {
     const iframe = iframeRef.current;
     const fs = fileSystemRef.current;
     if (!iframe || !iframe.contentDocument) return;
@@ -208,7 +208,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
 
         // Schedule update for next frame to avoid React render conflicts
         requestAnimationFrame(() => {
-          updateIframeContent();
+          prepareIframeContent();
         });
 
         setNeedsManualReload(false);
@@ -224,13 +224,13 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     return () => {
       window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
     };
-  }, [mainFile, updateIframeContent]);
+  }, [mainFile, prepareIframeContent]);
 
   // Force reload the preview
   const reloadPreview = () => {
     setShouldRefreshPreview(true);
     requestAnimationFrame(() => {
-      updateIframeContent();
+      prepareIframeContent();
       setNeedsManualReload(false);
     });
   };
