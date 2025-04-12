@@ -66,6 +66,12 @@ const EmbedChallengePage: React.FC = () => {
 
   if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>⌛️...</div>;
 
+  // Combine URL options with challenge data options
+  const showPreview = options.showPreview && challengeData.showPreview;
+
+  // Always use the grid layout if editors are shown (regardless of preview visibility)
+  const useGridLayout = options.showEditors;
+
   return (
     <EmbedLayout
       title={challengeData.title}
@@ -75,33 +81,22 @@ const EmbedChallengePage: React.FC = () => {
       options={options}
       className="bg-transparent"
     >
-      <div className={options.showPreview ? "grid grid-cols-1 gap-4 md:grid-cols-2" : ""}>
+      <div className={useGridLayout ? "grid grid-cols-1 gap-4 md:grid-cols-2" : ""}>
         {options.showEditors && (
           <div className="flex flex-col h-[500px]">
             <ChallengeIDE fileSystem={fileSystem} />
-
-            {options.isScored && !options.showPreview && (
-              <ChallengeTests
-                categoryId={categoryId!}
-                challengeId={challengeId!}
-                maxScore={challengeData.maxScore}
-                onTestRun={handleTestRun}
-                needsTestRun={needsTestRun}
-              />
-            )}
           </div>
         )}
 
-        <div
-          className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}
-        >
+        <div className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}>
           <ChallengePreview
             fileSystem={fileSystem}
             mainFile={challengeData.mainFile}
             previewType={challengeData.previewType}
             autoReload={options.autoReload}
-            hidden={!options.showPreview}
+            hidden={!showPreview}
           />
+
           {options.isScored && (
             <ChallengeTests
               categoryId={categoryId!}
@@ -109,6 +104,7 @@ const EmbedChallengePage: React.FC = () => {
               maxScore={challengeData.maxScore}
               onTestRun={handleTestRun}
               needsTestRun={needsTestRun}
+              showNextButton={false}
             />
           )}
         </div>

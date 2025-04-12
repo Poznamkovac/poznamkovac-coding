@@ -195,6 +195,10 @@ const EmbedCustomPage: React.FC = () => {
     );
   }
 
+  // Always use the grid layout if editors are shown
+  const useGridLayout = options.showEditors;
+  const showPreview = options.showPreview && assignmentData.showPreview;
+
   return (
     <EmbedLayout
       title={assignmentData.title}
@@ -204,47 +208,20 @@ const EmbedCustomPage: React.FC = () => {
       options={options}
       className="bg-transparent"
     >
-      <div className={options.showPreview ? "grid grid-cols-1 gap-4 md:grid-cols-2" : ""}>
+      <div className={useGridLayout ? "grid grid-cols-1 gap-4 md:grid-cols-2" : ""}>
         {options.showEditors && (
           <div className="flex flex-col h-[500px]">
             <ChallengeIDE fileSystem={fileSystem} />
-
-            {options.isScored && !options.showPreview && (
-              <div className="mx-4 mt-4">
-                <button
-                  onClick={runTests}
-                  className={`px-4 py-2 font-bold text-white rounded hover:bg-blue-700 ${
-                    needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  {needsTestRun ? "🔄" : "⏯️"}
-                </button>
-
-                <div className="mt-4">
-                  {testResults.map(({ name, success, message }, index) => (
-                    <div key={index} className={`p-2 mb-2 rounded ${success ? "bg-green-800" : "bg-red-800"}`}>
-                      <b>
-                        {success ? "✓" : "✗"} {name}
-                      </b>
-                      <br />
-                      <span className="text-sm text-gray-300">{message}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        <div
-          className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}
-        >
+        <div className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}>
           <ChallengePreview
             fileSystem={fileSystem}
             mainFile={assignmentData.mainFile}
             previewType={assignmentData.previewType}
             autoReload={options.autoReload}
-            hidden={!options.showPreview}
+            hidden={!showPreview}
           />
 
           {options.isScored && (

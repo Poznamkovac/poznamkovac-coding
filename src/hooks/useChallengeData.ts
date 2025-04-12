@@ -10,7 +10,6 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-
     // Load challenge data
     const loadChallengeData = async () => {
       setIsLoading(true);
@@ -21,6 +20,10 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
         // Set defaults if properties are missing
         if (!data.previewType) {
           data.previewType = "html";
+        }
+
+        if (data.showPreview === undefined) {
+          data.showPreview = true; // Default to true if not specified
         }
 
         if (!data.mainFile) {

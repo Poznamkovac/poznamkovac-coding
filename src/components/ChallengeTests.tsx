@@ -9,6 +9,7 @@ interface ChallengeTestsProps {
   challengeId: string;
   maxScore: number;
   needsTestRun?: boolean;
+  showNextButton?: boolean;
   onTestRun?: () => void;
   files?: string[];
   readonlyFiles?: string[];
@@ -24,6 +25,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   challengeId,
   maxScore,
   needsTestRun = false,
+  showNextButton = true,
   onTestRun = () => {},
   files,
   readonlyFiles,
@@ -194,7 +196,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         {needsTestRun ? "🔄" : allTestsPassed ? "🔁" : "⏯️"}
       </button>
 
-      {allTestsPassed && (
+      {showNextButton && allTestsPassed && (
         <button
           onClick={() => {
             window.location.hash = `#/challenges/${categoryId}/${parseInt(challengeId, 10) + 1}`;

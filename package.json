@@ -16,7 +16,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@monaco-editor/react": "^4.6.0",
     "autoprefixer": "^10.4.20",
-    "caniuse-lite": "^1.0.30001712",
+    "caniuse-lite": "^1.0.30001713",
     "emmet-monaco-es": "^5.4.0",
     "idb": "^8.0.2",
     "postcss": "^8.4.41",

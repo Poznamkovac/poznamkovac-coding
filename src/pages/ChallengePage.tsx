@@ -86,7 +86,7 @@ const ChallengePage: React.FC = () => {
             <div className="mb-6">
               <img
                 src={`/data/challenges/${categoryId}/${challengeId}/obrazok.png`}
-                alt="Assignment image"
+                alt={challengeData.title}
                 className="h-auto max-w-full"
                 onError={(e) => e.currentTarget.remove()}
               />
@@ -101,15 +101,13 @@ const ChallengePage: React.FC = () => {
             </div>
           )}
 
-          <div
-            className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}
-          >
+          <div className={`h-[500px] flex flex-col ${!options.showEditors ? "md:col-span-2" : ""}`}>
             <ChallengePreview
               fileSystem={fileSystem}
               mainFile={challengeData.mainFile}
               previewType={challengeData.previewType}
               autoReload={options.autoReload}
-              hidden={!options.showPreview}
+              hidden={!options.showPreview || !challengeData.showPreview}
             />
 
             {options.isScored && (
