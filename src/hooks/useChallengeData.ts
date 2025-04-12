@@ -15,7 +15,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
       setIsLoading(true);
       try {
         const response = await fetch(`/data/challenges/${categoryId}/${challengeId}/assignment.json`);
-        let data: ChallengeData = await response.json();
+        const data: ChallengeData = await response.json();
 
         // Set defaults if properties are missing
         if (!data.previewType) {
