@@ -168,7 +168,7 @@ class StorageService {
       const prefix = `uloha_${categoryId}_${challengeId}_`;
 
       const fileKeys = allKeys.filter(
-        (key) => key.startsWith(prefix) && key !== `${prefix}skore` // Exclude score
+        (key) => key.startsWith(prefix) && key !== `${prefix}skore`, // Exclude score
       );
 
       const result: Record<string, string> = {};

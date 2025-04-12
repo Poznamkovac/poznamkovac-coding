@@ -4,6 +4,6 @@
  * @returns {number[]} Usporiadané pole čísiel
  */
 function bubblesort(array, reverse = false) {
-    // TODO: implementujte Bubble Sort algoritmus
-    return array;
+  // TODO: implementujte Bubble Sort algoritmus
+  return array;
 }

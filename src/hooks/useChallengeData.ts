@@ -31,8 +31,8 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
           data.mainFile = data.files.find((f) => f.filename === "index.html")
             ? "index.html"
             : data.files.length > 0
-            ? data.files[0].filename
-            : "";
+              ? data.files[0].filename
+              : "";
         }
 
         // Default autoreload property

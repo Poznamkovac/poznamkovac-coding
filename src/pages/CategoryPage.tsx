@@ -33,7 +33,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
             completed: score === challenge.maxScore,
             score: score,
           };
-        })
+        }),
       );
 
       setCompletionStatus(newCompletionStatus);

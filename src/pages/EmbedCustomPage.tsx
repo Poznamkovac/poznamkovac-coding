@@ -150,7 +150,7 @@ const EmbedCustomPage: React.FC = () => {
         `
         ${testCode}
         return typeof runTests === 'function' ? runTests(window) : [];
-      `
+      `,
       );
 
       // Execute the tests in the iframe context

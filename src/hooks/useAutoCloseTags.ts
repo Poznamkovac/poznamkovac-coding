@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import * as monaco from 'monaco-editor';
+import { useEffect } from "react";
+import * as monaco from "monaco-editor";
 
 const useAutoCloseTags = (editor: monaco.editor.IStandaloneCodeEditor | null) => {
   useEffect(() => {
@@ -8,9 +8,31 @@ const useAutoCloseTags = (editor: monaco.editor.IStandaloneCodeEditor | null) =>
     const enabledLanguages = ["html", "javascript"];
     const isSelfClosing = (tag: string) =>
       [
-        "area", "base", "br", "col", "command", "embed", "hr", "img", "input",
-        "keygen", "link", "meta", "param", "source", "track", "wbr", "circle",
-        "ellipse", "line", "path", "polygon", "polyline", "rect", "stop", "use",
+        "area",
+        "base",
+        "br",
+        "col",
+        "command",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "keygen",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+        "circle",
+        "ellipse",
+        "line",
+        "path",
+        "polygon",
+        "polyline",
+        "rect",
+        "stop",
+        "use",
       ].includes(tag);
 
     const handleKeyDown = (event: monaco.IKeyboardEvent) => {
@@ -24,14 +46,14 @@ const useAutoCloseTags = (editor: monaco.editor.IStandaloneCodeEditor | null) =>
         const edits: monaco.editor.IIdentifiedSingleEditOperation[] = [];
         const newSelections: monaco.Selection[] = [];
 
-        selections.forEach(selection => {
+        selections.forEach((selection) => {
           newSelections.push(
             new monaco.Selection(
               selection.selectionStartLineNumber,
               selection.selectionStartColumn + 1,
               selection.endLineNumber,
               selection.endColumn + 1,
-            )
+            ),
           );
 
           const contentBeforeChange = model.getValueInRange({
@@ -60,7 +82,7 @@ const useAutoCloseTags = (editor: monaco.editor.IStandaloneCodeEditor | null) =>
         });
 
         setTimeout(() => {
-          editor.executeEdits('auto-close-tags', edits, newSelections);
+          editor.executeEdits("auto-close-tags", edits, newSelections);
         }, 0);
       }
     };

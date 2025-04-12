@@ -25,7 +25,7 @@ export interface ActiveFileChangeEvent {
 export const createVirtualFileSystem = async (
   categoryId: string,
   challengeId: string,
-  initialFiles: ChallengeFile[]
+  initialFiles: ChallengeFile[],
 ): Promise<VirtualFileSystem> => {
   // Create a map of filenames to file data
   const filesMap = new Map<string, ChallengeFile>();
@@ -83,7 +83,7 @@ export const createVirtualFileSystem = async (
             console.error(`Error loading file: ${file.filename}`, error);
           }
         }
-      })
+      }),
     );
   };
 
@@ -111,7 +111,7 @@ export const createVirtualFileSystem = async (
               challengeId,
               filename,
             },
-          })
+          }),
         );
       }
     },
@@ -136,7 +136,7 @@ export const createVirtualFileSystem = async (
               content,
               shouldReload: !!file.autoreload,
             },
-          })
+          }),
         );
       }
     },

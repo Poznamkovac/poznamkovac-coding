@@ -19,6 +19,6 @@ export const emitScoreUpdate = async (categoryId: string, challengeId: string, s
   window.dispatchEvent(
     new CustomEvent(SCORE_UPDATE_EVENT, {
       detail: { categoryId, challengeId, score },
-    })
+    }),
   );
 };

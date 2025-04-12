@@ -102,7 +102,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     if (shouldRefreshPreview || hasSignificantChanges) {
       // Re-process the HTML with the latest file content
       const htmlFile = Array.from(fs.files.values()).find(
-        (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html"
+        (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
       );
 
       if (htmlFile?.content) {
