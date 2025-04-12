@@ -1,7 +1,7 @@
 import { HashRouter, Route, Routes } from "react-router-dom";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { faHtml5, faCss3, faJs } from "@fortawesome/free-brands-svg-icons";
+import { faHtml5, faCss3, faJs, faPython } from "@fortawesome/free-brands-svg-icons";
 
 import Header from "./components/Header";
 import HomePage from "./pages/HomePage";
@@ -11,7 +11,7 @@ import EmbedChallengePage from "./pages/EmbedChallengePage";
 import EmbedCustomPage from "./pages/EmbedCustomPage";
 import CreateEmbedPage from "./pages/CreateEmbedPage";
 
-library.add(faHtml5, faCss3, faJs);
+library.add(faHtml5, faCss3, faJs, faPython);
 
 function App() {
   return (

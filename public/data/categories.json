@@ -19,5 +19,12 @@
     "ikona": "js",
     "ikonaFarba": "#FFF56B",
     "farba": "#ebab34"
+  },
+  {
+    "id": "python",
+    "title": "Python",
+    "ikona": "python",
+    "ikonaFarba": "yellow",
+    "farba": "#306998"
   }
 ]

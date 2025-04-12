@@ -31,8 +31,22 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
           data.mainFile = data.files.find((f) => f.filename === "index.html")
             ? "index.html"
             : data.files.length > 0
-              ? data.files[0].filename
-              : "";
+            ? data.files[0].filename
+            : "";
+        }
+
+        // If no previewTemplatePath is specified, see if one exists at the category level
+        if (!data.previewTemplatePath) {
+          try {
+            // Check if a previewTemplate.js exists for this category
+            const templateResponse = await fetch(`/data/challenges/${categoryId}/previewTemplate.js`, { method: "HEAD" });
+            if (templateResponse.ok) {
+              data.previewTemplatePath = `/data/challenges/${categoryId}/previewTemplate.js`;
+            }
+          } catch (error) {
+            // Ignore errors - we'll just not use a custom template
+            console.log(`No preview template found for category ${categoryId}`);
+          }
         }
 
         // Default autoreload property

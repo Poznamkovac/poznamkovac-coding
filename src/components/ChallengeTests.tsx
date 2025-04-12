@@ -34,11 +34,13 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [allTestsPassed, setAllTestsPassed] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTestRunning, setIsTestRunning] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState<number>(0);
   const [showSolution, setShowSolution] = useState<boolean>(false);
   const [solutionFiles, setSolutionFiles] = useState<SolutionFile[]>([]);
   const [solutionError, setSolutionError] = useState<string | null>(null);
   const [solutionLoaded, setSolutionLoaded] = useState<boolean>(false);
+  const [iframeLoading, setIframeLoading] = useState(false);
 
   useEffect(() => {
     // Load score from IndexedDB
@@ -63,12 +65,47 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   const runTests = async () => {
     // Call the onTestRun callback to reset the needsTestRun flag
     onTestRun();
+    setIsTestRunning(true);
 
     try {
       const testModule = await import(/* @vite-ignore */ `/data/challenges/${categoryId}/${challengeId}/tests.js`);
       const tester = new testModule.default();
-      const previewWindow = (document.getElementById("preview") as HTMLIFrameElement)?.contentWindow;
-      previewWindow?.location.reload();
+      const previewIframe = document.getElementById("preview") as HTMLIFrameElement;
+
+      // Function to reload iframe and wait for it to load
+      const reloadAndWaitForIframe = () => {
+        return new Promise<Window>((resolve) => {
+          // Set loading state
+          setIframeLoading(true);
+
+          // Create one-time load handler
+          const handleLoad = () => {
+            previewIframe.removeEventListener("load", handleLoad);
+            setIframeLoading(false);
+            if (previewIframe.contentWindow) {
+              resolve(previewIframe.contentWindow);
+            }
+          };
+
+          // Add event listener
+          previewIframe.addEventListener("load", handleLoad);
+
+          // Force reload
+          previewIframe.contentWindow?.location.reload();
+
+          // If for some reason the load event doesn't fire (fallback)
+          setTimeout(() => {
+            previewIframe.removeEventListener("load", handleLoad);
+            setIframeLoading(false);
+            if (previewIframe.contentWindow) {
+              resolve(previewIframe.contentWindow);
+            }
+          }, 5000); // 5 second fallback timeout
+        });
+      };
+
+      // Wait for the iframe to reload and be ready
+      const previewWindow = await reloadAndWaitForIframe();
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
         (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function"
@@ -112,6 +149,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
           result: { detaily_zle: "An error occurred during testing." },
         },
       ]);
+    } finally {
+      setIsTestRunning(false);
     }
   };
 
@@ -191,11 +230,12 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     <div className="mx-4">
       <button
         onClick={runTests}
-        className={`px-4 py-2 mt-4 font-bold text-white rounded hover:bg-blue-700 ${
-          needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"
-        }`}
+        disabled={isTestRunning || iframeLoading}
+        className={`px-4 py-2 mt-4 font-bold text-white rounded ${
+          isTestRunning || iframeLoading ? "opacity-50 cursor-not-allowed" : ""
+        } ${needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"}`}
       >
-        {needsTestRun ? "🔄" : allTestsPassed ? "🔁" : "⏯️"}
+        {isTestRunning || iframeLoading ? "⌛️" : needsTestRun ? "🔄" : allTestsPassed ? "🔁" : "⏯️"}
       </button>
 
       {showNextButton && allTestsPassed && (

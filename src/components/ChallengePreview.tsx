@@ -7,16 +7,28 @@ interface ChallengePreviewProps {
   fileSystem: VirtualFileSystem;
   mainFile: string;
   previewType: string;
+  previewTemplatePath?: string;
   autoReload?: boolean;
   hidden: boolean;
+  onIframeLoad?: () => void;
 }
 
-const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFile, autoReload = true, hidden = false }) => {
+const ChallengePreview: React.FC<ChallengePreviewProps> = ({
+  fileSystem,
+  mainFile,
+  previewType,
+  previewTemplatePath,
+  autoReload = true,
+  hidden = false,
+  onIframeLoad,
+}) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [needsManualReload, setNeedsManualReload] = useState(false);
   const [shouldRefreshPreview, setShouldRefreshPreview] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const fileSystemRef = useRef(fileSystem);
   const autoReloadRef = useRef(autoReload);
+  const previewTemplateRef = useRef<((mainFile: string, fileSystem: VirtualFileSystem) => string) | null>(null);
 
   // Track file changes to force full reloads when needed
   const fileContentRef = useRef<Record<string, string>>({});
@@ -30,6 +42,51 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
   useEffect(() => {
     autoReloadRef.current = autoReload;
   }, [autoReload]);
+
+  // Load custom preview template if specified
+  useEffect(() => {
+    const loadPreviewTemplate = async () => {
+      if (previewTemplatePath) {
+        try {
+          const response = await fetch(previewTemplatePath);
+          const templateCode = await response.text();
+
+          // Create a wrapper function that can execute the code safely
+          // This approach avoids issues with parsing the function and ensures returns work correctly
+          const wrappedCode = `
+            const module = {}; 
+            (function(exports) { 
+              ${templateCode} 
+            })(module);
+            return module.default || null;
+          `;
+
+          try {
+            // Execute the wrapped code to get the exported function
+            const templateFunction = new Function(wrappedCode)();
+
+            if (typeof templateFunction === "function") {
+              // Use type assertion to ensure TypeScript understands the type
+              previewTemplateRef.current = templateFunction as (mainFile: string, fileSystem: VirtualFileSystem) => string;
+            } else {
+              console.error("Template did not return a function");
+              previewTemplateRef.current = null;
+            }
+          } catch (evalError) {
+            console.error("Error evaluating template:", evalError);
+            previewTemplateRef.current = null;
+          }
+        } catch (error) {
+          console.error("Failed to load preview template:", error);
+          previewTemplateRef.current = null;
+        }
+      } else {
+        previewTemplateRef.current = null;
+      }
+    };
+
+    loadPreviewTemplate();
+  }, [previewTemplatePath]);
 
   // Process the HTML to resolve file references
   const processHTML = useCallback((html: string): string => {
@@ -77,7 +134,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
   }, []);
 
   // Update iframe content
-  const prepareIframeContent = useCallback(() => {
+  const updateIframeContent = useCallback(() => {
     const iframe = iframeRef.current;
     const fs = fileSystemRef.current;
     if (!iframe || !iframe.contentDocument) return;
@@ -101,58 +158,67 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     // Force a complete reload if there are significant changes
     if (shouldRefreshPreview || hasSignificantChanges) {
       // Re-process the HTML with the latest file content
-      const htmlFile = Array.from(fs.files.values()).find(
-        (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
-      );
+      if (previewTemplateRef.current) {
+        // Use the custom preview template if available
+        const generatedHTML = previewTemplateRef.current(mainFile, fs);
+        iframe.srcdoc = generatedHTML;
+      } else {
+        const htmlFile = Array.from(fs.files.values()).find(
+          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html"
+        );
 
-      if (htmlFile?.content) {
-        const processedHTML = processHTML(htmlFile.content);
-        iframe.srcdoc = processedHTML;
-        setShouldRefreshPreview(false);
-        return;
+        if (htmlFile?.content) {
+          const processedHTML = processHTML(htmlFile.content);
+          iframe.srcdoc = processedHTML;
+        }
       }
+
+      setShouldRefreshPreview(false);
+      return;
     }
 
-    // Otherwise, just update the script and style contents
-    const iframeDoc = iframe.contentDocument;
+    // Otherwise, just update the script and style contents (for HTML previews only)
+    if (!previewTemplateRef.current) {
+      const iframeDoc = iframe.contentDocument;
 
-    // Process inline and external scripts
-    const scriptTags = Array.from(iframeDoc.querySelectorAll("script[src], script[data-source-file]"));
-    scriptTags.forEach((scriptTag) => {
-      const sourceFile = scriptTag.getAttribute("data-source-file") || scriptTag.getAttribute("src");
-      if (sourceFile) {
-        const jsFile = Array.from(fs.files.values()).find((file) => file.filename === sourceFile);
-        if (jsFile?.content) {
-          // Replace the script with a new one (for proper execution)
-          const newScript = iframeDoc.createElement("script");
-          newScript.textContent = jsFile.content;
-          newScript.setAttribute("data-source-file", sourceFile);
-          scriptTag.parentNode?.replaceChild(newScript, scriptTag);
-        }
-      }
-    });
-
-    // Process inline and external styles
-    const styleTags = Array.from(iframeDoc.querySelectorAll('link[rel="stylesheet"], style[data-source-file]'));
-    styleTags.forEach((styleTag) => {
-      const sourceFile = styleTag.getAttribute("data-source-file") || styleTag.getAttribute("href");
-      if (sourceFile) {
-        const cssFile = Array.from(fs.files.values()).find((file) => file.filename === sourceFile);
-        if (cssFile?.content) {
-          // Update style content or replace link with style
-          if (styleTag.tagName.toLowerCase() === "style") {
-            // Just update content for style tags
-            styleTag.textContent = cssFile.content;
-          } else {
-            // Replace link with style
-            const newStyle = iframeDoc.createElement("style");
-            newStyle.textContent = cssFile.content;
-            newStyle.setAttribute("data-source-file", sourceFile);
-            styleTag.parentNode?.replaceChild(newStyle, styleTag);
+      // Process inline and external scripts
+      const scriptTags = Array.from(iframeDoc.querySelectorAll("script[src], script[data-source-file]"));
+      scriptTags.forEach((scriptTag) => {
+        const sourceFile = scriptTag.getAttribute("data-source-file") || scriptTag.getAttribute("src");
+        if (sourceFile) {
+          const jsFile = Array.from(fs.files.values()).find((file) => file.filename === sourceFile);
+          if (jsFile?.content) {
+            // Replace the script with a new one (for proper execution)
+            const newScript = iframeDoc.createElement("script");
+            newScript.textContent = jsFile.content;
+            newScript.setAttribute("data-source-file", sourceFile);
+            scriptTag.parentNode?.replaceChild(newScript, scriptTag);
           }
         }
-      }
-    });
+      });
+
+      // Process inline and external styles
+      const styleTags = Array.from(iframeDoc.querySelectorAll('link[rel="stylesheet"], style[data-source-file]'));
+      styleTags.forEach((styleTag) => {
+        const sourceFile = styleTag.getAttribute("data-source-file") || styleTag.getAttribute("href");
+        if (sourceFile) {
+          const cssFile = Array.from(fs.files.values()).find((file) => file.filename === sourceFile);
+          if (cssFile?.content) {
+            // Update style content or replace link with style
+            if (styleTag.tagName.toLowerCase() === "style") {
+              // Just update content for style tags
+              styleTag.textContent = cssFile.content;
+            } else {
+              // Replace link with style
+              const newStyle = iframeDoc.createElement("style");
+              newStyle.textContent = cssFile.content;
+              newStyle.setAttribute("data-source-file", sourceFile);
+              styleTag.parentNode?.replaceChild(newStyle, styleTag);
+            }
+          }
+        }
+      });
+    }
   }, [mainFile, shouldRefreshPreview, processHTML]);
 
   // Initialize the iframe with HTML content
@@ -160,15 +226,22 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    // Get HTML content - try to find the main file first
-    const htmlFile =
-      Array.from(fileSystem.files.values()).find((file) => file.filename === mainFile) ||
-      Array.from(fileSystem.files.values()).find((file) => file.filename.toLowerCase() === "index.html");
+    setIsLoading(true);
 
-    // If no HTML file is found, create a basic HTML structure
-    const htmlContent =
-      htmlFile?.content ||
-      `<!DOCTYPE html>
+    if (previewTemplateRef.current) {
+      // Use the custom preview template if available
+      const generatedHTML = previewTemplateRef.current(mainFile, fileSystem);
+      iframe.srcdoc = generatedHTML;
+    } else {
+      // Get HTML content - try to find the main file first
+      const htmlFile =
+        Array.from(fileSystem.files.values()).find((file) => file.filename === mainFile) ||
+        Array.from(fileSystem.files.values()).find((file) => file.filename.toLowerCase() === "index.html");
+
+      // If no HTML file is found, create a basic HTML structure
+      const htmlContent =
+        htmlFile?.content ||
+        `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -179,8 +252,9 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
 </body>
 </html>`;
 
-    // Set initial HTML
-    iframe.srcdoc = processHTML(htmlContent);
+      // Set initial HTML
+      iframe.srcdoc = processHTML(htmlContent);
+    }
 
     // Initial file content snapshot
     const initialFiles = fileSystem.getAllFiles();
@@ -190,6 +264,24 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
       }
     });
   }, [mainFile, fileSystem, processHTML]);
+
+  // Handle iframe load event
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const handleLoad = () => {
+      setIsLoading(false);
+      if (onIframeLoad) {
+        onIframeLoad();
+      }
+    };
+
+    iframe.addEventListener("load", handleLoad);
+    return () => {
+      iframe.removeEventListener("load", handleLoad);
+    };
+  }, [onIframeLoad]);
 
   // Listen for file changes
   useEffect(() => {
@@ -208,7 +300,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
 
         // Schedule update for next frame to avoid React render conflicts
         requestAnimationFrame(() => {
-          prepareIframeContent();
+          updateIframeContent();
         });
 
         setNeedsManualReload(false);
@@ -224,13 +316,14 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     return () => {
       window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
     };
-  }, [mainFile, prepareIframeContent]);
+  }, [mainFile, updateIframeContent]);
 
   // Force reload the preview
   const reloadPreview = () => {
     setShouldRefreshPreview(true);
+    setIsLoading(true);
     requestAnimationFrame(() => {
-      prepareIframeContent();
+      updateIframeContent();
       setNeedsManualReload(false);
     });
   };
@@ -239,6 +332,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({ fileSystem, mainFil
     <div className={`flex flex-col flex-1 mb-4 ${hidden ? "hidden" : ""}`}>
       <div className="flex items-center mb-1">
         <h2 className="flex-grow text-xl font-semibold">Preview</h2>
+        {isLoading && <span className="mr-2 text-sm text-gray-500">Loading...</span>}
         {needsManualReload && (
           <button onClick={reloadPreview} className="px-2 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700">
             🔄 Reload

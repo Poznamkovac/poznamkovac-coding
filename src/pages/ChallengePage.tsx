@@ -16,6 +16,7 @@ const ChallengePage: React.FC = () => {
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [isScoreLoading, setIsScoreLoading] = useState(true);
   const [needsTestRun, setNeedsTestRun] = useState(false);
+  const [isPreviewLoaded, setIsPreviewLoaded] = useState(false);
 
   useEffect(() => {
     if (challengeData) {
@@ -64,7 +65,15 @@ const ChallengePage: React.FC = () => {
     setNeedsTestRun(false);
   };
 
+  const handleIframeLoad = () => {
+    setIsPreviewLoaded(true);
+  };
+
   if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>⌛️...</div>;
+
+  // Prepare preview template path based on category
+  const previewTemplatePath =
+    challengeData.previewTemplatePath || (categoryId ? `/data/challenges/${categoryId}/previewTemplate.js` : undefined);
 
   return (
     <div className="min-h-screen text-white">
@@ -106,8 +115,10 @@ const ChallengePage: React.FC = () => {
               fileSystem={fileSystem}
               mainFile={challengeData.mainFile}
               previewType={challengeData.previewType}
+              previewTemplatePath={previewTemplatePath}
               autoReload={options.autoReload}
               hidden={!options.showPreview || !challengeData.showPreview}
+              onIframeLoad={handleIframeLoad}
             />
 
             {options.isScored && (

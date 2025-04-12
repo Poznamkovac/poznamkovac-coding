@@ -22,6 +22,8 @@ export interface ChallengeData {
   showPreview: boolean;
   /** The main file to execute or display in preview */
   mainFile: string;
+  /** Category specific preview template path (optional) */
+  previewTemplatePath?: string;
   files: ChallengeFile[];
 }
 
