@@ -11,6 +11,12 @@
             "readonly": false,
             "hidden": false,
             "autoreload": false
+        },
+        {
+            "filename": "my_module.py",
+            "readonly": false,
+            "hidden": false,
+            "autoreload": false
         }
     ]
 }

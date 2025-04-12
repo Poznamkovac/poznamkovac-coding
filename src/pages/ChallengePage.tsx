@@ -16,7 +16,6 @@ const ChallengePage: React.FC = () => {
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [isScoreLoading, setIsScoreLoading] = useState(true);
   const [needsTestRun, setNeedsTestRun] = useState(false);
-  const [isPreviewLoaded, setIsPreviewLoaded] = useState(false);
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
 
   useEffect(() => {
@@ -67,7 +66,6 @@ const ChallengePage: React.FC = () => {
   };
 
   const handleIframeLoad = useCallback((api: { forceReload: () => Promise<void> }) => {
-    setIsPreviewLoaded(true);
     previewApiRef.current = api;
   }, []);
 

@@ -43,7 +43,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
             if (templateResponse.ok) {
               data.previewTemplatePath = `/data/challenges/${categoryId}/previewTemplate.js`;
             }
-          } catch (error) {
+          } catch {
             // Ignore errors - we'll just not use a custom template
             console.log(`No preview template found for category ${categoryId}`);
           }

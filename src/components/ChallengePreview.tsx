@@ -294,11 +294,6 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
       // Get the latest content
       const fs = fileSystemRef.current;
 
-      // Get file-specific autoreload setting
-      const mainFileData = Array.from(fs.files.values()).find((file) => file.filename === mainFile);
-      const fileAutoreload = mainFileData?.autoreload;
-
-      // If testing a non-autoreload file, ensure we display the result, not the placeholder
       // Tests should always show the result, not the placeholder
       if (previewTemplateRef.current) {
         // Use the custom preview template if available
@@ -333,7 +328,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         resolve();
       }, 5000);
     });
-  }, [mainFile, processHTML, previewType]);
+  }, [mainFile, processHTML]);
 
   // Update fileSystemRef when fileSystem changes
   useEffect(() => {

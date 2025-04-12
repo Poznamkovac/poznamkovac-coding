@@ -1,1 +1,3 @@
-# Write your Python code here
+from my_module import hello
+
+hello()
