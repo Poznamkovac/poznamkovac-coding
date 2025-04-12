@@ -45,6 +45,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   const [iframeLoading, setIframeLoading] = useState(false);
 
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const previewReadyRef = useRef<boolean>(false);
+  const testerRef = useRef<unknown>(null);
 
   useEffect(() => {
     // Load score from IndexedDB
@@ -56,6 +58,22 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     };
 
     loadScore();
+
+    // Listen for PREVIEW_READY messages from the iframe
+    const handlePreviewMessages = (event: MessageEvent) => {
+      if (event.data && event.data.type === "PREVIEW_READY") {
+        previewReadyRef.current = true;
+      } else if (event.data && event.data.type === "PREVIEW_RELOADING") {
+        // Reset ready state when preview is being reloaded
+        previewReadyRef.current = false;
+      }
+    };
+
+    window.addEventListener("message", handlePreviewMessages);
+
+    return () => {
+      window.removeEventListener("message", handlePreviewMessages);
+    };
   }, [categoryId, challengeId]);
 
   const saveHighestScore = async (newScore: number) => {
@@ -71,10 +89,15 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     onTestRun();
     setIsTestRunning(true);
 
+    // Always reset preview ready state at the start of each test run
+    previewReadyRef.current = false;
+
     try {
       // Get the test module
       const testModule = await import(/* @vite-ignore */ `/data/challenges/${categoryId}/${challengeId}/tests.js`);
       const tester = new testModule.default();
+      testerRef.current = tester;
+
       const previewIframe = document.getElementById("preview") as HTMLIFrameElement;
       previewIframeRef.current = previewIframe;
 
@@ -91,13 +114,15 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         // Function to reload iframe and wait for it to load
         const reloadAndWaitForIframe = () => {
           return new Promise<Window>((resolve) => {
+            // Reset ready state
+            previewReadyRef.current = false;
+
             // Set loading state
             setIframeLoading(true);
 
             // Create one-time load handler
             const handleLoad = () => {
               previewIframe.removeEventListener("load", handleLoad);
-              setIframeLoading(false);
               if (previewIframe.contentWindow) {
                 resolve(previewIframe.contentWindow);
               }
@@ -112,7 +137,6 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
             // If for some reason the load event doesn't fire (fallback)
             setTimeout(() => {
               previewIframe.removeEventListener("load", handleLoad);
-              setIframeLoading(false);
               if (previewIframe.contentWindow) {
                 resolve(previewIframe.contentWindow);
               }
@@ -124,9 +148,40 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         previewWindow = await reloadAndWaitForIframe();
       }
 
-      // If we have a preview window, run the tests
+      // If we have a preview window, wait for it to signal it's ready
       if (!previewWindow) {
         throw new Error("Preview window not available");
+      }
+
+      // Wait for the PREVIEW_READY message if not already received
+      if (!previewReadyRef.current) {
+        await new Promise<void>((resolve, reject) => {
+          const checkInterval = 100; // ms
+          const maxWaitTime = 10000; // 10 seconds timeout
+          let elapsedTime = 0;
+
+          const checkReadyState = () => {
+            if (previewReadyRef.current) {
+              setIframeLoading(false);
+              resolve();
+            } else if (elapsedTime >= maxWaitTime) {
+              setIframeLoading(false);
+              reject(new Error("Timeout waiting for preview to be ready"));
+            } else {
+              elapsedTime += checkInterval;
+              setTimeout(checkReadyState, checkInterval);
+            }
+          };
+
+          checkReadyState();
+        });
+      } else {
+        setIframeLoading(false);
+      }
+
+      // Set the preview window on the tester once
+      if (typeof tester.setPreviewWindow === "function") {
+        tester.setPreviewWindow(previewWindow);
       }
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
@@ -136,7 +191,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       const results = await Promise.all(
         testMethods.map(async (method) => {
           try {
-            const result: Test = await tester[method as keyof typeof tester](previewWindow);
+            // Call test method without passing previewWindow since it's set at class level
+            const result: Test = await tester[method as keyof typeof tester]();
             return { name: method, result };
           } catch (error) {
             console.error(`Error in method: ${method}:`, error);
@@ -168,7 +224,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       setTestResults([
         {
           name: "Error",
-          result: { detaily_zle: "An error occurred during testing." },
+          result: { detaily_zle: `An error occurred during testing: ${error instanceof Error ? error.message : String(error)}` },
         },
       ]);
     } finally {

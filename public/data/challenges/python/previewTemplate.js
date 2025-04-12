@@ -150,14 +150,6 @@ function previewTemplate(mainFile, fileSystem) {
       // Flag to indicate when Pyodide is ready
       window.pyodideReady = false;
       
-      // Function to notify parent that the iframe is ready for testing
-      function notifyReady() {
-        window.pyodideReady = true;
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'PYODIDE_READY' }, '*');
-        }
-      }
-      
       // Main function to initialize Pyodide and run Python code
       async function main() {
         try {
@@ -224,6 +216,14 @@ function previewTemplate(mainFile, fileSystem) {
       
       // Start the main function
       main();
+
+      // Function to notify parent that the iframe is ready for testing
+      function notifyReady() {
+        window.pyodideReady = true;
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'PREVIEW_READY', language: 'python' }, '*');
+        }
+      }
     </script>
   </body>
 </html>

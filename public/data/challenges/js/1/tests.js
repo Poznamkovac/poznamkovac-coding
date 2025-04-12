@@ -1,4 +1,15 @@
 export default class HTMLChallengeTester {
+  constructor() {
+    this.previewWindow = null;
+  }
+
+  /**
+   * Set the preview window reference for all tests
+   */
+  setPreviewWindow(window) {
+    this.previewWindow = window;
+  }
+
   _correct_sort(array, reverse = false) {
     return array.sort((a, b) => {
       return reverse ? b - a : a - b;
@@ -17,16 +28,15 @@ export default class HTMLChallengeTester {
     return arrays;
   }
 
-  /** @param {Window} window */
-  _generic_test_bubblesort(window, reverse = false) {
-    if (typeof window.bubblesort !== "function") {
+  _generic_test_bubblesort(reverse = false) {
+    if (typeof this.previewWindow.bubblesort !== "function") {
       return {
         detaily_zle: "Funkcia <code>bubblesort</code> nie je správne definovaná.",
       };
     }
 
     for (let array of this._get_arrays()) {
-      let sorted = window.bubblesort(array.slice(), reverse);
+      let sorted = this.previewWindow.bubblesort(array.slice(), reverse);
       let correct = this._correct_sort(array.slice(), reverse);
 
       if (JSON.stringify(sorted) !== JSON.stringify(correct)) {
@@ -42,13 +52,11 @@ export default class HTMLChallengeTester {
     };
   }
 
-  /** @param {Window} window */
-  test_bubblesort_min(window) {
-    return this._generic_test_bubblesort(window, true);
+  test_bubblesort_min() {
+    return this._generic_test_bubblesort(true);
   }
 
-  /** @param {Window} window */
-  test_bubblesort_max(window) {
-    return this._generic_test_bubblesort(window, false);
+  test_bubblesort_max() {
+    return this._generic_test_bubblesort(false);
   }
 }

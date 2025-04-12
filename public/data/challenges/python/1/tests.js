@@ -2,15 +2,24 @@
  * Tests for the Python Hello World challenge
  */
 export default class PythonTester {
+    constructor() {
+        this.previewWindow = null;
+    }
+
+    /**
+     * Set the preview window reference for all tests
+     */
+    setPreviewWindow(window) {
+        this.previewWindow = window;
+    }
+
     /**
      * Test that the script correctly outputs "Hello, World!"
      */
-    async test_hello_output(previewWindow) {
+    async test_hello_output() {
         try {
-            await this.wait_for_loader(previewWindow);
-
-            const STDOUT = previewWindow.document.getElementById('stdout');
-            const STDERR = previewWindow.document.getElementById('stderr');
+            const STDOUT = this.previewWindow.document.getElementById('stdout');
+            const STDERR = this.previewWindow.document.getElementById('stderr');
 
             let stdout = STDOUT.textContent;
             let stderr = STDERR.textContent;
@@ -34,46 +43,5 @@ export default class PythonTester {
                 detaily_zle: `Test error: ${error.message}`
             };
         }
-    }
-
-    async wait_for_loader(previewWindow) {
-        const loader = previewWindow.document.getElementById('loader');
-        if (loader && loader.style.display !== 'none') {
-            try {
-                await this.waitForCondition(
-                    () => loader.style.display === 'none',
-                    10000,
-                    'Pyodide is still loading'
-                );
-            } catch (timeoutError) {
-                return {
-                    detaily_zle: 'Timed out waiting for Python environment to load'
-                }
-            }
-        }
-    }
-
-    /**
-     * Wait for a condition to be true
-     */
-    waitForCondition(checkFn, timeout = 5000, errorMessage = 'Condition timeout') {
-        return new Promise((resolve, reject) => {
-            if (checkFn()) {
-                return resolve();
-            }
-
-            const timeoutId = setTimeout(() => {
-                clearInterval(intervalId);
-                reject(new Error(errorMessage));
-            }, timeout);
-
-            const intervalId = setInterval(() => {
-                if (checkFn()) {
-                    clearTimeout(timeoutId);
-                    clearInterval(intervalId);
-                    resolve();
-                }
-            }, 100);
-        });
     }
 }

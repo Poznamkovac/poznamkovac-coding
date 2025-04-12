@@ -17,6 +17,7 @@ const ChallengePage: React.FC = () => {
   const [isScoreLoading, setIsScoreLoading] = useState(true);
   const [needsTestRun, setNeedsTestRun] = useState(false);
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
+  const previewReadyRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (challengeData) {
@@ -49,14 +50,25 @@ const ChallengePage: React.FC = () => {
         }
       };
 
+      // Listen for preview ready messages
+      const handlePreviewReady = (event: MessageEvent) => {
+        if (event.data && event.data.type === "PREVIEW_READY") {
+          previewReadyRef.current = true;
+        } else if (event.data && event.data.type === "PREVIEW_RELOADING") {
+          previewReadyRef.current = false;
+        }
+      };
+
       // Add event listeners
       window.addEventListener("scoreUpdate", handleScoreUpdate);
       window.addEventListener(FILE_CHANGE_EVENT, handleFileChange);
+      window.addEventListener("message", handlePreviewReady);
 
       // Cleanup
       return () => {
         window.removeEventListener("scoreUpdate", handleScoreUpdate);
         window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
+        window.removeEventListener("message", handlePreviewReady);
       };
     }
   }, [challengeData, categoryId, challengeId, options.autoReload]);
@@ -71,8 +83,33 @@ const ChallengePage: React.FC = () => {
 
   // Function to force reload the preview (used by tests)
   const forceReloadPreview = useCallback(async () => {
+    // Reset the preview ready flag
+    previewReadyRef.current = false;
+
     if (previewApiRef.current) {
-      return previewApiRef.current.forceReload();
+      await previewApiRef.current.forceReload();
+
+      // Wait for the preview to signal it's ready
+      if (!previewReadyRef.current) {
+        await new Promise<void>((resolve, reject) => {
+          const checkInterval = 100; // ms
+          const maxWaitTime = 10000; // 10 seconds timeout
+          let elapsedTime = 0;
+
+          const checkReadyState = () => {
+            if (previewReadyRef.current) {
+              resolve();
+            } else if (elapsedTime >= maxWaitTime) {
+              reject(new Error("Timeout waiting for preview to be ready"));
+            } else {
+              elapsedTime += checkInterval;
+              setTimeout(checkReadyState, checkInterval);
+            }
+          };
+
+          checkReadyState();
+        });
+      }
     }
     return Promise.resolve();
   }, []);

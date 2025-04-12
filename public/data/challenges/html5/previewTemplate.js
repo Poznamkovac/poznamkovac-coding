@@ -64,6 +64,18 @@ function previewTemplate(mainFile, fileSystem) {
         }
     });
 
+    // Add script to notify parent when ready
+    const notifyScript = doc.createElement("script");
+    notifyScript.textContent = `
+      document.addEventListener('DOMContentLoaded', function() {
+        // Signal to parent window that the preview is ready for testing
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'PREVIEW_READY', language: 'html' }, '*');
+        }
+      });
+    `;
+    doc.head.appendChild(notifyScript);
+
     return doc.documentElement.outerHTML;
 }
 

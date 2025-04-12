@@ -280,6 +280,14 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         return;
       }
 
+      // Notify parent that preview is reloading and not ready
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: "PREVIEW_RELOADING" },
+          origin: window.location.origin,
+        })
+      );
+
       const handleLoad = () => {
         iframe.removeEventListener("load", handleLoad);
         resolve();
@@ -460,9 +468,25 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
       }
     };
 
+    // Add handler for preview ready messages
+    const handlePreviewMessages = (event) => {
+      // Forward messages from iframe to parent window
+      if (event.source === iframe.contentWindow && event.data && event.data.type === "PREVIEW_READY") {
+        window.dispatchEvent(
+          new MessageEvent("message", {
+            data: event.data,
+            origin: window.location.origin,
+          })
+        );
+      }
+    };
+
     iframe.addEventListener("load", handleLoad);
+    window.addEventListener("message", handlePreviewMessages);
+
     return () => {
       iframe.removeEventListener("load", handleLoad);
+      window.removeEventListener("message", handlePreviewMessages);
     };
   }, [onIframeLoad, forceReload]);
 
