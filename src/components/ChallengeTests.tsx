@@ -1,6 +1,6 @@
 import type React from "react";
 import type { Test } from "../types/test";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { emitScoreUpdate } from "../services/scoreService";
 import { storageService } from "../services/storageService";
 
@@ -13,6 +13,7 @@ interface ChallengeTestsProps {
   onTestRun?: () => void;
   files?: string[];
   readonlyFiles?: string[];
+  forceReloadPreview?: () => Promise<void>;
 }
 
 interface SolutionFile {
@@ -29,6 +30,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   onTestRun = () => {},
   files,
   readonlyFiles,
+  forceReloadPreview,
 }) => {
   const [testResults, setTestResults] = useState<Array<{ name: string; result: Test }>>([]);
   const [currentScore, setCurrentScore] = useState<number>(0);
@@ -41,6 +43,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   const [solutionError, setSolutionError] = useState<string | null>(null);
   const [solutionLoaded, setSolutionLoaded] = useState<boolean>(false);
   const [iframeLoading, setIframeLoading] = useState(false);
+
+  const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
     // Load score from IndexedDB
@@ -68,9 +72,15 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     setIsTestRunning(true);
 
     try {
+      // Force reload the preview if provided
+      if (forceReloadPreview) {
+        await forceReloadPreview();
+      }
+
       const testModule = await import(/* @vite-ignore */ `/data/challenges/${categoryId}/${challengeId}/tests.js`);
       const tester = new testModule.default();
       const previewIframe = document.getElementById("preview") as HTMLIFrameElement;
+      previewIframeRef.current = previewIframe;
 
       // Function to reload iframe and wait for it to load
       const reloadAndWaitForIframe = () => {

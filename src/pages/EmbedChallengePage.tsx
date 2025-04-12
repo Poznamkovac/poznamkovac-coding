@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
@@ -17,6 +17,7 @@ const EmbedChallengePage: React.FC = () => {
   const [isScoreLoading, setIsScoreLoading] = useState(true);
   const [needsTestRun, setNeedsTestRun] = useState(false);
   const [isPreviewLoaded, setIsPreviewLoaded] = useState(false);
+  const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
 
   useEffect(() => {
     if (challengeData) {
@@ -65,9 +66,18 @@ const EmbedChallengePage: React.FC = () => {
     setNeedsTestRun(false);
   };
 
-  const handleIframeLoad = () => {
+  const handleIframeLoad = useCallback((api: { forceReload: () => Promise<void> }) => {
     setIsPreviewLoaded(true);
-  };
+    previewApiRef.current = api;
+  }, []);
+
+  // Function to force reload the preview (used by tests)
+  const forceReloadPreview = useCallback(async () => {
+    if (previewApiRef.current) {
+      return previewApiRef.current.forceReload();
+    }
+    return Promise.resolve();
+  }, []);
 
   if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>⌛️...</div>;
 
@@ -116,6 +126,7 @@ const EmbedChallengePage: React.FC = () => {
               onTestRun={handleTestRun}
               needsTestRun={needsTestRun}
               showNextButton={false}
+              forceReloadPreview={forceReloadPreview}
             />
           )}
         </div>

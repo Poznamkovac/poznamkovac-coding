@@ -10,8 +10,49 @@ interface ChallengePreviewProps {
   previewTemplatePath?: string;
   autoReload?: boolean;
   hidden: boolean;
-  onIframeLoad?: () => void;
+  onIframeLoad?: (api: { forceReload: () => Promise<void> }) => void;
 }
+
+const PLACEHOLDER_HTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Preview</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    .message {
+      text-align: center;
+      max-width: 500px;
+      line-height: 1.5;
+    }
+    .reload-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="message">
+    <div class="reload-icon">🔄</div>
+    <h3>Preview Ready</h3>
+    <p>Your code changes will not automatically refresh this preview. Click the "Reload" button above when you're ready to see your changes.</p>
+  </div>
+</body>
+</html>
+`;
 
 const ChallengePreview: React.FC<ChallengePreviewProps> = ({
   fileSystem,
@@ -32,6 +73,45 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
 
   // Track file changes to force full reloads when needed
   const fileContentRef = useRef<Record<string, string>>({});
+
+  // Force reload the preview
+  const reloadPreview = () => {
+    setShouldRefreshPreview(true);
+    setIsLoading(true);
+    requestAnimationFrame(() => {
+      updateIframeContent();
+      setNeedsManualReload(false);
+    });
+  };
+
+  // Public method to force reload the preview (used by tests)
+  const forceReload = useCallback(() => {
+    return new Promise<void>((resolve) => {
+      // Set up a load handler to resolve the promise
+      const iframe = iframeRef.current;
+      if (!iframe) {
+        resolve();
+        return;
+      }
+
+      const handleLoad = () => {
+        iframe.removeEventListener("load", handleLoad);
+        resolve();
+      };
+
+      // Add event listener for load
+      iframe.addEventListener("load", handleLoad);
+
+      // Force reload
+      reloadPreview();
+
+      // Fallback - resolve after 5 seconds if load event doesn't fire
+      setTimeout(() => {
+        iframe.removeEventListener("load", handleLoad);
+        resolve();
+      }, 5000);
+    });
+  }, []);
 
   // Update fileSystemRef when fileSystem changes
   useEffect(() => {
@@ -228,6 +308,20 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
 
     setIsLoading(true);
 
+    if (!autoReload) {
+      // If autoreload is disabled, show a placeholder initially
+      iframe.srcdoc = PLACEHOLDER_HTML;
+
+      // Initial file content snapshot still needed for change detection
+      const initialFiles = fileSystem.getAllFiles();
+      initialFiles.forEach((file) => {
+        if (file.content) {
+          fileContentRef.current[file.filename] = file.content;
+        }
+      });
+      return;
+    }
+
     if (previewTemplateRef.current) {
       // Use the custom preview template if available
       const generatedHTML = previewTemplateRef.current(mainFile, fileSystem);
@@ -263,9 +357,9 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         fileContentRef.current[file.filename] = file.content;
       }
     });
-  }, [mainFile, fileSystem, processHTML]);
+  }, [mainFile, fileSystem, processHTML, autoReload]);
 
-  // Handle iframe load event
+  // Handle iframe load event and expose API
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
@@ -273,7 +367,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
     const handleLoad = () => {
       setIsLoading(false);
       if (onIframeLoad) {
-        onIframeLoad();
+        onIframeLoad({ forceReload });
       }
     };
 
@@ -281,7 +375,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
     return () => {
       iframe.removeEventListener("load", handleLoad);
     };
-  }, [onIframeLoad]);
+  }, [onIframeLoad, forceReload]);
 
   // Listen for file changes
   useEffect(() => {
@@ -317,16 +411,6 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
       window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
     };
   }, [mainFile, updateIframeContent]);
-
-  // Force reload the preview
-  const reloadPreview = () => {
-    setShouldRefreshPreview(true);
-    setIsLoading(true);
-    requestAnimationFrame(() => {
-      updateIframeContent();
-      setNeedsManualReload(false);
-    });
-  };
 
   return (
     <div className={`flex flex-col flex-1 mb-4 ${hidden ? "hidden" : ""}`}>

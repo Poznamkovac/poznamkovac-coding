@@ -4,7 +4,7 @@ import { useChallengeData } from "../hooks/useChallengeData";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
 import ChallengeTests from "../components/ChallengeTests";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { storageService } from "../services/storageService";
 import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 import { useQueryParams } from "../hooks/useQueryParams";
@@ -17,6 +17,7 @@ const ChallengePage: React.FC = () => {
   const [isScoreLoading, setIsScoreLoading] = useState(true);
   const [needsTestRun, setNeedsTestRun] = useState(false);
   const [isPreviewLoaded, setIsPreviewLoaded] = useState(false);
+  const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
 
   useEffect(() => {
     if (challengeData) {
@@ -65,9 +66,18 @@ const ChallengePage: React.FC = () => {
     setNeedsTestRun(false);
   };
 
-  const handleIframeLoad = () => {
+  const handleIframeLoad = useCallback((api: { forceReload: () => Promise<void> }) => {
     setIsPreviewLoaded(true);
-  };
+    previewApiRef.current = api;
+  }, []);
+
+  // Function to force reload the preview (used by tests)
+  const forceReloadPreview = useCallback(async () => {
+    if (previewApiRef.current) {
+      return previewApiRef.current.forceReload();
+    }
+    return Promise.resolve();
+  }, []);
 
   if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>⌛️...</div>;
 
@@ -130,6 +140,7 @@ const ChallengePage: React.FC = () => {
                 needsTestRun={needsTestRun}
                 files={challengeData.files.map((file) => file.filename)}
                 readonlyFiles={challengeData.files.filter((file) => file.readonly).map((file) => file.filename)}
+                forceReloadPreview={forceReloadPreview}
               />
             )}
           </div>
