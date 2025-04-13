@@ -1,11 +1,19 @@
+import type { ChallengeFile } from "../types/challenge";
 import React, { useEffect, useState, useRef } from "react";
 import { useQueryParams, EmbedOptions, DEFAULT_OPTIONS, toUrlSafeBase64 } from "../hooks/useQueryParams";
-import { ChallengeFile } from "../types/challenge";
 
 // Function to safely encode UTF-8 strings to base64
 const utf8ToBase64 = (str: string): string => {
-  return window.btoa(unescape(encodeURIComponent(str)));
+  return window.btoa(encodeURIComponent(str));
 };
+
+interface Category {
+  id: string;
+  title: string;
+  icon: string;
+  iconColor: string;
+  color: string;
+}
 
 // Default file templates
 const DEFAULT_HTML = `<!DOCTYPE html>
@@ -38,7 +46,18 @@ document.addEventListener('DOMContentLoaded', () => {
   app.textContent = 'Hello from JavaScript!';
 });`;
 
-const DEFAULT_TEST = `// Test file 
+const DEFAULT_PYTHON = `# Python code here
+print("Hello from Python!")
+
+def main():
+    print("This is the main function")
+    
+if __name__ == "__main__":
+    main()`;
+
+// Test templates for different languages
+const TEST_TEMPLATES = {
+  html5: `// Test file for HTML
 // This file allows you to define tests for the assignment
 // You can use regular JavaScript assertions
 
@@ -74,7 +93,137 @@ function runTests(window) {
       message: result.message
     };
   });
-}`;
+}`,
+
+  css3: `// Test file for CSS
+// This file allows you to define tests for the assignment
+// You can use regular JavaScript assertions
+
+function runTests(window) {
+  const tests = [
+    {
+      name: "Test 1: Stylesheets are applied",
+      test: function(window) {
+        const styles = window.getComputedStyle(window.document.body);
+        return { 
+          success: styles.backgroundColor !== "rgba(0, 0, 0, 0)",
+          message: styles.backgroundColor !== "rgba(0, 0, 0, 0)" ? 
+            "Success: Styles are applied" : 
+            "Failure: No styles detected on body element" 
+        };
+      }
+    },
+    {
+      name: "Test 2: H1 is styled",
+      test: function(window) {
+        const h1 = window.document.querySelector('h1');
+        if (!h1) return { success: false, message: "No H1 element found" };
+        
+        const styles = window.getComputedStyle(h1);
+        return { 
+          success: styles.color !== "rgba(0, 0, 0, 0)",
+          message: styles.color !== "rgba(0, 0, 0, 0)" ? 
+            "Success: H1 has styles" : 
+            "Failure: H1 appears unstyled" 
+        };
+      }
+    }
+  ];
+  
+  return tests.map(t => {
+    const result = t.test(window);
+    return {
+      name: t.name,
+      success: result.success,
+      message: result.message
+    };
+  });
+}`,
+
+  js: `// Test file for JavaScript
+// This file allows you to define tests for the assignment
+// You can use regular JavaScript assertions
+
+function runTests(window) {
+  const tests = [
+    {
+      name: "Test 1: JavaScript is executing",
+      test: function(window) {
+        const app = window.document.getElementById('app');
+        return { 
+          success: app && app.textContent && app.textContent.includes('Hello from JavaScript'),
+          message: app?.textContent?.includes('Hello from JavaScript') ? 
+            "Success: JavaScript executed correctly" : 
+            "Failure: JavaScript didn't update the DOM as expected" 
+        };
+      }
+    },
+    {
+      name: "Test 2: DOM is loaded",
+      test: function(window) {
+        return { 
+          success: window.document.readyState === 'complete',
+          message: window.document.readyState === 'complete' ? 
+            "Success: DOM is fully loaded" : 
+            "Failure: DOM is not loaded yet" 
+        };
+      }
+    }
+  ];
+  
+  return tests.map(t => {
+    const result = t.test(window);
+    return {
+      name: t.name,
+      success: result.success,
+      message: result.message
+    };
+  });
+}`,
+
+  python: `// Test file for Python
+// This file allows you to define tests for the assignment
+
+function runTests(window) {
+  const tests = [
+    {
+      name: "Test 1: Python code executed",
+      test: function(window) {
+        // Python output is in a special stdout element
+        const stdout = window.document.getElementById('stdout');
+        return { 
+          success: stdout && stdout.textContent && stdout.textContent.includes('Hello from Python'),
+          message: stdout?.textContent?.includes('Hello from Python') ? 
+            "Success: Python code executed successfully" : 
+            "Failure: Python didn't produce expected output" 
+        };
+      }
+    },
+    {
+      name: "Test 2: No errors occurred",
+      test: function(window) {
+        // Python errors appear in stderr
+        const stderr = window.document.getElementById('stderr');
+        return { 
+          success: !stderr || !stderr.textContent || stderr.textContent.trim() === '',
+          message: (!stderr || !stderr.textContent || stderr.textContent.trim() === '') ? 
+            "Success: No errors occurred" : 
+            "Failure: Python code produced errors" 
+        };
+      }
+    }
+  ];
+  
+  return tests.map(t => {
+    const result = t.test(window);
+    return {
+      name: t.name,
+      success: result.success,
+      message: result.message
+    };
+  });
+}`,
+};
 
 interface CustomAssignment {
   title: string;
@@ -83,6 +232,7 @@ interface CustomAssignment {
   files: ChallengeFile[];
   mainFile: string;
   previewType: string;
+  previewTemplatePath?: string;
 }
 
 const CreateEmbedPage: React.FC = () => {
@@ -95,10 +245,11 @@ const CreateEmbedPage: React.FC = () => {
       { filename: "index.html", readonly: false, hidden: false, autoreload: true, content: DEFAULT_HTML },
       { filename: "style.css", readonly: false, hidden: false, autoreload: true, content: DEFAULT_CSS },
       { filename: "script.js", readonly: false, hidden: false, autoreload: true, content: DEFAULT_JS },
-      { filename: "test.js", readonly: false, hidden: true, autoreload: false, content: DEFAULT_TEST },
+      { filename: "test.js", readonly: false, hidden: true, autoreload: false, content: TEST_TEMPLATES.html5 },
     ],
     mainFile: "index.html",
     previewType: "html",
+    previewTemplatePath: "/data/challenges/html5/previewTemplate.js",
   });
   const [iframeCode, setIframeCode] = useState<string>("");
   const [fullEmbedUrl, setFullEmbedUrl] = useState<string>("");
@@ -106,7 +257,28 @@ const CreateEmbedPage: React.FC = () => {
   const [displayOptions, setDisplayOptions] = useState<EmbedOptions>(DEFAULT_OPTIONS);
   const [currentFile, setCurrentFile] = useState<number>(0);
   const [parseError, setParseError] = useState<string>("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [testEditorOpen, setTestEditorOpen] = useState<boolean>(false);
   const initializedRef = useRef(false);
+
+  // Fetch available categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/data/categories.json");
+        if (!response.ok) {
+          throw new Error("Failed to fetch categories");
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+        setParseError("Failed to load programming languages.");
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Display parse error from query params
   useEffect(() => {
@@ -284,6 +456,76 @@ const CreateEmbedPage: React.FC = () => {
     }));
   };
 
+  // Handle language change
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const language = e.target.value;
+    const testIndex = assignment.files.findIndex((file) => file.filename === "test.js");
+    const updatedFiles = [...assignment.files];
+
+    // Update preview template path and test file
+    const previewTemplatePath = language ? `/data/challenges/${language}/previewTemplate.js` : undefined;
+
+    // If a test file exists, update its content based on the selected language
+    if (testIndex !== -1) {
+      updatedFiles[testIndex] = {
+        ...updatedFiles[testIndex],
+        content: TEST_TEMPLATES[language as keyof typeof TEST_TEMPLATES] || TEST_TEMPLATES.html5,
+      };
+    }
+
+    // Add appropriate main file if not exist
+    let mainFile = assignment.mainFile;
+
+    if (language === "python") {
+      // Check if Python main file exists, create if not
+      const pythonMainExists = updatedFiles.some((file) => file.filename === "main.py");
+      if (!pythonMainExists) {
+        updatedFiles.push({
+          filename: "main.py",
+          readonly: false,
+          hidden: false,
+          autoreload: false, // Python files typically don't auto-reload
+          content: DEFAULT_PYTHON,
+        });
+      }
+      mainFile = "main.py";
+    } else if (language === "html5" || language === "css3" || language === "js") {
+      // For web-based languages, ensure index.html exists
+      const htmlExists = updatedFiles.some((file) => file.filename === "index.html");
+      if (!htmlExists) {
+        updatedFiles.push({
+          filename: "index.html",
+          readonly: false,
+          hidden: false,
+          autoreload: true,
+          content: DEFAULT_HTML,
+        });
+      }
+      mainFile = "index.html";
+    }
+
+    setAssignment((prev) => ({
+      ...prev,
+      previewType: language === "python" ? "python" : language === "js" ? "javascript" : "html",
+      previewTemplatePath,
+      files: updatedFiles,
+      mainFile,
+    }));
+  };
+
+  // Open/close test editor
+  const toggleTestEditor = () => {
+    setTestEditorOpen(!testEditorOpen);
+
+    // If opening the test editor, switch to the test file
+    if (!testEditorOpen) {
+      const testIndex = assignment.files.findIndex((file) => file.filename === "test.js");
+      if (testIndex !== -1) {
+        setCurrentFile(testIndex);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 text-white bg-gray-900">
       <h1 className="mb-8 text-3xl font-bold">Create Custom Embeddable Assignment</h1>
@@ -307,7 +549,7 @@ const CreateEmbedPage: React.FC = () => {
               name="title"
               value={assignment.title}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 text-gray-200 rounded"
+              className="w-full px-3 py-2 text-gray-200 bg-gray-700 rounded"
             />
           </div>
 
@@ -318,7 +560,7 @@ const CreateEmbedPage: React.FC = () => {
               value={assignment.assignment}
               onChange={handleInputChange}
               rows={4}
-              className="w-full px-3 py-2 text-gray-200 rounded"
+              className="w-full px-3 py-2 text-gray-200 bg-gray-700 rounded"
             />
           </div>
 
@@ -330,8 +572,31 @@ const CreateEmbedPage: React.FC = () => {
               value={assignment.maxScore}
               onChange={handleInputChange}
               min="0"
-              className="w-full px-3 py-2 text-gray-200 rounded"
+              className="w-full px-3 py-2 text-gray-200 bg-gray-700 rounded"
             />
+          </div>
+
+          <div className="mb-4">
+            <label className="block mb-1">Programming Language</label>
+            <select
+              value={
+                assignment.previewType === "python"
+                  ? "python"
+                  : assignment.previewType === "javascript"
+                  ? "js"
+                  : assignment.previewType === "html"
+                  ? "html5"
+                  : "html5"
+              }
+              onChange={handleLanguageChange}
+              className="w-full px-3 py-2 text-gray-200 bg-gray-700 rounded"
+            >
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.title}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -422,6 +687,46 @@ const CreateEmbedPage: React.FC = () => {
             </label>
           </div>
         </div>
+      </div>
+
+      {/* Test Editor Section */}
+      <div className="p-4 mb-8 bg-gray-800 rounded-lg">
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-bold">Tests</h2>
+          <button onClick={toggleTestEditor} className="px-3 py-1 ml-4 text-white bg-blue-600 rounded hover:bg-blue-700">
+            {testEditorOpen ? "Close Test Editor" : "Open Test Editor"}
+          </button>
+        </div>
+
+        {testEditorOpen && (
+          <div className="mb-4">
+            <p className="mb-2">Edit your test.js file to customize how your assignment is evaluated:</p>
+            <textarea
+              value={assignment.files.find((f) => f.filename === "test.js")?.content || ""}
+              onChange={(e) => {
+                const testIndex = assignment.files.findIndex((f) => f.filename === "test.js");
+                if (testIndex !== -1) {
+                  const updatedFiles = [...assignment.files];
+                  updatedFiles[testIndex] = {
+                    ...updatedFiles[testIndex],
+                    content: e.target.value,
+                  };
+                  setAssignment((prev) => ({
+                    ...prev,
+                    files: updatedFiles,
+                  }));
+                }
+              }}
+              className="w-full px-3 py-2 font-mono text-green-300 bg-gray-900 rounded"
+              rows={15}
+            />
+          </div>
+        )}
+
+        <p className="text-gray-400">
+          The test file contains functions that will evaluate student submissions. You can customize the tests based on your
+          assignment requirements.
+        </p>
       </div>
 
       {/* Files Section */}

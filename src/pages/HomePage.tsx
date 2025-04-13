@@ -6,9 +6,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 interface Category {
   id: string;
   title: string;
-  ikona: string;
-  ikonaFarba: string;
-  farba: string;
+  icon: string;
+  iconColor: string;
+  color: string;
 }
 
 const HomePage: React.FC = () => {
@@ -32,14 +32,14 @@ const HomePage: React.FC = () => {
             key={category.id}
             to={`/challenges/${category.id}`}
             className="flex flex-row items-center justify-start gap-4 px-6 py-4 font-bold text-white transition duration-300 rounded shadow hover:opacity-80"
-            style={{ backgroundColor: category.farba }}
+            style={{ backgroundColor: category.color }}
           >
             <FontAwesomeIcon
               size="2x"
               // @ts-expect-error FontAwesome icon prop expects a different type but our API returns string array
-              icon={["fab", category.ikona]}
+              icon={["fab", category.icon]}
               className="mr-2"
-              style={{ color: category.ikonaFarba }}
+              style={{ color: category.iconColor }}
             />
             {category.title}
           </Link>

@@ -2,29 +2,29 @@
   {
     "id": "html5",
     "title": "HTML",
-    "ikona": "html5",
-    "ikonaFarba": "#ffffff",
-    "farba": "#E34F26"
+    "icon": "html5",
+    "iconColor": "#ffffff",
+    "color": "#E34F26"
   },
   {
     "id": "css3",
     "title": "CSS",
-    "ikona": "css3",
-    "ikonaFarba": "#ffffff",
-    "farba": "#1572B6"
+    "icon": "css3",
+    "iconColor": "#ffffff",
+    "color": "#1572B6"
   },
   {
     "id": "js",
     "title": "JavaScript",
-    "ikona": "js",
-    "ikonaFarba": "#FFF56B",
-    "farba": "#ebab34"
+    "icon": "js",
+    "iconColor": "#FFF56B",
+    "color": "#ebab34"
   },
   {
     "id": "python",
     "title": "Python",
-    "ikona": "python",
-    "ikonaFarba": "yellow",
-    "farba": "#306998"
+    "icon": "python",
+    "iconColor": "yellow",
+    "color": "#306998"
   }
 ]

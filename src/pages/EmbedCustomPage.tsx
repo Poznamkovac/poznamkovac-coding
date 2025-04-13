@@ -22,6 +22,7 @@ const EmbedCustomPage: React.FC = () => {
   const [needsTestRun, setNeedsTestRun] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const initializedRef = useRef(false);
+  const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
 
   // Update optionsRef when options change
   useEffect(() => {
@@ -119,6 +120,19 @@ const EmbedCustomPage: React.FC = () => {
     };
   }, [fileSystem]); // Only re-run when fileSystem changes
 
+  // Handle iframe load
+  const handleIframeLoad = useCallback((api: { forceReload: () => Promise<void> }) => {
+    previewApiRef.current = api;
+  }, []);
+
+  // Force reload the preview (used by tests)
+  const forceReloadPreview = useCallback(async () => {
+    if (previewApiRef.current) {
+      return previewApiRef.current.forceReload();
+    }
+    return Promise.resolve();
+  }, []);
+
   // Run tests for the custom assignment
   const runTests = useCallback(async () => {
     if (!fileSystem || !assignmentData) return;
@@ -133,6 +147,9 @@ const EmbedCustomPage: React.FC = () => {
         console.error("No test.js file found");
         return;
       }
+
+      // Force reload the preview before testing
+      await forceReloadPreview();
 
       // Get the preview iframe
       const iframe = document.getElementById("preview") as HTMLIFrameElement;
@@ -150,7 +167,7 @@ const EmbedCustomPage: React.FC = () => {
         `
         ${testCode}
         return typeof runTests === 'function' ? runTests(window) : [];
-      `,
+      `
       );
 
       // Execute the tests in the iframe context
@@ -174,7 +191,7 @@ const EmbedCustomPage: React.FC = () => {
         },
       ]);
     }
-  }, [fileSystem, assignmentData]);
+  }, [fileSystem, assignmentData, forceReloadPreview]);
 
   if (!fileSystem || !assignmentData) {
     return (
@@ -220,8 +237,10 @@ const EmbedCustomPage: React.FC = () => {
             fileSystem={fileSystem}
             mainFile={assignmentData.mainFile}
             previewType={assignmentData.previewType}
+            previewTemplatePath={assignmentData.previewTemplatePath}
             autoReload={options.autoReload}
             hidden={!showPreview}
+            onIframeLoad={handleIframeLoad}
           />
 
           {options.isScored && (

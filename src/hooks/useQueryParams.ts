@@ -39,7 +39,7 @@ export const fromUrlSafeBase64 = (safe: string): string => {
 
 // Convert base64 to UTF-8 string (handles non-ASCII characters)
 export const base64ToUtf8 = (base64: string): string => {
-  return decodeURIComponent(escape(window.atob(base64)));
+  return decodeURIComponent(window.atob(base64));
 };
 
 export function useQueryParams(): {
