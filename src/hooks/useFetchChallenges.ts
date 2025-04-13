@@ -1,5 +1,7 @@
 import type { ChallengeList, ChallengeData } from "../types/challenge";
 import { useState, useCallback, useEffect } from "react";
+import { useI18n } from "./useI18n";
+import { getLocalizedResourceUrl } from "../services/i18nService";
 
 const CHALLENGES_PER_PAGE = 6;
 
@@ -8,11 +10,13 @@ export const useFetchChallenges = (categoryId: string, currentPage: number) => {
   const [challenges, setChallenges] = useState<ChallengeList>({});
   const [isLastPage, setIsLastPage] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { language } = useI18n();
 
   const fetchChallenge = useCallback(
     async (index: number): Promise<ChallengeData | null> => {
       try {
-        const response = await fetch(`/data/challenges/${categoryId}/${index}/assignment.json`);
+        const url = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${index}/assignment.json`, language);
+        const response = await fetch(url);
         if (!response.ok) {
           return null;
         }
@@ -21,7 +25,7 @@ export const useFetchChallenges = (categoryId: string, currentPage: number) => {
         return null;
       }
     },
-    [categoryId],
+    [categoryId, language]
   );
 
   const fetchChallenges = useCallback(async () => {

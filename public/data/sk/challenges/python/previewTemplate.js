@@ -56,7 +56,7 @@ function previewTemplate(mainFile, fileSystem) {
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Python Execution</title>
+    <title>Python</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
     <style>
       html, body {
@@ -197,13 +197,13 @@ function previewTemplate(mainFile, fileSystem) {
               console.error(error);
             }
           } else {
-            addOutput(\`Error: Main file "\${mainFilePath}" not found\`, 'stderr');
+            addOutput(\`Chyba: hlavný súbor "\${mainFilePath}" sa nenašiel\`, 'stderr');
           }
         } catch (error) {
           // Handle Pyodide loading errors
           loader.style.display = 'none';
-          addOutput(\`Failed to initialize Python environment: \${error.message}\`, 'stderr');
-          console.error('Pyodide initialization error:', error);
+          addOutput(\`Nepodarilo sa inicializovať Python prostredie: \${error.message}\`, 'stderr');
+          console.error('Chyba inicializácie Pyodide:', error);
         } finally {
           // Notify that we're ready for tests
           notifyReady();

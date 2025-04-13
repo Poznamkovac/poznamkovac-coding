@@ -1,6 +1,6 @@
 {
-  "title": "Hello Python",
-  "assignment": "Write a Python program that defines function <code>hello()</code> which returns <code>'Hello, World!'</code>.",
+  "title": "Ahoj Python",
+  "assignment": "Napíšte Python program, ktorý definuje funkciu <code>ahoj()</code>, ktorá vráti <code>'Ahoj, svet!'</code>.",
   "maxScore": 5,
   "previewType": "python",
   "showPreview": true,

@@ -23,16 +23,16 @@ export default class PythonTester {
       let stderr = STDERR.textContent;
       if (stderr.length > 0) {
         return {
-          details_wrong: `Expected no errors, but found stderr`,
+          details_wrong: `Neočakával som chyby, ale bol nájdený stderr`,
         };
       }
 
       return {
-        details_ok: 'The program functions correctly.',
+        details_ok: 'Program funguje správne.',
       };
     } catch (error) {
       return {
-        details_wrong: `Test error: ${error.message}`,
+        details_wrong: `Chyba testov: ${error.message}`,
       };
     }
   }

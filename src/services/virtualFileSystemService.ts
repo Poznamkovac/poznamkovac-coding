@@ -1,5 +1,7 @@
 import { ChallengeFile, VirtualFileSystem } from "../types/challenge";
 import { storageService } from "./storageService";
+import { LanguageCode } from "../types/i18n";
+import { getLocalizedResourceUrl } from "./i18nService";
 
 // Custom event for file change notifications
 export const FILE_CHANGE_EVENT = "fileChange";
@@ -26,6 +28,7 @@ export const createVirtualFileSystem = async (
   categoryId: string,
   challengeId: string,
   initialFiles: ChallengeFile[],
+  language: LanguageCode = "auto"
 ): Promise<VirtualFileSystem> => {
   // Create a map of filenames to file data
   const filesMap = new Map<string, ChallengeFile>();
@@ -69,7 +72,8 @@ export const createVirtualFileSystem = async (
           // Only fetch from server for non-custom challenges
           // Otherwise, fetch from the server
           try {
-            const response = await fetch(`/data/challenges/${categoryId}/${challengeId}/files/${file.filename}`);
+            const url = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${challengeId}/files/${file.filename}`, language);
+            const response = await fetch(url);
             if (response.ok) {
               const content = await response.text();
               const currentFile = filesMap.get(file.filename);
@@ -83,7 +87,7 @@ export const createVirtualFileSystem = async (
             console.error(`Error loading file: ${file.filename}`, error);
           }
         }
-      }),
+      })
     );
   };
 
@@ -111,7 +115,7 @@ export const createVirtualFileSystem = async (
               challengeId,
               filename,
             },
-          }),
+          })
         );
       }
     },
@@ -136,7 +140,7 @@ export const createVirtualFileSystem = async (
               content,
               shouldReload: !!file.autoreload,
             },
-          }),
+          })
         );
       }
     },

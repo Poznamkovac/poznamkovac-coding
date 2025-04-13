@@ -3,6 +3,8 @@ import type { Test } from "../types/test";
 import { useState, useEffect, useRef } from "react";
 import { emitScoreUpdate } from "../services/scoreService";
 import { storageService } from "../services/storageService";
+import { useI18n } from "../hooks/useI18n";
+import { getLocalizedResourceUrl } from "../services/i18nService";
 
 interface ChallengeTestsProps {
   categoryId: string;
@@ -43,6 +45,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   const [solutionError, setSolutionError] = useState<string | null>(null);
   const [solutionLoaded, setSolutionLoaded] = useState<boolean>(false);
   const [iframeLoading, setIframeLoading] = useState(false);
+  const { language } = useI18n();
 
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const previewReadyRef = useRef<boolean>(false);
@@ -94,7 +97,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
 
     try {
       // Get the test module
-      const testModule = await import(/* @vite-ignore */ `/data/challenges/${categoryId}/${challengeId}/tests.js`);
+      const testsUrl = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${challengeId}/tests.js`, language);
+      const testModule = await import(/* @vite-ignore */ testsUrl);
       const tester = new testModule.default();
       testerRef.current = tester;
 
@@ -245,7 +249,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         readonlyList = readonlyFiles || [];
       } else {
         // Fallback to fetching assignment.json if files aren't provided
-        const metadataResponse = await fetch(`/data/challenges/${categoryId}/${challengeId}/assignment.json`);
+        const metadataUrl = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${challengeId}/assignment.json`, language);
+        const metadataResponse = await fetch(metadataUrl);
         if (!metadataResponse.ok) {
           setSolutionError("Assignment metadata not available");
           return;
@@ -272,7 +277,11 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         }
 
         // Fetch the solution files
-        const response = await fetch(`/data/challenges/${categoryId}/${challengeId}/solution/${filename}`);
+        const solutionUrl = getLocalizedResourceUrl(
+          `/data/challenges/${categoryId}/${challengeId}/solution/${filename}`,
+          language
+        );
+        const response = await fetch(solutionUrl);
         if (!response.ok) {
           continue; // Skip files that don't have solutions
         }

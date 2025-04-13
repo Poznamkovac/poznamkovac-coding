@@ -8,6 +8,8 @@ import { useQueryParams } from "../hooks/useQueryParams";
 import { storageService } from "../services/storageService";
 import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 import EmbedLayout from "../components/EmbedLayout";
+import { useI18n } from "../hooks/useI18n";
+import { getLocalizedResourceUrl } from "../services/i18nService";
 
 const EmbedChallengePage: React.FC = () => {
   const { categoryId, challengeId } = useParams<{ categoryId: string; challengeId: string }>();
@@ -17,6 +19,7 @@ const EmbedChallengePage: React.FC = () => {
   const [isScoreLoading, setIsScoreLoading] = useState(true);
   const [needsTestRun, setNeedsTestRun] = useState(false);
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
+  const { language } = useI18n();
 
   useEffect(() => {
     if (challengeData) {
@@ -81,7 +84,8 @@ const EmbedChallengePage: React.FC = () => {
 
   // Prepare preview template path based on category
   const previewTemplatePath =
-    challengeData.previewTemplatePath || (categoryId ? `/data/challenges/${categoryId}/previewTemplate.js` : undefined);
+    challengeData.previewTemplatePath ||
+    (categoryId ? getLocalizedResourceUrl(`/data/challenges/${categoryId}/previewTemplate.js`, language) : undefined);
 
   // Combine URL options with challenge data options
   const showPreview = options.showPreview && challengeData.showPreview;

@@ -2,19 +2,23 @@ import type { ChallengeData, VirtualFileSystem } from "../types/challenge";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createVirtualFileSystem } from "../services/virtualFileSystemService";
+import { useI18n } from "../hooks/useI18n";
+import { getLocalizedResourceUrl } from "../services/i18nService";
 
 export const useChallengeData = (categoryId: string, challengeId: string) => {
   const navigate = useNavigate();
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
   const [fileSystem, setFileSystem] = useState<VirtualFileSystem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { language } = useI18n();
 
   useEffect(() => {
     // Load challenge data
     const loadChallengeData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/data/challenges/${categoryId}/${challengeId}/assignment.json`);
+        const url = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${challengeId}/assignment.json`, language);
+        const response = await fetch(url);
         const data: ChallengeData = await response.json();
 
         // Set defaults if properties are missing
@@ -31,17 +35,18 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
           data.mainFile = data.files.find((f) => f.filename === "index.html")
             ? "index.html"
             : data.files.length > 0
-              ? data.files[0].filename
-              : "";
+            ? data.files[0].filename
+            : "";
         }
 
         // If no previewTemplatePath is specified, see if one exists at the category level
         if (!data.previewTemplatePath) {
           try {
             // Check if a previewTemplate.js exists for this category
-            const templateResponse = await fetch(`/data/challenges/${categoryId}/previewTemplate.js`, { method: "HEAD" });
+            const templateUrl = getLocalizedResourceUrl(`/data/challenges/${categoryId}/previewTemplate.js`, language);
+            const templateResponse = await fetch(templateUrl, { method: "HEAD" });
             if (templateResponse.ok) {
-              data.previewTemplatePath = `/data/challenges/${categoryId}/previewTemplate.js`;
+              data.previewTemplatePath = templateUrl;
             }
           } catch {
             // Ignore errors - we'll just not use a custom template
@@ -59,7 +64,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
         setChallengeData(data);
 
         // Create virtual file system
-        const fs = await createVirtualFileSystem(categoryId, challengeId, data.files);
+        const fs = await createVirtualFileSystem(categoryId, challengeId, data.files, language);
         setFileSystem(fs);
 
         setIsLoading(false);
@@ -70,7 +75,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
     };
 
     loadChallengeData();
-  }, [categoryId, challengeId, navigate]);
+  }, [categoryId, challengeId, navigate, language]);
 
   return {
     challengeData,

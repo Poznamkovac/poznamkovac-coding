@@ -8,6 +8,8 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { storageService } from "../services/storageService";
 import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 import { useQueryParams } from "../hooks/useQueryParams";
+import { useI18n } from "../hooks/useI18n";
+import { getLocalizedResourceUrl } from "../services/i18nService";
 
 const ChallengePage: React.FC = () => {
   const { categoryId, challengeId } = useParams();
@@ -18,6 +20,7 @@ const ChallengePage: React.FC = () => {
   const [needsTestRun, setNeedsTestRun] = useState(false);
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
   const previewReadyRef = useRef<boolean>(false);
+  const { language } = useI18n();
 
   useEffect(() => {
     if (challengeData) {
@@ -118,7 +121,11 @@ const ChallengePage: React.FC = () => {
 
   // Prepare preview template path based on category
   const previewTemplatePath =
-    challengeData.previewTemplatePath || (categoryId ? `/data/challenges/${categoryId}/previewTemplate.js` : undefined);
+    challengeData.previewTemplatePath ||
+    (categoryId ? getLocalizedResourceUrl(`/data/challenges/${categoryId}/previewTemplate.js`, language) : undefined);
+
+  // Get localized image URL
+  const imageUrl = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${challengeId}/obrazok.png`, language);
 
   return (
     <div className="min-h-screen text-white">
@@ -139,7 +146,7 @@ const ChallengePage: React.FC = () => {
             <p className="mb-6" dangerouslySetInnerHTML={{ __html: challengeData.assignment }} />
             <div className="mb-6">
               <img
-                src={`/data/challenges/${categoryId}/${challengeId}/obrazok.png`}
+                src={imageUrl}
                 alt={challengeData.title}
                 className="h-auto max-w-full"
                 onError={(e) => e.currentTarget.remove()}
