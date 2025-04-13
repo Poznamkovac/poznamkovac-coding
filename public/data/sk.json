@@ -1,25 +1,88 @@
 {
-    "app": {
-        "title": "Poznámkovač Webúlohy",
-        "welcome": "Vitajte v Poznámkovač (Webúlohy)!"
+  "app": {
+    "title": "Poznámkovač Webúlohy",
+    "welcome": "Vitajte v Poznámkovač (Webúlohy)!"
+  },
+  "header": {
+    "back": "⏪ Späť",
+    "home": "Domov",
+    "language": "Jazyk",
+    "auto": "Automaticky"
+  },
+  "common": {
+    "loading": "Načítavam...",
+    "error": "Chyba pri načítaní dát",
+    "noCategories": "Nie sú tu žiadne kategórie na zobrazenie.",
+    "backToHome": "Späť na domovskú stránku"
+  },
+  "editor": {
+    "loading": "Načítavam editor kódu...",
+    "loadingCode": "Načítavam kód...",
+    "noFileSelected": "Žiadny súbor nie je vybraný",
+    "readOnly": "(iba na čítanie)"
+  },
+  "challenge": {
+    "veryClever": "si veľmi šikovný :D",
+    "score": "Skóre"
+  },
+  "category": {
+    "loadingChallengeStatus": "Načítavam stav úloh...",
+    "loadingChallenges": "Načítavam úlohy...",
+    "noChallenges": "Ups, nie sú tu žiadne úlohy na zobrazenie.",
+    "backToPrevious": "Späť na predchádzajúcu stranu"
+  },
+  "pagination": {
+    "previous": "Predchádzajúca",
+    "next": "Ďalšia",
+    "page": "Strana"
+  },
+  "preview": {
+    "title": "Náhľad",
+    "reload": "Obnoviť",
+    "runYourCode": "Spusti svoj kód",
+    "pythonCodeReady": "Python kód je pripravený",
+    "pythonExecutionMessage": "Tvoj Python kód bude spustený, keď klikneš na tlačidlo \"Obnoviť\" alebo spustíš testy.",
+    "pythonTechNote": "Python kód beží v prehliadači pomocou",
+    "autoReloadDisabled": "Automatické obnovenie je pre tento typ súboru vypnuté. Klikni na tlačidlo \"Obnoviť\" vyššie alebo na tlačidlo \"Spustiť testy\" nižšie, keď budeš pripravený vidieť svoje zmeny.",
+    "templateNotFunction": "Šablóna nevrátila funkciu",
+    "errorEvaluatingTemplate": "Chyba pri vyhodnocovaní šablóny:",
+    "failedToLoadTemplate": "Zlyhalo načítanie šablóny náhľadu:"
+  },
+  "tests": {
+    "previewWindowNotAvailable": "Okno náhľadu nie je dostupné",
+    "previewReadyTimeout": "Vypršal časový limit čakania na pripravenosť náhľadu",
+    "executionError": "Chyba pri vykonávaní testu",
+    "error": "Chyba",
+    "errorOccurred": "Počas testovania sa vyskytla chyba",
+    "assignmentMetadataNotAvailable": "Metadáta úlohy nie sú dostupné",
+    "noSolutionFiles": "Pre túto úlohu nie sú definované žiadne súbory riešení",
+    "noSolutionsAvailable": "Žiadne riešenia nie sú k dispozícii.",
+    "errorLoadingSolutions": "Chyba pri načítaní riešení",
+    "pass": "ok",
+    "fail": "neprešiel",
+    "copyToClipboard": "Kopírovať do schránky",
+    "noTestFileFound": "Nenašiel sa súbor test.js",
+    "previewReadyError": "Chyba pri čakaní na pripravenosť náhľadu",
+    "previewError": "Chyba náhľadu",
+    "previewLoadError": "Náhľad sa nenačítal správne",
+    "previewIframeNotFound": "Nenašiel sa iframe náhľadu",
+    "errorRunningTests": "Chyba pri spúšťaní testov"
+  },
+  "embed": {
+    "customAssignment": "Vlastná úloha",
+    "customAssignmentFromUrl": "Vlastná úloha načítaná z URL",
+    "errorInitializingFs": "Chyba pri inicializácii súborového systému:",
+    "errorProcessingCustomData": "Chyba pri spracovávaní vlastných dát:",
+    "errorLoadingCustomAssignment": "Chyba pri načítaní vlastnej úlohy",
+    "noValidAssignmentData": "Neboli poskytnuté žiadne platné údaje o úlohe. Uistite sa, že URL obsahuje platný JSON objekt v base64 kódovaní v parametri \"data\".",
+    "createCustomAssignment": "Vytvoriť vlastnú úlohu"
+  },
+  "categories": {
+    "web": {
+      "title": "Web (HTML/CSS/JS)"
     },
-    "header": {
-        "back": "⏪ Späť",
-        "home": "Domov",
-        "language": "Jazyk",
-        "auto": "Automaticky"
-    },
-    "common": {
-        "loading": "Načítavam...",
-        "error": "Chyba pri načítaní dát",
-        "noCategories": "Nie sú tu žiadne kategórie na zobrazenie."
-    },
-    "categories": {
-        "web": {
-            "title": "Web (HTML/CSS/JS)"
-        },
-        "python": {
-            "title": "Python"
-        }
+    "python": {
+      "title": "Python"
     }
+  }
 }

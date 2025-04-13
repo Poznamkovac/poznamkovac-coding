@@ -4,6 +4,7 @@ import { useRef, useEffect } from "react";
 
 import { BeforeMount, Editor, Monaco, OnMount } from "@monaco-editor/react";
 import { emmetHTML, emmetCSS } from "emmet-monaco-es";
+import { useI18n } from "../hooks/useI18n";
 
 import useAutoCloseTags from "../hooks/useAutoCloseTags";
 
@@ -24,6 +25,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const disposeEmmetHtmlRef = useRef<DisposableFunction | null>(null);
   const disposeEmmetCssRef = useRef<DisposableFunction | null>(null);
+  const { t } = useI18n();
 
   const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;
@@ -67,7 +69,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
 
   return (
     <Editor
-      loading={<div>Načítavam editor kódu...</div>}
+      loading={<div>{t("editor.loading")}</div>}
       height={height || "100%"}
       language={language}
       theme="vs-dark"

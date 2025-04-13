@@ -19,7 +19,7 @@ const EmbedChallengePage: React.FC = () => {
   const [isScoreLoading, setIsScoreLoading] = useState(true);
   const [needsTestRun, setNeedsTestRun] = useState(false);
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
-  const { language } = useI18n();
+  const { language, t } = useI18n();
 
   useEffect(() => {
     if (challengeData) {
@@ -80,7 +80,7 @@ const EmbedChallengePage: React.FC = () => {
     return Promise.resolve();
   }, []);
 
-  if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>⌛️...</div>;
+  if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>{t("common.loading")}</div>;
 
   // Prepare preview template path based on category
   const previewTemplatePath =

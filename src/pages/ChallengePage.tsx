@@ -20,7 +20,7 @@ const ChallengePage: React.FC = () => {
   const [needsTestRun, setNeedsTestRun] = useState(false);
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
   const previewReadyRef = useRef<boolean>(false);
-  const { language } = useI18n();
+  const { language, t } = useI18n();
 
   useEffect(() => {
     if (challengeData) {
@@ -117,7 +117,7 @@ const ChallengePage: React.FC = () => {
     return Promise.resolve();
   }, []);
 
-  if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>⌛️...</div>;
+  if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>{t("common.loading")}</div>;
 
   // Prepare preview template path based on category
   const previewTemplatePath =
@@ -134,7 +134,7 @@ const ChallengePage: React.FC = () => {
           <>
             <h2 className="my-4 text-3xl font-bold">
               {options.isScored && currentScore === challengeData.maxScore && "✅ "}
-              {options.isScored && currentScore > challengeData.maxScore && "(si veľmi šikovný :D)"}
+              {options.isScored && currentScore > challengeData.maxScore && `(${t("challenge.veryClever")})`}
               {challengeData.title}
               {options.isScored && (
                 <span className="ml-2 text-xl font-normal">

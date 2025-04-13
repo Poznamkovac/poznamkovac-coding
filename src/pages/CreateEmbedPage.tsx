@@ -748,7 +748,7 @@ const CreateEmbedPage: React.FC = () => {
                 >
                   {file.filename}
                 </button>
-              )
+              ),
           )}
         </div>
 

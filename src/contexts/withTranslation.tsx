@@ -9,7 +9,7 @@ import { useI18n } from "../hooks/useI18n";
  * @returns A new component with translation props
  */
 export function withTranslation<P extends object>(
-  Component: React.ComponentType<P & { t: (key: string) => string }>
+  Component: React.ComponentType<P & { t: (key: string) => string }>,
 ): React.FC<P> {
   // Create a new component that gets translations and passes them to the wrapped component
   const WithTranslation: React.FC<P> = (props) => {
@@ -39,7 +39,7 @@ export function withTranslation<P extends object>(
  * }
  */
 export function TranslationProvider<P extends object>(
-  Target: React.ComponentType<P & { t: (key: string) => string }>
+  Target: React.ComponentType<P & { t: (key: string) => string }>,
 ): React.FC<P> {
   return withTranslation(Target);
 }

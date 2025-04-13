@@ -134,7 +134,7 @@ class StorageService {
     categoryId: string,
     challengeId: string,
     score: number,
-    language: LanguageCode = "auto"
+    language: LanguageCode = "auto",
   ): Promise<void> {
     const effectiveLanguage = getEffectiveLanguage(language);
     const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_skore`;
@@ -153,7 +153,7 @@ class StorageService {
     categoryId: string,
     challengeId: string,
     filename: string,
-    language: LanguageCode = "auto"
+    language: LanguageCode = "auto",
   ): Promise<string | null> {
     const effectiveLanguage = getEffectiveLanguage(language);
     const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_${filename}`;
@@ -174,7 +174,7 @@ class StorageService {
     challengeId: string,
     filename: string,
     code: string,
-    language: LanguageCode = "auto"
+    language: LanguageCode = "auto",
   ): Promise<void> {
     const effectiveLanguage = getEffectiveLanguage(language);
     const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_${filename}`;
@@ -191,7 +191,7 @@ class StorageService {
   async getAllChallengeFiles(
     categoryId: string,
     challengeId: string,
-    language: LanguageCode = "auto"
+    language: LanguageCode = "auto",
   ): Promise<Record<string, string>> {
     try {
       const effectiveLanguage = getEffectiveLanguage(language);
@@ -200,7 +200,7 @@ class StorageService {
       const prefix = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_`;
 
       const fileKeys = allKeys.filter(
-        (key) => key.startsWith(prefix) && key !== `${prefix}skore` // Exclude score
+        (key) => key.startsWith(prefix) && key !== `${prefix}skore`, // Exclude score
       );
 
       const result: Record<string, string> = {};

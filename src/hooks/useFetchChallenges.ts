@@ -25,7 +25,7 @@ export const useFetchChallenges = (categoryId: string, currentPage: number) => {
         return null;
       }
     },
-    [categoryId, language]
+    [categoryId, language],
   );
 
   const fetchChallenges = useCallback(async () => {

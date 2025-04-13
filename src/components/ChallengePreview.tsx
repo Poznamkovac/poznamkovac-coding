@@ -2,6 +2,7 @@ import type React from "react";
 import { useEffect, useRef, useState, useLayoutEffect, useCallback } from "react";
 import { VirtualFileSystem } from "../types/challenge";
 import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
+import { useI18n } from "../hooks/useI18n";
 
 interface ChallengePreviewProps {
   fileSystem: VirtualFileSystem;
@@ -14,22 +15,22 @@ interface ChallengePreviewProps {
 }
 
 // Create dynamic placeholder HTML based on previewType
-const getPlaceholderHTML = (previewType: string) => {
+const getPlaceholderHTML = (previewType: string, t: (key: string) => string) => {
   // Customize message based on language
   let languageSpecificMessage = "";
-  let title = "Run Your Code";
+  let title = t("preview.runYourCode");
 
   switch (previewType.toLowerCase()) {
     case "python":
-      title = "Python Code Ready";
+      title = t("preview.pythonCodeReady");
       languageSpecificMessage = `
-        <p>Your Python code will be executed when you click the "Reload" button or run tests.</p>
-        <p class="tech-note">Python code runs in the browser using <a href="https://pyodide.org" target="_blank">Pyodide</a>.</p>
+        <p>${t("preview.pythonExecutionMessage")}</p>
+        <p class="tech-note">${t("preview.pythonTechNote")} <a href="https://pyodide.org" target="_blank">Pyodide</a>.</p>
       `;
       break;
     default:
       languageSpecificMessage = `
-        <p>Auto-reload is disabled for this type of file. Click the "Reload" button above or the "Run Tests" button below when you're ready to see your changes.</p>
+        <p>${t("preview.autoReloadDisabled")}</p>
       `;
   }
 
@@ -38,7 +39,7 @@ const getPlaceholderHTML = (previewType: string) => {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Preview</title>
+  <title>${t("preview.title")}</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -116,6 +117,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
   const fileSystemRef = useRef(fileSystem);
   const autoReloadRef = useRef(autoReload);
   const previewTemplateRef = useRef<((mainFile: string, fileSystem: VirtualFileSystem) => string) | null>(null);
+  const { t } = useI18n();
 
   // Track file changes to force full reloads when needed
   const fileContentRef = useRef<Record<string, string>>({});
@@ -367,15 +369,15 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
               // Use type assertion to ensure TypeScript understands the type
               previewTemplateRef.current = templateFunction as (mainFile: string, fileSystem: VirtualFileSystem) => string;
             } else {
-              console.error("Template did not return a function");
+              console.error(t("preview.templateNotFunction"));
               previewTemplateRef.current = null;
             }
           } catch (evalError) {
-            console.error("Error evaluating template:", evalError);
+            console.error(t("preview.errorEvaluatingTemplate"), evalError);
             previewTemplateRef.current = null;
           }
         } catch (error) {
-          console.error("Failed to load preview template:", error);
+          console.error(t("preview.failedToLoadTemplate"), error);
           previewTemplateRef.current = null;
         }
       } else {
@@ -384,7 +386,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
     };
 
     loadPreviewTemplate();
-  }, [previewTemplatePath]);
+  }, [previewTemplatePath, t]);
 
   // Initialize the iframe with HTML content
   useLayoutEffect(() => {
@@ -400,7 +402,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
     // If explicitly set to false in the file, or global autoReload is false
     if (fileAutoreload === false || !autoReload) {
       // If autoreload is disabled, show a placeholder initially
-      iframe.srcdoc = getPlaceholderHTML(previewType);
+      iframe.srcdoc = getPlaceholderHTML(previewType, t);
 
       // Initial file content snapshot still needed for change detection
       const initialFiles = fileSystem.getAllFiles();
@@ -429,7 +431,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Preview</title>
+  <title>${t("preview.title")}</title>
 </head>
 <body>
   <div id="app"></div>
@@ -447,7 +449,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         fileContentRef.current[file.filename] = file.content;
       }
     });
-  }, [mainFile, fileSystem, processHTML, autoReload, previewType]);
+  }, [mainFile, fileSystem, processHTML, autoReload, previewType, t]);
 
   // Handle iframe load event and expose API
   useEffect(() => {
@@ -527,14 +529,14 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
   return (
     <div className={`flex flex-col flex-1 mb-4 ${hidden ? "hidden" : ""}`}>
       <div className="flex items-center mb-1">
-        <h2 className="flex-grow text-xl font-semibold">Preview</h2>
-        {isLoading && <span className="mr-2 text-sm text-gray-500">Loading...</span>}
+        <h2 className="flex-grow text-xl font-semibold">{t("preview.title")}</h2>
+        {isLoading && <span className="mr-2 text-sm text-gray-500">{t("common.loading")}</span>}
         {needsManualReload && (
           <button
             onClick={reloadPreview}
             className="px-2 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 preview-reload-button"
           >
-            🔄 Reload
+            🔄 {t("preview.reload")}
           </button>
         )}
       </div>

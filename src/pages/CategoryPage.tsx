@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useFetchChallenges } from "../hooks/useFetchChallenges";
 import { storageService } from "../services/storageService";
+import { useI18n } from "../hooks/useI18n";
 
 // Custom event name for score updates
 const SCORE_UPDATE_EVENT = "scoreUpdate";
@@ -18,6 +19,7 @@ interface ScoreUpdateDetail {
 const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }> = ({ challenges, categoryId }) => {
   const [completionStatus, setCompletionStatus] = useState<{ [key: string]: { completed: boolean; score: number } }>({});
   const [isLoading, setIsLoading] = useState(true);
+  const { t } = useI18n();
 
   useEffect(() => {
     // Initial load from IndexedDB
@@ -70,7 +72,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
   }, [challenges, categoryId]);
 
   if (isLoading) {
-    return <div>Načítavam stav úloh...</div>;
+    return <div>{t("category.loadingChallengeStatus")}</div>;
   }
 
   return (
@@ -85,8 +87,8 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
             <div className="inline-block px-2 py-1 mr-2 text-white bg-blue-900 rounded-full text-bold">{id}.</div>
             {completionStatus[id]?.completed && "✅ "} {challenge.title}
             <span className="inline-block px-2 py-1 ml-2 text-sm bg-gray-700 rounded-lg white">
-              <b>Skóre:</b> {completionStatus[id]?.score || 0} / {challenge.maxScore}
-              {(completionStatus[id]?.score || 0) > challenge.maxScore && " (si veľmi šikovný :D)"}
+              <b>{t("challenge.score")}:</b> {completionStatus[id]?.score || 0} / {challenge.maxScore}
+              {(completionStatus[id]?.score || 0) > challenge.maxScore && ` (${t("challenge.veryClever")})`}
             </span>
           </h2>
           <p
@@ -107,25 +109,31 @@ const Pagination: React.FC<{ currentPage: number; isLastPage: boolean; onPageCha
   currentPage,
   isLastPage,
   onPageChange,
-}) => (
-  <div className="flex justify-center mt-8">
-    <button
-      onClick={() => onPageChange(currentPage - 1)}
-      disabled={currentPage === 1}
-      className="px-4 py-2 mr-2 text-white bg-blue-500 rounded disabled:bg-gray-700 disabled:text-gray-400"
-    >
-      Predchádzajúca
-    </button>
-    <span className="px-4 py-2">Strana {currentPage}</span>
-    <button
-      onClick={() => onPageChange(currentPage + 1)}
-      disabled={isLastPage}
-      className="px-4 py-2 ml-2 text-white bg-blue-500 rounded disabled:bg-gray-700 disabled:text-gray-400"
-    >
-      Ďalšia
-    </button>
-  </div>
-);
+}) => {
+  const { t } = useI18n();
+
+  return (
+    <div className="flex justify-center mt-8">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="px-4 py-2 mr-2 text-white bg-blue-500 rounded disabled:bg-gray-700 disabled:text-gray-400"
+      >
+        {t("pagination.previous")}
+      </button>
+      <span className="px-4 py-2">
+        {t("pagination.page")} {currentPage}
+      </span>
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={isLastPage}
+        className="px-4 py-2 ml-2 text-white bg-blue-500 rounded disabled:bg-gray-700 disabled:text-gray-400"
+      >
+        {t("pagination.next")}
+      </button>
+    </div>
+  );
+};
 
 /** Stránka kategórie. Obsahuje zoznam úloh a stránkovanie. */
 const CategoryPage: React.FC = () => {
@@ -133,6 +141,7 @@ const CategoryPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState<number>(parseInt(searchParams.get("strana") || "1", 10));
+  const { t } = useI18n();
 
   const { challenges, isLastPage, isLoading } = useFetchChallenges(categoryId!, currentPage);
 
@@ -146,23 +155,23 @@ const CategoryPage: React.FC = () => {
   const challengeEntries = useMemo(() => Object.entries(challenges), [challenges]);
 
   if (isLoading) {
-    return <div>Načítavam úlohy...</div>;
+    return <div>{t("category.loadingChallenges")}</div>;
   }
 
   if (challengeEntries.length === 0) {
     return (
       <div>
-        <p>Ups, nie sú tu žiadne úlohy na zobrazenie.</p>
+        <p>{t("category.noChallenges")}</p>
         {currentPage > 1 && (
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
           >
-            Späť na predchádzajúcu stranu
+            {t("category.backToPrevious")}
           </button>
         )}
         <Link to="/" className="block mt-6 text-blue-600 underline">
-          Späť na domovskú stránku
+          {t("common.backToHome")}
         </Link>
       </div>
     );

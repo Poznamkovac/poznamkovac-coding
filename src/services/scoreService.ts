@@ -17,7 +17,7 @@ export const emitScoreUpdate = async (
   categoryId: string,
   challengeId: string,
   score: number,
-  language: LanguageCode = "auto"
+  language: LanguageCode = "auto",
 ) => {
   // Save to IndexedDB
   await storageService.setChallengeScore(categoryId, challengeId, score, language);
@@ -26,6 +26,6 @@ export const emitScoreUpdate = async (
   window.dispatchEvent(
     new CustomEvent(SCORE_UPDATE_EVENT, {
       detail: { categoryId, challengeId, score, language },
-    })
+    }),
   );
 };

@@ -1,5 +1,6 @@
 import React from "react";
 import { VirtualFileSystem } from "../types/challenge";
+import { useI18n } from "../hooks/useI18n";
 
 interface FileTabsProps {
   fileSystem: VirtualFileSystem;
@@ -36,6 +37,7 @@ const getFileIcon = (filename: string): string => {
 const FileTabs: React.FC<FileTabsProps> = ({ fileSystem }) => {
   const visibleFiles = fileSystem.getVisibleFiles();
   const activeFile = fileSystem.activeFile;
+  const { t } = useI18n();
 
   const handleTabClick = (filename: string) => {
     if (activeFile !== filename) {
@@ -56,7 +58,7 @@ const FileTabs: React.FC<FileTabsProps> = ({ fileSystem }) => {
         >
           <span className="mr-2">{getFileIcon(file.filename)}</span>
           <span>{file.filename}</span>
-          {file.readonly && <span className="px-1 ml-2 text-xs bg-gray-600 rounded">(read-only)</span>}
+          {file.readonly && <span className="px-1 ml-2 text-xs bg-gray-600 rounded">{t("editor.readOnly")}</span>}
         </div>
       ))}
     </div>

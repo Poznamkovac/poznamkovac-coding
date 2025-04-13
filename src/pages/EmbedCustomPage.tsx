@@ -5,6 +5,7 @@ import EmbedLayout from "../components/EmbedLayout";
 import { useQueryParams } from "../hooks/useQueryParams";
 import { createVirtualFileSystem, FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 import { ChallengeData, VirtualFileSystem } from "../types/challenge";
+import { useI18n } from "../hooks/useI18n";
 
 interface TestResult {
   name: string;
@@ -25,6 +26,7 @@ const EmbedCustomPage: React.FC = () => {
   const initializedRef = useRef(false);
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
   const previewReadyRef = useRef<boolean>(false);
+  const { t } = useI18n();
 
   // Update optionsRef when options change
   useEffect(() => {
@@ -40,8 +42,8 @@ const EmbedCustomPage: React.FC = () => {
     try {
       // Create default challenge data structure
       const defaultData: ChallengeData = {
-        title: "Custom Assignment",
-        assignment: "Custom assignment loaded from URL",
+        title: t("embed.customAssignment"),
+        assignment: t("embed.customAssignmentFromUrl"),
         maxScore: 0,
         showPreview: true,
         previewType: "web",
@@ -62,7 +64,7 @@ const EmbedCustomPage: React.FC = () => {
         assignmentData.files = [
           {
             filename: "index.html",
-            content: "<html><body><h1>Custom Assignment</h1></body></html>",
+            content: `<html><body><h1>${t("embed.customAssignment")}</h1></body></html>`,
             readonly: false,
             hidden: false,
             autoreload: true,
@@ -88,15 +90,15 @@ const EmbedCustomPage: React.FC = () => {
           fileSystemRef.current = fs;
           initializedRef.current = true;
         } catch (error) {
-          console.error("Error initializing file system:", error);
+          console.error(t("embed.errorInitializingFs"), error);
         }
       };
 
       initializeFileSystem();
     } catch (error) {
-      console.error("Error processing custom data:", error);
+      console.error(t("embed.errorProcessingCustomData"), error);
     }
-  }, [customData]);
+  }, [customData, t]);
 
   // Set up event listeners for file changes and preview ready events
   useEffect(() => {
@@ -157,7 +159,7 @@ const EmbedCustomPage: React.FC = () => {
             if (previewReadyRef.current) {
               resolve();
             } else if (elapsedTime >= maxWaitTime) {
-              reject(new Error("Timeout waiting for preview to be ready"));
+              reject(new Error(t("tests.previewReadyTimeout")));
             } else {
               elapsedTime += checkInterval;
               setTimeout(checkReadyState, checkInterval);
@@ -169,7 +171,7 @@ const EmbedCustomPage: React.FC = () => {
       }
     }
     return Promise.resolve();
-  }, []);
+  }, [t]);
 
   // Run tests for the custom assignment
   const runTests = useCallback(async () => {
@@ -183,7 +185,7 @@ const EmbedCustomPage: React.FC = () => {
       const testFile = Array.from(fileSystem.files.values()).find((file) => file.filename === "test.js");
 
       if (!testFile || !testFile.content) {
-        console.error("No test.js file found");
+        console.error(t("tests.noTestFileFound"));
         setIsTestRunning(false);
         return;
       }
@@ -192,12 +194,12 @@ const EmbedCustomPage: React.FC = () => {
       try {
         await forceReloadPreview();
       } catch (error) {
-        console.error("Error waiting for preview to be ready:", error);
+        console.error(t("tests.previewReadyError"), error);
         setTestResults([
           {
-            name: "Preview Error",
+            name: t("tests.previewError"),
             success: false,
-            message: `Preview did not load correctly: ${error}`,
+            message: `${t("tests.previewLoadError")}: ${error}`,
           },
         ]);
         setIsTestRunning(false);
@@ -207,7 +209,7 @@ const EmbedCustomPage: React.FC = () => {
       // Get the preview iframe
       const iframe = document.getElementById("preview") as HTMLIFrameElement;
       if (!iframe || !iframe.contentWindow) {
-        console.error("Preview iframe not found");
+        console.error(t("tests.previewIframeNotFound"));
         setIsTestRunning(false);
         return;
       }
@@ -236,31 +238,28 @@ const EmbedCustomPage: React.FC = () => {
         setCurrentScore(calculatedScore);
       }
     } catch (error) {
-      console.error("Error running tests:", error);
+      console.error(t("tests.errorRunningTests"), error);
       setTestResults([
         {
-          name: "Error",
+          name: t("tests.error"),
           success: false,
-          message: `Test execution error: ${error}`,
+          message: `${t("tests.executionError")}: ${error}`,
         },
       ]);
     } finally {
       setIsTestRunning(false);
     }
-  }, [fileSystem, assignmentData, forceReloadPreview]);
+  }, [fileSystem, assignmentData, forceReloadPreview, t]);
 
   if (!fileSystem || !assignmentData) {
     return (
       <div className="min-h-screen text-white">
         <div className="container p-4 mx-auto">
-          <h2 className="text-xl font-bold">Error Loading Custom Assignment</h2>
-          <p>
-            No valid assignment data was provided. Make sure the URL contains a valid base64-encoded JSON object in the "data"
-            parameter.
-          </p>
+          <h2 className="text-xl font-bold">{t("embed.errorLoadingCustomAssignment")}</h2>
+          <p>{t("embed.noValidAssignmentData")}</p>
           <p className="mt-4">
             <a href="#/embed/create" className="text-blue-400 underline">
-              Create a custom assignment
+              {t("embed.createCustomAssignment")}
             </a>
           </p>
         </div>

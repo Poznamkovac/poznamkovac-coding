@@ -3,6 +3,7 @@ import { VirtualFileSystem } from "../types/challenge";
 import CodeEditor from "./CodeEditor";
 import FileTabs from "./FileTabs";
 import { ACTIVE_FILE_CHANGE_EVENT, ActiveFileChangeEvent } from "../services/virtualFileSystemService";
+import { useI18n } from "../hooks/useI18n";
 
 interface ChallengeIDEProps {
   fileSystem: VirtualFileSystem;
@@ -42,6 +43,7 @@ const ChallengeIDE: React.FC<ChallengeIDEProps> = ({ fileSystem }) => {
   const [activeFileContent, setActiveFileContent] = useState<string>("");
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
   const fileSystemRef = useRef(fileSystem);
+  const { t } = useI18n();
 
   // Update fileSystemRef when fileSystem prop changes
   useEffect(() => {
@@ -109,7 +111,7 @@ const ChallengeIDE: React.FC<ChallengeIDEProps> = ({ fileSystem }) => {
           />
         </div>
       ) : (
-        <div className="flex items-center justify-center flex-1 text-gray-400">No file selected</div>
+        <div className="flex items-center justify-center flex-1 text-gray-400">{t("editor.noFileSelected")}</div>
       )}
     </div>
   );

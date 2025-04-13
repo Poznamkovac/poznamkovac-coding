@@ -16,7 +16,7 @@ export default class PythonTester {
   /**
    * Test that the script outputs the correct key
    */
-  async test_output_key() {
+  async test_output() {
     try {
       const STDERR = this.previewWindow.document.getElementById("stderr");
 
@@ -28,7 +28,7 @@ export default class PythonTester {
       }
 
       return {
-        details_ok: 'The program functions correctly.',
+        details_ok: "The program functions correctly.",
       };
     } catch (error) {
       return {

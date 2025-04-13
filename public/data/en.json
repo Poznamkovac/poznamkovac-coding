@@ -1,25 +1,88 @@
 {
-    "app": {
-        "title": "Notist Web Assignments",
-        "welcome": "Welcome to Notist (Web Assignments)!"
+  "app": {
+    "title": "Notist Web Assignments",
+    "welcome": "Welcome to Notist (Web Assignments)!"
+  },
+  "header": {
+    "back": "⏪ Back",
+    "home": "Home",
+    "language": "Language",
+    "auto": "Auto"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error loading data",
+    "noCategories": "There are no categories to display.",
+    "backToHome": "Back to home page"
+  },
+  "editor": {
+    "loading": "Loading code editor...",
+    "loadingCode": "Loading code...",
+    "noFileSelected": "No file selected",
+    "readOnly": "(read-only)"
+  },
+  "challenge": {
+    "veryClever": "you're very clever :D",
+    "score": "Score"
+  },
+  "category": {
+    "loadingChallengeStatus": "Loading challenge status...",
+    "loadingChallenges": "Loading challenges...",
+    "noChallenges": "Oops, there are no challenges to display.",
+    "backToPrevious": "Back to previous page"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page"
+  },
+  "preview": {
+    "title": "Preview",
+    "reload": "Reload",
+    "runYourCode": "Run Your Code",
+    "pythonCodeReady": "Python Code Ready",
+    "pythonExecutionMessage": "Your Python code will be executed when you click the \"Reload\" button or run tests.",
+    "pythonTechNote": "Python code runs in the browser using",
+    "autoReloadDisabled": "Auto-reload is disabled for this type of file. Click the \"Reload\" button above or the \"Run Tests\" button below when you're ready to see your changes.",
+    "templateNotFunction": "Template did not return a function",
+    "errorEvaluatingTemplate": "Error evaluating template:",
+    "failedToLoadTemplate": "Failed to load preview template:"
+  },
+  "tests": {
+    "previewWindowNotAvailable": "Preview window not available",
+    "previewReadyTimeout": "Timeout waiting for preview to be ready",
+    "executionError": "Test execution error",
+    "error": "Error",
+    "errorOccurred": "An error occurred during testing",
+    "assignmentMetadataNotAvailable": "Assignment metadata not available",
+    "noSolutionFiles": "No solution files defined for this challenge",
+    "noSolutionsAvailable": "No solutions available.",
+    "errorLoadingSolutions": "Error loading solutions",
+    "pass": "ok",
+    "fail": "fail",
+    "copyToClipboard": "Copy to clipboard",
+    "noTestFileFound": "No test.js file found",
+    "previewReadyError": "Error waiting for preview to be ready",
+    "previewError": "Preview Error",
+    "previewLoadError": "Preview did not load correctly",
+    "previewIframeNotFound": "Preview iframe not found",
+    "errorRunningTests": "Error running tests"
+  },
+  "embed": {
+    "customAssignment": "Custom Assignment",
+    "customAssignmentFromUrl": "Custom assignment loaded from URL",
+    "errorInitializingFs": "Error initializing file system:",
+    "errorProcessingCustomData": "Error processing custom data:",
+    "errorLoadingCustomAssignment": "Error Loading Custom Assignment",
+    "noValidAssignmentData": "No valid assignment data was provided. Make sure the URL contains a valid base64-encoded JSON object in the \"data\" parameter.",
+    "createCustomAssignment": "Create a custom assignment"
+  },
+  "categories": {
+    "web": {
+      "title": "Web (HTML/CSS/JS)"
     },
-    "header": {
-        "back": "⏪ Back",
-        "home": "Home",
-        "language": "Language",
-        "auto": "Auto"
-    },
-    "common": {
-        "loading": "Loading...",
-        "error": "Error loading data",
-        "noCategories": "There are no categories to display."
-    },
-    "categories": {
-        "web": {
-            "title": "Web (HTML/CSS/JS)"
-        },
-        "python": {
-            "title": "Python"
-        }
+    "python": {
+      "title": "Python"
     }
+  }
 }

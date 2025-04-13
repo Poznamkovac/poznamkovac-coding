@@ -45,7 +45,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   const [solutionError, setSolutionError] = useState<string | null>(null);
   const [solutionLoaded, setSolutionLoaded] = useState<boolean>(false);
   const [iframeLoading, setIframeLoading] = useState(false);
-  const { language } = useI18n();
+  const { language, t } = useI18n();
 
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const previewReadyRef = useRef<boolean>(false);
@@ -158,7 +158,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
 
       // If we have a preview window, wait for it to signal it's ready
       if (!previewWindow) {
-        throw new Error("Preview window not available");
+        throw new Error(t("tests.previewWindowNotAvailable"));
       }
 
       // Wait for the PREVIEW_READY message if not already received
@@ -174,7 +174,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
               resolve();
             } else if (elapsedTime >= maxWaitTime) {
               setIframeLoading(false);
-              reject(new Error("Timeout waiting for preview to be ready"));
+              reject(new Error(t("tests.previewReadyTimeout")));
             } else {
               elapsedTime += checkInterval;
               setTimeout(checkReadyState, checkInterval);
@@ -193,7 +193,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       }
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
-        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function"
+        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function",
       );
 
       const results = await Promise.all(
@@ -206,10 +206,10 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
             console.error(`Error in method: ${method}:`, error);
             return {
               name: method,
-              result: { details_wrong: `Test execution error: ${error}` },
+              result: { details_wrong: `${t("tests.executionError")}: ${error}` },
             };
           }
-        })
+        }),
       );
 
       setTestResults(results);
@@ -231,9 +231,9 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       console.error("Error running tests", error);
       setTestResults([
         {
-          name: "Error",
+          name: t("tests.error"),
           result: {
-            details_wrong: `An error occurred during testing: ${error instanceof Error ? error.message : String(error)}`,
+            details_wrong: `${t("tests.errorOccurred")}: ${error instanceof Error ? error.message : String(error)}`,
           },
         },
       ]);
@@ -257,7 +257,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         const metadataUrl = `/data/${effectiveLanguage}/challenges/${categoryId}/${challengeId}/assignment.json`;
         const metadataResponse = await fetch(metadataUrl);
         if (!metadataResponse.ok) {
-          setSolutionError("Assignment metadata not available");
+          setSolutionError(t("tests.assignmentMetadataNotAvailable"));
           return;
         }
 
@@ -267,7 +267,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       }
 
       if (filesList.length === 0) {
-        setSolutionError("No solution files defined for this challenge");
+        setSolutionError(t("tests.noSolutionFiles"));
         return;
       }
 
@@ -295,7 +295,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       }
 
       if (loadedFiles.length === 0) {
-        setSolutionError("No solutions available.");
+        setSolutionError(t("tests.noSolutionsAvailable"));
       } else {
         setSolutionFiles(loadedFiles);
       }
@@ -303,7 +303,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       setSolutionLoaded(true);
     } catch (error) {
       console.error("Error loading solutions:", error);
-      setSolutionError("Error loading solutions");
+      setSolutionError(t("tests.errorLoadingSolutions"));
     }
   };
 
@@ -315,7 +315,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
   };
 
   if (isLoading) {
-    return <div>⌛️...</div>;
+    return <div>{t("common.loading")}</div>;
   }
 
   return (
@@ -357,7 +357,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
             <b>
               {result.details_ok ? "✓" : "✗"} {name}
             </b>
-            {result.details_ok ? ` - ok!` : ` - fail!`}
+            {result.details_ok ? ` - ${t("tests.pass")}!` : ` - ${t("tests.fail")}!`}
             <br />
 
             <span className="text-sm text-gray-300 font-italic">
@@ -378,7 +378,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
               <div key={file.name} className="mt-4">
                 <div className="flex items-center gap-4 mb-2">
                   <button
-                    title="Copy to clipboard"
+                    title={t("tests.copyToClipboard")}
                     className="px-1 mb-1 text-lg font-semibold text-yellow-300 bg-yellow-500 rounded-lg hover:bg-yellow-600 active:bg-yellow-700"
                     onClick={() => {
                       navigator.clipboard.writeText(file.content);

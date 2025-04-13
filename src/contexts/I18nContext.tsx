@@ -68,7 +68,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
     window.history.replaceState(
       {},
       "",
-      `${window.location.pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}${window.location.hash}`
+      `${window.location.pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}${window.location.hash}`,
     );
   }, [language, searchParams]);
 
@@ -110,7 +110,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
       if (!translations) return key;
       return getNestedValue(translations, key) || key;
     },
-    [translations]
+    [translations],
   );
 
   const contextValue = useMemo(
@@ -120,7 +120,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
       t,
       isLoading,
     }),
-    [language, setLanguage, t, isLoading]
+    [language, setLanguage, t, isLoading],
   );
 
   return <I18nContext.Provider value={contextValue}>{children}</I18nContext.Provider>;
