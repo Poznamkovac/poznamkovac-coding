@@ -1,24 +1,10 @@
 [
   {
-    "id": "html5",
-    "title": "HTML",
+    "id": "web",
+    "title": "Web (HTML/CSS/JS)",
     "icon": "html5",
     "iconColor": "#ffffff",
     "color": "#E34F26"
-  },
-  {
-    "id": "css3",
-    "title": "CSS",
-    "icon": "css3",
-    "iconColor": "#ffffff",
-    "color": "#1572B6"
-  },
-  {
-    "id": "js",
-    "title": "JavaScript",
-    "icon": "js",
-    "iconColor": "#FFF56B",
-    "color": "#ebab34"
   },
   {
     "id": "python",

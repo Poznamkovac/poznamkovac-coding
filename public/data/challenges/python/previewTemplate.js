@@ -6,54 +6,50 @@
  */
 function previewTemplate(mainFile, fileSystem) {
   // Get all files and their content
-  const allFiles = Array.from(fileSystem.files.values())
-    .reduce((acc, file) => {
-      acc[file.filename] = file.content || '';
-      return acc;
-    }, {});
+  const allFiles = Array.from(fileSystem.files.values()).reduce((acc, file) => {
+    acc[file.filename] = file.content || "";
+    return acc;
+  }, {});
 
   // Escape content to prevent HTML parsing issues
   const escapeContent = (content) => {
-    return content
-      .replace(/\\/g, "\\\\")
-      .replace(/`/g, "\\`")
-      .replace(/\${/g, "\\${");
+    return content.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\${/g, "\\${");
   };
 
   // Create a string representation of the files object
   const filesStr = Object.entries(allFiles)
-    .map(([filename, content]) => `"${filename}": \`${escapeContent(content || '')}\``)
-    .join(',\n');
+    .map(([filename, content]) => `"${filename}": \`${escapeContent(content || "")}\``)
+    .join(",\n");
 
   // Get Python files for import path setup
-  const pyFiles = Object.keys(allFiles).filter(file => file.endsWith('.py'));
+  const pyFiles = Object.keys(allFiles).filter((file) => file.endsWith(".py"));
 
   // Normalize the main file path for Python
-  const normalizedMainFile = mainFile.replace(/\\/g, '/');
+  const normalizedMainFile = mainFile.replace(/\\/g, "/");
 
   // Pre-process file directories to avoid scope issues
-  const pythonFilePaths = pyFiles.map(filename => {
-    const normalizedPath = filename.replace(/\\/g, '/');
-    const dirParts = normalizedPath.split('/');
-    const dir = dirParts.length > 1 ? dirParts.slice(0, -1).join('/') : '';
+  const pythonFilePaths = pyFiles.map((filename) => {
+    const normalizedPath = filename.replace(/\\/g, "/");
+    const dirParts = normalizedPath.split("/");
+    const dir = dirParts.length > 1 ? dirParts.slice(0, -1).join("/") : "";
 
     return {
       filename: normalizedPath,
-      directory: dir
+      directory: dir,
     };
   });
 
   // Generate the import paths setup code
   const importPathsSetup = pythonFilePaths
-    .filter(file => file.filename !== normalizedMainFile && file.directory)
-    .map(file => {
+    .filter((file) => file.filename !== normalizedMainFile && file.directory)
+    .map((file) => {
       return `
         if ("${file.directory}" && !sys.path.includes("${file.directory}")) {
           sys.path.insert(0, "${file.directory}")
         }
       `;
     })
-    .join('\n');
+    .join("\n");
 
   return `
 <!DOCTYPE html>

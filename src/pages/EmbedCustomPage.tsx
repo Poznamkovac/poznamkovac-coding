@@ -21,8 +21,10 @@ const EmbedCustomPage: React.FC = () => {
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [needsTestRun, setNeedsTestRun] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [isTestRunning, setIsTestRunning] = useState(false);
   const initializedRef = useRef(false);
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
+  const previewReadyRef = useRef<boolean>(false);
 
   // Update optionsRef when options change
   useEffect(() => {
@@ -96,7 +98,7 @@ const EmbedCustomPage: React.FC = () => {
     }
   }, [customData]);
 
-  // Set up event listeners only once
+  // Set up event listeners for file changes and preview ready events
   useEffect(() => {
     // Skip if no file system yet
     if (!fileSystem) return;
@@ -111,12 +113,23 @@ const EmbedCustomPage: React.FC = () => {
       }
     };
 
-    // Add event listener
+    // Listen for preview ready messages
+    const handlePreviewMessages = (event: MessageEvent) => {
+      if (event.data && event.data.type === "PREVIEW_READY") {
+        previewReadyRef.current = true;
+      } else if (event.data && event.data.type === "PREVIEW_RELOADING") {
+        previewReadyRef.current = false;
+      }
+    };
+
+    // Add event listeners
     window.addEventListener(FILE_CHANGE_EVENT, handleFileChange);
+    window.addEventListener("message", handlePreviewMessages);
 
     // Cleanup
     return () => {
       window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
+      window.removeEventListener("message", handlePreviewMessages);
     };
   }, [fileSystem]); // Only re-run when fileSystem changes
 
@@ -127,8 +140,33 @@ const EmbedCustomPage: React.FC = () => {
 
   // Force reload the preview (used by tests)
   const forceReloadPreview = useCallback(async () => {
+    // Reset the preview ready flag
+    previewReadyRef.current = false;
+
     if (previewApiRef.current) {
-      return previewApiRef.current.forceReload();
+      await previewApiRef.current.forceReload();
+
+      // Wait for the preview to signal it's ready
+      if (!previewReadyRef.current) {
+        await new Promise<void>((resolve, reject) => {
+          const checkInterval = 100; // ms
+          const maxWaitTime = 10000; // 10 seconds timeout
+          let elapsedTime = 0;
+
+          const checkReadyState = () => {
+            if (previewReadyRef.current) {
+              resolve();
+            } else if (elapsedTime >= maxWaitTime) {
+              reject(new Error("Timeout waiting for preview to be ready"));
+            } else {
+              elapsedTime += checkInterval;
+              setTimeout(checkReadyState, checkInterval);
+            }
+          };
+
+          checkReadyState();
+        });
+      }
     }
     return Promise.resolve();
   }, []);
@@ -138,6 +176,7 @@ const EmbedCustomPage: React.FC = () => {
     if (!fileSystem || !assignmentData) return;
 
     setNeedsTestRun(false);
+    setIsTestRunning(true);
 
     try {
       // Find test.js file
@@ -145,16 +184,31 @@ const EmbedCustomPage: React.FC = () => {
 
       if (!testFile || !testFile.content) {
         console.error("No test.js file found");
+        setIsTestRunning(false);
         return;
       }
 
       // Force reload the preview before testing
-      await forceReloadPreview();
+      try {
+        await forceReloadPreview();
+      } catch (error) {
+        console.error("Error waiting for preview to be ready:", error);
+        setTestResults([
+          {
+            name: "Preview Error",
+            success: false,
+            message: `Preview did not load correctly: ${error}`,
+          },
+        ]);
+        setIsTestRunning(false);
+        return;
+      }
 
       // Get the preview iframe
       const iframe = document.getElementById("preview") as HTMLIFrameElement;
       if (!iframe || !iframe.contentWindow) {
         console.error("Preview iframe not found");
+        setIsTestRunning(false);
         return;
       }
 
@@ -167,7 +221,7 @@ const EmbedCustomPage: React.FC = () => {
         `
         ${testCode}
         return typeof runTests === 'function' ? runTests(window) : [];
-      `
+        `,
       );
 
       // Execute the tests in the iframe context
@@ -190,6 +244,8 @@ const EmbedCustomPage: React.FC = () => {
           message: `Test execution error: ${error}`,
         },
       ]);
+    } finally {
+      setIsTestRunning(false);
     }
   }, [fileSystem, assignmentData, forceReloadPreview]);
 
@@ -247,11 +303,16 @@ const EmbedCustomPage: React.FC = () => {
             <div className="mt-4">
               <button
                 onClick={runTests}
+                disabled={isTestRunning}
                 className={`px-4 py-2 font-bold text-white rounded hover:bg-blue-700 ${
-                  needsTestRun ? "bg-orange-600 hover:bg-orange-700 animate-pulse" : "bg-blue-600 hover:bg-blue-700"
+                  isTestRunning
+                    ? "opacity-50 cursor-not-allowed bg-blue-600"
+                    : needsTestRun
+                      ? "bg-orange-600 hover:bg-orange-700 animate-pulse"
+                      : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
-                {needsTestRun ? "🔄" : "⏯️"}
+                {isTestRunning ? "⌛️" : needsTestRun ? "🔄" : "⏯️"}
               </button>
 
               <div className="mt-4">

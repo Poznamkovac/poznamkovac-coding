@@ -744,17 +744,20 @@ const CreateEmbedPage: React.FC = () => {
         </div>
 
         <div className="flex mb-2 overflow-x-auto">
-          {assignment.files.map((file, index) => (
-            <button
-              key={file.filename}
-              onClick={() => setCurrentFile(index)}
-              className={`px-3 py-1 mr-2 text-sm rounded-t ${index === currentFile ? "bg-blue-600" : "bg-gray-700"} ${
-                file.filename === assignment.mainFile ? "font-bold" : ""
-              } ${file.hidden ? "opacity-50" : ""}`}
-            >
-              {file.filename}
-            </button>
-          ))}
+          {assignment.files.map(
+            (file, index) =>
+              file.filename !== "test.js" && (
+                <button
+                  key={file.filename}
+                  onClick={() => setCurrentFile(index)}
+                  className={`px-3 py-1 mr-2 text-sm rounded-t ${index === currentFile ? "bg-blue-600" : "bg-gray-700"} ${
+                    file.filename === assignment.mainFile ? "font-bold" : ""
+                  } ${file.hidden ? "opacity-50" : ""}`}
+                >
+                  {file.filename}
+                </button>
+              )
+          )}
         </div>
 
         {assignment.files.length > 0 && (

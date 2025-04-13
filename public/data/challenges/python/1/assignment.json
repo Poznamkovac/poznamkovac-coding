@@ -1,22 +1,22 @@
 {
-    "title": "Hello Python",
-    "assignment": "Write a Python program that prints 'Hello, World!' to the console.",
-    "maxScore": 5,
-    "previewType": "python",
-    "showPreview": true,
-    "mainFile": "main.py",
-    "files": [
-        {
-            "filename": "main.py",
-            "readonly": false,
-            "hidden": false,
-            "autoreload": false
-        },
-        {
-            "filename": "my_module.py",
-            "readonly": false,
-            "hidden": false,
-            "autoreload": false
-        }
-    ]
+  "title": "Hello Python",
+  "assignment": "Write a Python program that prints 'Hello, World!' to the console.",
+  "maxScore": 5,
+  "previewType": "python",
+  "showPreview": true,
+  "mainFile": "main.py",
+  "files": [
+    {
+      "filename": "main.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    },
+    {
+      "filename": "my_module.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    }
+  ]
 }

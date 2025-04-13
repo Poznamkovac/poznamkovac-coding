@@ -185,7 +185,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       }
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
-        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function"
+        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function",
       );
 
       const results = await Promise.all(
@@ -201,7 +201,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
               result: { detaily_zle: `Test execution error: ${error}` },
             };
           }
-        })
+        }),
       );
 
       setTestResults(results);
