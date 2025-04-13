@@ -3,6 +3,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faHtml5, faCss3, faJs, faPython } from "@fortawesome/free-brands-svg-icons";
 
+import { I18nProvider } from "./contexts/I18nContext";
 import Header from "./components/Header";
 import HomePage from "./pages/HomePage";
 import CategoryPage from "./pages/CategoryPage";
@@ -16,29 +17,31 @@ library.add(faHtml5, faCss3, faJs, faPython);
 function App() {
   return (
     <HashRouter>
-      <Routes>
-        {/* Embed routes without header */}
-        <Route path="/embed/:categoryId/:challengeId" element={<EmbedChallengePage />} />
-        <Route path="/embed/custom" element={<EmbedCustomPage />} />
-        <Route path="/embed/create" element={<CreateEmbedPage />} />
+      <I18nProvider>
+        <Routes>
+          {/* Embed routes without header */}
+          <Route path="/embed/:categoryId/:challengeId" element={<EmbedChallengePage />} />
+          <Route path="/embed/custom" element={<EmbedCustomPage />} />
+          <Route path="/embed/create" element={<CreateEmbedPage />} />
 
-        {/* Regular routes with header */}
-        <Route
-          path="*"
-          element={
-            <div className="flex flex-col min-h-screen text-white bg-gray-900">
-              <Header />
-              <main className="container flex-grow px-4 py-8 mx-auto">
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/challenges/:categoryId" element={<CategoryPage />} />
-                  <Route path="/challenges/:categoryId/:challengeId" element={<ChallengePage />} />
-                </Routes>
-              </main>
-            </div>
-          }
-        />
-      </Routes>
+          {/* Regular routes with header */}
+          <Route
+            path="*"
+            element={
+              <div className="flex flex-col min-h-screen text-white bg-gray-900">
+                <Header />
+                <main className="container flex-grow px-4 py-8 mx-auto">
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/challenges/:categoryId" element={<CategoryPage />} />
+                    <Route path="/challenges/:categoryId/:challengeId" element={<ChallengePage />} />
+                  </Routes>
+                </main>
+              </div>
+            }
+          />
+        </Routes>
+      </I18nProvider>
     </HashRouter>
   );
 }

@@ -1,0 +1,25 @@
+{
+    "app": {
+        "title": "Poznámkovač Webúlohy",
+        "welcome": "Vitajte v Poznámkovač (Webúlohy)!"
+    },
+    "header": {
+        "back": "⏪ Späť",
+        "home": "Domov",
+        "language": "Jazyk",
+        "auto": "Automaticky"
+    },
+    "common": {
+        "loading": "Načítavam...",
+        "error": "Chyba pri načítaní dát",
+        "noCategories": "Nie sú tu žiadne kategórie na zobrazenie."
+    },
+    "categories": {
+        "web": {
+            "title": "Web (HTML/CSS/JS)"
+        },
+        "python": {
+            "title": "Python"
+        }
+    }
+}

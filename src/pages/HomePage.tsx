@@ -1,7 +1,8 @@
 import type React from "react";
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useI18n } from "../hooks/useI18n";
+import { useLocalizedResource } from "../hooks/useLocalizedResource";
 
 interface Category {
   id: string;
@@ -12,20 +13,24 @@ interface Category {
 }
 
 const HomePage: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { t, isLoading: translationsLoading } = useI18n();
+  const { data: categories, loading, error } = useLocalizedResource<Category[]>("/data/categories.json");
 
-  useEffect(() => {
-    fetch("/data/categories.json")
-      .then((response) => response.json())
-      .then((data) => setCategories(data))
-      .catch((error) => console.error("Chyba pri načítaní kategórií:", error));
-  }, []);
+  if (translationsLoading || loading) {
+    return <div>{t("common.loading")}</div>;
+  }
 
-  if (categories.length === 0) return <div>Nie sú tu žiadne kategórie na zobrazenie.</div>;
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
+  if (!categories || categories.length === 0) {
+    return <div>{t("common.noCategories")}</div>;
+  }
 
   return (
     <div>
-      <h1 className="mb-6 text-3xl font-bold">Vitajte v Poznámkovač (Webúlohy)!</h1>
+      <h1 className="mb-6 text-3xl font-bold">{t("app.welcome")}</h1>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {categories.map((category) => (
           <Link
@@ -41,7 +46,7 @@ const HomePage: React.FC = () => {
               className="mr-2"
               style={{ color: category.iconColor }}
             />
-            {category.title}
+            {t(`categories.${category.id}.title`) || category.title}
           </Link>
         ))}
       </div>

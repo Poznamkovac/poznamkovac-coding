@@ -1,0 +1,25 @@
+{
+    "app": {
+        "title": "Notist Web Assignments",
+        "welcome": "Welcome to Notist (Web Assignments)!"
+    },
+    "header": {
+        "back": "⏪ Back",
+        "home": "Home",
+        "language": "Language",
+        "auto": "Auto"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "Error loading data",
+        "noCategories": "There are no categories to display."
+    },
+    "categories": {
+        "web": {
+            "title": "Web (HTML/CSS/JS)"
+        },
+        "python": {
+            "title": "Python"
+        }
+    }
+}
