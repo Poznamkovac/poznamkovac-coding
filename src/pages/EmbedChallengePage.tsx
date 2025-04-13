@@ -25,7 +25,7 @@ const EmbedChallengePage: React.FC = () => {
     if (challengeData) {
       const loadScore = async () => {
         setIsScoreLoading(true);
-        const score = await storageService.getChallengeScore(categoryId!, challengeId!);
+        const score = await storageService.getChallengeScore(categoryId!, challengeId!, language);
         setCurrentScore(score);
         setIsScoreLoading(false);
       };
@@ -34,10 +34,19 @@ const EmbedChallengePage: React.FC = () => {
 
       // Set up event listener for score updates
       const handleScoreUpdate = (event: Event) => {
-        const customEvent = event as CustomEvent<{ categoryId: string; challengeId: string; score: number }>;
-        const { categoryId: updatedCategoryId, challengeId: updatedChallengeId, score } = customEvent.detail;
+        const customEvent = event as CustomEvent<{ categoryId: string; challengeId: string; score: number; language?: string }>;
+        const {
+          categoryId: updatedCategoryId,
+          challengeId: updatedChallengeId,
+          score,
+          language: eventLanguage,
+        } = customEvent.detail;
 
-        if (updatedCategoryId === categoryId && updatedChallengeId === challengeId) {
+        if (
+          updatedCategoryId === categoryId &&
+          updatedChallengeId === challengeId &&
+          (!eventLanguage || eventLanguage === language)
+        ) {
           setCurrentScore(score);
         }
       };
@@ -62,7 +71,7 @@ const EmbedChallengePage: React.FC = () => {
         window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
       };
     }
-  }, [challengeData, categoryId, challengeId, options.autoReload]);
+  }, [challengeData, categoryId, challengeId, options.autoReload, language]);
 
   const handleTestRun = () => {
     setNeedsTestRun(false);

@@ -117,6 +117,7 @@ class StorageService {
    * @returns The score or 0 if not found
    */
   async getChallengeScore(categoryId: string, challengeId: string, language: LanguageCode = "auto"): Promise<number> {
+    // We ALWAYS want to use the effective language, NOT "auto" for storage
     const effectiveLanguage = getEffectiveLanguage(language);
     const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_skore`;
     const score = await this.getValue(key);
@@ -134,8 +135,9 @@ class StorageService {
     categoryId: string,
     challengeId: string,
     score: number,
-    language: LanguageCode = "auto",
+    language: LanguageCode = "auto"
   ): Promise<void> {
+    // We ALWAYS want to use the effective language, NOT "auto" for storage
     const effectiveLanguage = getEffectiveLanguage(language);
     const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_skore`;
     await this.setValue(key, score);
@@ -153,8 +155,9 @@ class StorageService {
     categoryId: string,
     challengeId: string,
     filename: string,
-    language: LanguageCode = "auto",
+    language: LanguageCode = "auto"
   ): Promise<string | null> {
+    // We ALWAYS want to use the effective language, NOT "auto" for storage
     const effectiveLanguage = getEffectiveLanguage(language);
     const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_${filename}`;
     const code = await this.getValue(key);
@@ -174,8 +177,9 @@ class StorageService {
     challengeId: string,
     filename: string,
     code: string,
-    language: LanguageCode = "auto",
+    language: LanguageCode = "auto"
   ): Promise<void> {
+    // We ALWAYS want to use the effective language, NOT "auto" for storage
     const effectiveLanguage = getEffectiveLanguage(language);
     const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_${filename}`;
     await this.setValue(key, code);
@@ -191,16 +195,17 @@ class StorageService {
   async getAllChallengeFiles(
     categoryId: string,
     challengeId: string,
-    language: LanguageCode = "auto",
+    language: LanguageCode = "auto"
   ): Promise<Record<string, string>> {
     try {
+      // We ALWAYS want to use the effective language, NOT "auto" for storage
       const effectiveLanguage = getEffectiveLanguage(language);
       const db = await this.dbPromise;
       const allKeys = await db.getAllKeys(STORE_NAME);
       const prefix = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_`;
 
       const fileKeys = allKeys.filter(
-        (key) => key.startsWith(prefix) && key !== `${prefix}skore`, // Exclude score
+        (key) => key.startsWith(prefix) && key !== `${prefix}skore` // Exclude score
       );
 
       const result: Record<string, string> = {};

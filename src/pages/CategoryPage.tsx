@@ -14,12 +14,13 @@ interface ScoreUpdateDetail {
   categoryId: string;
   challengeId: string;
   score: number;
+  language?: string;
 }
 
 const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }> = ({ challenges, categoryId }) => {
   const [completionStatus, setCompletionStatus] = useState<{ [key: string]: { completed: boolean; score: number } }>({});
   const [isLoading, setIsLoading] = useState(true);
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   useEffect(() => {
     // Initial load from IndexedDB
@@ -30,12 +31,12 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
       // Load scores for all challenges
       await Promise.all(
         Object.entries(challenges).map(async ([id, challenge]) => {
-          const score = await storageService.getChallengeScore(categoryId, id);
+          const score = await storageService.getChallengeScore(categoryId, id, language);
           newCompletionStatus[id] = {
             completed: score === challenge.maxScore,
             score: score,
           };
-        }),
+        })
       );
 
       setCompletionStatus(newCompletionStatus);
@@ -48,10 +49,10 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
     // Set up event listener for score updates
     const handleScoreUpdate = (event: Event) => {
       const customEvent = event as CustomEvent<ScoreUpdateDetail>;
-      const { categoryId: updatedCategoryId, challengeId, score } = customEvent.detail;
+      const { categoryId: updatedCategoryId, challengeId, score, language: eventLanguage } = customEvent.detail;
 
-      // Only update if it's for our category
-      if (updatedCategoryId === categoryId && challenges[challengeId]) {
+      // Only update if it's for our category and the same language
+      if (updatedCategoryId === categoryId && challenges[challengeId] && (!eventLanguage || eventLanguage === language)) {
         setCompletionStatus((prevStatus) => ({
           ...prevStatus,
           [challengeId]: {
@@ -69,7 +70,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryId: string }>
     return () => {
       window.removeEventListener(SCORE_UPDATE_EVENT, handleScoreUpdate);
     };
-  }, [challenges, categoryId]);
+  }, [challenges, categoryId, language]);
 
   if (isLoading) {
     return <div>{t("category.loadingChallengeStatus")}</div>;

@@ -1,13 +1,18 @@
 import { LanguageCode } from "../types/i18n";
 
+// Function to get browser language - helper that should be used only when language is "auto"
+const getBrowserLanguage = (): string => {
+  const browserLang = navigator.language.split("-")[0];
+  return browserLang;
+};
+
 /**
  * Gets the effective language from the provided language code
  * If 'auto', returns the browser language (defaulting to 'en' if browser language is not supported)
  */
 export const getEffectiveLanguage = (language: LanguageCode): string => {
   if (language === "auto") {
-    const browserLang = navigator.language.split("-")[0];
-    return browserLang;
+    return getBrowserLanguage();
   }
   return language;
 };
