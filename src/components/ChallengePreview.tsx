@@ -27,13 +27,6 @@ const getPlaceholderHTML = (previewType: string) => {
         <p class="tech-note">Python code runs in the browser using <a href="https://pyodide.org" target="_blank">Pyodide</a>.</p>
       `;
       break;
-    case "js":
-    case "javascript":
-      title = "JavaScript Code Ready";
-      languageSpecificMessage = `
-        <p>Your JavaScript code will be executed when you click the "Reload" button or run tests.</p>
-      `;
-      break;
     default:
       languageSpecificMessage = `
         <p>Auto-reload is disabled for this type of file. Click the "Reload" button above or the "Run Tests" button below when you're ready to see your changes.</p>

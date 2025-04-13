@@ -5,7 +5,7 @@ const useAutoCloseTags = (editor: monaco.editor.IStandaloneCodeEditor | null) =>
   useEffect(() => {
     if (!editor) return;
 
-    const enabledLanguages = ["html", "javascript"];
+    const enabledLanguages = ["html", "javascript", "xml"];
     const isSelfClosing = (tag: string) =>
       [
         "area",

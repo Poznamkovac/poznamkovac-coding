@@ -248,8 +248,8 @@ const CreateEmbedPage: React.FC = () => {
       { filename: "test.js", readonly: false, hidden: true, autoreload: false, content: TEST_TEMPLATES.html5 },
     ],
     mainFile: "index.html",
-    previewType: "html",
-    previewTemplatePath: "/data/challenges/html5/previewTemplate.js",
+    previewType: "web",
+    previewTemplatePath: "/data/challenges/web/previewTemplate.js",
   });
   const [iframeCode, setIframeCode] = useState<string>("");
   const [fullEmbedUrl, setFullEmbedUrl] = useState<string>("");
@@ -506,7 +506,7 @@ const CreateEmbedPage: React.FC = () => {
 
     setAssignment((prev) => ({
       ...prev,
-      previewType: language === "python" ? "python" : language === "js" ? "javascript" : "html",
+      previewType: language,
       previewTemplatePath,
       files: updatedFiles,
       mainFile,
@@ -579,15 +579,7 @@ const CreateEmbedPage: React.FC = () => {
           <div className="mb-4">
             <label className="block mb-1">Programming Language</label>
             <select
-              value={
-                assignment.previewType === "python"
-                  ? "python"
-                  : assignment.previewType === "javascript"
-                  ? "js"
-                  : assignment.previewType === "html"
-                  ? "html5"
-                  : "html5"
-              }
+              value={assignment.previewType}
               onChange={handleLanguageChange}
               className="w-full px-3 py-2 text-gray-200 bg-gray-700 rounded"
             >

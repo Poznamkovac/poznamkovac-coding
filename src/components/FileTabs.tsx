@@ -23,6 +23,8 @@ const getFileIcon = (filename: string): string => {
       return "📊";
     case "md":
       return "📝";
+    case "py":
+      return "🐍";
     default:
       return "📄";
   }

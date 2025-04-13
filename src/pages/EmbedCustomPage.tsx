@@ -44,7 +44,7 @@ const EmbedCustomPage: React.FC = () => {
         assignment: "Custom assignment loaded from URL",
         maxScore: 0,
         showPreview: true,
-        previewType: "html",
+        previewType: "web",
         mainFile: "index.html",
         files: [],
       };
@@ -56,7 +56,7 @@ const EmbedCustomPage: React.FC = () => {
       };
 
       // Ensure all required fields are present
-      if (!assignmentData.previewType) assignmentData.previewType = "html";
+      if (!assignmentData.previewType) assignmentData.previewType = "web";
       if (!assignmentData.files || !Array.isArray(assignmentData.files) || assignmentData.files.length === 0) {
         // Create default files if none provided
         assignmentData.files = [

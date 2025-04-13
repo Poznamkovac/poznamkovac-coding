@@ -16,7 +16,7 @@ export interface ChallengeData {
   assignment: string;
   /** Maximálne skóre ktoré možno za túto úlohu dostať. */
   maxScore: number;
-  /** Type of preview to use: "html", "console", etc. */
+  /** Type of preview to use: "web", "preview", etc. */
   previewType: string;
   /** Whether or not to show the preview. */
   showPreview: boolean;

@@ -19,7 +19,7 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
 
         // Set defaults if properties are missing
         if (!data.previewType) {
-          data.previewType = "html";
+          data.previewType = "web";
         }
 
         if (data.showPreview === undefined) {

@@ -2,7 +2,7 @@
   "title": "Bubble Sort",
   "assignment": "Implementuj Bubble Sort algoritmus pre pole čísiel. Funkcia <code>bubblesort</code> musí akceptovať dva argumenty – jeden pre pole a jeden pre režim (<code>false</code> = vzostupný, <code>true</code> = zostupný). Funkcia musí vrátiť usporiadané pole čísiel.",
   "maxScore": 1,
-  "previewType": "html",
+  "previewType": "web",
   "showPreview": false,
   "mainFile": "index.html",
   "files": [
