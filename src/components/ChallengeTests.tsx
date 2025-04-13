@@ -185,7 +185,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       }
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
-        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function",
+        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function"
       );
 
       const results = await Promise.all(
@@ -198,15 +198,15 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
             console.error(`Error in method: ${method}:`, error);
             return {
               name: method,
-              result: { detaily_zle: `Test execution error: ${error}` },
+              result: { details_wrong: `Test execution error: ${error}` },
             };
           }
-        }),
+        })
       );
 
       setTestResults(results);
 
-      const passedTests = results.filter((result) => result.result.detaily_ok).length;
+      const passedTests = results.filter((result) => result.result.details_ok).length;
       const newScore = Math.round((passedTests / results.length) * maxScore);
       await saveHighestScore(newScore);
 
@@ -224,7 +224,9 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       setTestResults([
         {
           name: "Error",
-          result: { detaily_zle: `An error occurred during testing: ${error instanceof Error ? error.message : String(error)}` },
+          result: {
+            details_wrong: `An error occurred during testing: ${error instanceof Error ? error.message : String(error)}`,
+          },
         },
       ]);
     } finally {
@@ -339,16 +341,16 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
 
       <div className="mt-4">
         {testResults.map(({ name, result }) => (
-          <div key={name} className={`p-2 mb-2 rounded ${result.detaily_ok ? "bg-green-800" : "bg-red-800"}`}>
+          <div key={name} className={`p-2 mb-2 rounded ${result.details_ok ? "bg-green-800" : "bg-red-800"}`}>
             <b>
-              {result.detaily_ok ? "✓" : "✗"} {name}
+              {result.details_ok ? "✓" : "✗"} {name}
             </b>
-            {result.detaily_ok ? ` - ok!` : ` - fail!`}
+            {result.details_ok ? ` - ok!` : ` - fail!`}
             <br />
 
             <span className="text-sm text-gray-300 font-italic">
-              <span dangerouslySetInnerHTML={{ __html: result.detaily_ok || "" }} />
-              <span dangerouslySetInnerHTML={{ __html: result.detaily_zle || "" }} />
+              <span dangerouslySetInnerHTML={{ __html: result.details_ok || "" }} />
+              <span dangerouslySetInnerHTML={{ __html: result.details_wrong || "" }} />
             </span>
           </div>
         ))}

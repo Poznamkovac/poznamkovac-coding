@@ -14,33 +14,25 @@ export default class PythonTester {
   }
 
   /**
-   * Test that the script correctly outputs "Hello, World!"
+   * Test that the script outputs the correct key
    */
-  async test_hello_output() {
+  async test_output_key() {
     try {
-      const STDOUT = this.previewWindow.document.getElementById("stdout");
       const STDERR = this.previewWindow.document.getElementById("stderr");
 
-      let stdout = STDOUT.textContent;
       let stderr = STDERR.textContent;
       if (stderr.length > 0) {
         return {
-          detaily_zle: `Expected no errors, but found stderr`,
+          details_wrong: `Expected no errors, but found stderr`,
         };
       }
 
-      if (stdout.includes("Hello, World!")) {
-        return {
-          detaily_ok: 'Your program correctly output "Hello, World!"',
-        };
-      } else {
-        return {
-          detaily_zle: `Expected to find "Hello, World!" in the output, but found: "${stdout}"`,
-        };
-      }
+      return {
+        details_ok: 'The program functions correctly.',
+      };
     } catch (error) {
       return {
-        detaily_zle: `Test error: ${error.message}`,
+        details_wrong: `Test error: ${error.message}`,
       };
     }
   }

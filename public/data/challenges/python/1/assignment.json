@@ -1,19 +1,19 @@
 {
   "title": "Hello Python",
-  "assignment": "Write a Python program that prints 'Hello, World!' to the console.",
+  "assignment": "Write a Python program that defines function <code>hello()</code> which returns <code>'Hello, World!'</code>.",
   "maxScore": 5,
   "previewType": "python",
   "showPreview": true,
-  "mainFile": "main.py",
+  "mainFile": "test.py",
   "files": [
     {
-      "filename": "main.py",
-      "readonly": false,
-      "hidden": false,
+      "filename": "test.py",
+      "readonly": true,
+      "hidden": true,
       "autoreload": false
     },
     {
-      "filename": "my_module.py",
+      "filename": "main.py",
       "readonly": false,
       "hidden": false,
       "autoreload": false

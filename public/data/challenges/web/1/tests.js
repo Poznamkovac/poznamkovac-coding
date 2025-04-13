@@ -31,7 +31,7 @@ export default class HTMLChallengeTester {
   _generic_test_bubblesort(reverse = false) {
     if (typeof this.previewWindow.bubblesort !== "function") {
       return {
-        detaily_zle: "Funkcia <code>bubblesort</code> nie je správne definovaná.",
+        details_wrong: "Funkcia <code>bubblesort</code> nie je správne definovaná.",
       };
     }
 
@@ -41,14 +41,14 @@ export default class HTMLChallengeTester {
 
       if (JSON.stringify(sorted) !== JSON.stringify(correct)) {
         return {
-          detaily_zle: "Funkcia <code>bubblesort</code> nevracia správny výsledok.",
+          details_wrong: "Funkcia <code>bubblesort</code> nevracia správny výsledok.",
         };
       }
     }
 
     return {
       skore: 1,
-      detaily_ok: "Funkcia <code>bubblesort</code> je správne implementovaná.",
+      details_ok: "Funkcia <code>bubblesort</code> je správne implementovaná.",
     };
   }
 
