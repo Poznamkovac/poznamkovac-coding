@@ -1,8 +1,8 @@
 import type React from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useI18n } from "../hooks/useI18n";
 import { useLocalizedResource } from "../hooks/useLocalizedResource";
+import { useT } from "../services/i18nUtils";
 
 interface Category {
   id: string;
@@ -13,10 +13,10 @@ interface Category {
 }
 
 const HomePage: React.FC = () => {
-  const { t, isLoading: translationsLoading } = useI18n();
+  const t = useT();
   const { data: categories, loading, error } = useLocalizedResource<Category[]>("/data/categories.json");
 
-  if (translationsLoading || loading) {
+  if (loading) {
     return <div>{t("common.loading")}</div>;
   }
 

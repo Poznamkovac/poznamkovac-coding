@@ -60,7 +60,7 @@ export const createVirtualFileSystem = async (
         }
 
         // Try to get content from IndexedDB first
-        const storedContent = await storageService.getEditorCode(categoryId, challengeId, file.filename);
+        const storedContent = await storageService.getEditorCode(categoryId, challengeId, file.filename, language);
 
         if (storedContent) {
           // If found in storage, use it
@@ -128,7 +128,7 @@ export const createVirtualFileSystem = async (
         filesMap.set(filename, { ...file, content });
 
         // Save to IndexedDB
-        storageService.setEditorCode(categoryId, challengeId, filename, content);
+        storageService.setEditorCode(categoryId, challengeId, filename, content, language);
 
         // Dispatch custom event for file changes
         window.dispatchEvent(

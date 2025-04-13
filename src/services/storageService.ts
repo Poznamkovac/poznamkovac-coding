@@ -1,4 +1,6 @@
 import { openDB, DBSchema, IDBPDatabase } from "idb";
+import { getEffectiveLanguage } from "./i18nService";
+import { LanguageCode } from "../types/i18n";
 
 interface AppDB extends DBSchema {
   "challenge-data": {
@@ -111,10 +113,12 @@ class StorageService {
    * Get assignment score
    * @param categoryId The category ID
    * @param challengeId The challenge ID
+   * @param language The language code (optional)
    * @returns The score or 0 if not found
    */
-  async getChallengeScore(categoryId: string, challengeId: string): Promise<number> {
-    const key = `uloha_${categoryId}_${challengeId}_skore`;
+  async getChallengeScore(categoryId: string, challengeId: string, language: LanguageCode = "auto"): Promise<number> {
+    const effectiveLanguage = getEffectiveLanguage(language);
+    const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_skore`;
     const score = await this.getValue(key);
     return typeof score === "number" ? score : typeof score === "string" ? parseInt(score, 10) : 0;
   }
@@ -124,9 +128,16 @@ class StorageService {
    * @param categoryId The category ID
    * @param challengeId The challenge ID
    * @param score The score to save
+   * @param language The language code (optional)
    */
-  async setChallengeScore(categoryId: string, challengeId: string, score: number): Promise<void> {
-    const key = `uloha_${categoryId}_${challengeId}_skore`;
+  async setChallengeScore(
+    categoryId: string,
+    challengeId: string,
+    score: number,
+    language: LanguageCode = "auto"
+  ): Promise<void> {
+    const effectiveLanguage = getEffectiveLanguage(language);
+    const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_skore`;
     await this.setValue(key, score);
   }
 
@@ -135,10 +146,17 @@ class StorageService {
    * @param categoryId The category ID
    * @param challengeId The challenge ID
    * @param filename The filename to retrieve
+   * @param language The language code (optional)
    * @returns The stored code or null if not found
    */
-  async getEditorCode(categoryId: string, challengeId: string, filename: string): Promise<string | null> {
-    const key = `uloha_${categoryId}_${challengeId}_${filename}`;
+  async getEditorCode(
+    categoryId: string,
+    challengeId: string,
+    filename: string,
+    language: LanguageCode = "auto"
+  ): Promise<string | null> {
+    const effectiveLanguage = getEffectiveLanguage(language);
+    const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_${filename}`;
     const code = await this.getValue(key);
     return typeof code === "string" ? code : null;
   }
@@ -149,9 +167,17 @@ class StorageService {
    * @param challengeId The challenge ID
    * @param filename The filename to save
    * @param code The code to save
+   * @param language The language code (optional)
    */
-  async setEditorCode(categoryId: string, challengeId: string, filename: string, code: string): Promise<void> {
-    const key = `uloha_${categoryId}_${challengeId}_${filename}`;
+  async setEditorCode(
+    categoryId: string,
+    challengeId: string,
+    filename: string,
+    code: string,
+    language: LanguageCode = "auto"
+  ): Promise<void> {
+    const effectiveLanguage = getEffectiveLanguage(language);
+    const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_${filename}`;
     await this.setValue(key, code);
   }
 
@@ -159,16 +185,22 @@ class StorageService {
    * Get all saved files for a challenge
    * @param categoryId The category ID
    * @param challengeId The challenge ID
+   * @param language The language code (optional)
    * @returns Object with filenames as keys and content as values
    */
-  async getAllChallengeFiles(categoryId: string, challengeId: string): Promise<Record<string, string>> {
+  async getAllChallengeFiles(
+    categoryId: string,
+    challengeId: string,
+    language: LanguageCode = "auto"
+  ): Promise<Record<string, string>> {
     try {
+      const effectiveLanguage = getEffectiveLanguage(language);
       const db = await this.dbPromise;
       const allKeys = await db.getAllKeys(STORE_NAME);
-      const prefix = `uloha_${categoryId}_${challengeId}_`;
+      const prefix = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_`;
 
       const fileKeys = allKeys.filter(
-        (key) => key.startsWith(prefix) && key !== `${prefix}skore`, // Exclude score
+        (key) => key.startsWith(prefix) && key !== `${prefix}skore` // Exclude score
       );
 
       const result: Record<string, string> = {};

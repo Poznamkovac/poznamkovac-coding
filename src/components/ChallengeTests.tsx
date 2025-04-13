@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { emitScoreUpdate } from "../services/scoreService";
 import { storageService } from "../services/storageService";
 import { useI18n } from "../hooks/useI18n";
-import { getLocalizedResourceUrl } from "../services/i18nService";
+import { getEffectiveLanguage } from "../services/i18nService";
 
 interface ChallengeTestsProps {
   categoryId: string;
@@ -55,7 +55,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     // Load score from IndexedDB
     const loadScore = async () => {
       setIsLoading(true);
-      const score = await storageService.getChallengeScore(categoryId, challengeId);
+      const score = await storageService.getChallengeScore(categoryId, challengeId, language);
       setCurrentScore(score);
       setIsLoading(false);
     };
@@ -77,13 +77,13 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     return () => {
       window.removeEventListener("message", handlePreviewMessages);
     };
-  }, [categoryId, challengeId]);
+  }, [categoryId, challengeId, language]);
 
   const saveHighestScore = async (newScore: number) => {
     if (newScore > currentScore) {
       setCurrentScore(newScore);
       // Use emitScoreUpdate to save to IndexedDB and broadcast the change
-      await emitScoreUpdate(categoryId, challengeId, newScore);
+      await emitScoreUpdate(categoryId, challengeId, newScore, language);
     }
   };
 
@@ -96,9 +96,13 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     previewReadyRef.current = false;
 
     try {
-      // Get the test module
-      const testsUrl = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${challengeId}/tests.js`, language);
-      const testModule = await import(/* @vite-ignore */ testsUrl);
+      // Get the effective language to use in the path
+      const effectiveLanguage = getEffectiveLanguage(language);
+
+      // Use the language-specific path with the original import method
+      const testModule = await import(
+        /* @vite-ignore */ `/data/${effectiveLanguage}/challenges/${categoryId}/${challengeId}/tests.js`
+      );
       const tester = new testModule.default();
       testerRef.current = tester;
 
@@ -249,7 +253,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         readonlyList = readonlyFiles || [];
       } else {
         // Fallback to fetching assignment.json if files aren't provided
-        const metadataUrl = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${challengeId}/assignment.json`, language);
+        const effectiveLanguage = getEffectiveLanguage(language);
+        const metadataUrl = `/data/${effectiveLanguage}/challenges/${categoryId}/${challengeId}/assignment.json`;
         const metadataResponse = await fetch(metadataUrl);
         if (!metadataResponse.ok) {
           setSolutionError("Assignment metadata not available");
@@ -277,10 +282,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         }
 
         // Fetch the solution files
-        const solutionUrl = getLocalizedResourceUrl(
-          `/data/challenges/${categoryId}/${challengeId}/solution/${filename}`,
-          language
-        );
+        const effectiveLanguage = getEffectiveLanguage(language);
+        const solutionUrl = `/data/${effectiveLanguage}/challenges/${categoryId}/${challengeId}/solution/${filename}`;
         const response = await fetch(solutionUrl);
         if (!response.ok) {
           continue; // Skip files that don't have solutions
