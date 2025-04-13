@@ -1,5 +1,5 @@
 import React from "react";
-import { withTranslation } from "../contexts/withTranslation";
+import { withTranslation } from "../hooks/useTranslation";
 
 interface FooterProps {
   // The t function will be injected by the HOC
@@ -21,4 +21,5 @@ class Footer extends React.Component<FooterProps> {
 }
 
 // Wrap the component with the translation HOC
-export default withTranslation(Footer);
+const TranslatedFooter = withTranslation(Footer);
+export default TranslatedFooter;
