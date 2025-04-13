@@ -1,4 +1,7 @@
-export type LanguageCode = "en" | "sk" | "auto";
+export type LanguageCode = string;
+
+// Keep "auto" as a special case for auto-detection
+export type SystemLanguageCode = "auto";
 
 export interface Translations {
   app: {

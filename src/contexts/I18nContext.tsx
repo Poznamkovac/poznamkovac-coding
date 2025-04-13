@@ -17,13 +17,13 @@ const getNestedValue = (obj: Translations | Record<string, unknown>, path: strin
 
   for (const key of keys) {
     if (current && typeof current === "object" && key in current) {
-      current = current[key as keyof typeof current];
+      current = current[key as keyof typeof current] as Translations | Record<string, unknown>;
     } else {
       return path; // Return the key path if translation not found
     }
   }
 
-  return current as string;
+  return String(current);
 };
 
 // Helper to get browser language
@@ -32,27 +32,34 @@ const getBrowserLanguage = (): LanguageCode => {
   return browserLang === "sk" ? "sk" : "en"; // Default to 'en' for any language other than Slovak
 };
 
+// Default language when a requested language is not available
+const DEFAULT_LANGUAGE = "en";
+
 interface I18nProviderProps {
   children: React.ReactNode;
 }
 
 export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [translations, setTranslations] = useState<Translations | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Get language preference from URL, localStorage, or browser
   const getInitialLanguage = (): LanguageCode => {
-    const urlLang = searchParams.get("lang") as LanguageCode | null;
-    if (urlLang && (urlLang === "en" || urlLang === "sk" || urlLang === "auto")) {
+    // 1. Prioritize URL language parameter
+    const urlLang = searchParams.get("lang");
+    if (urlLang) {
+      // Any language from URL is accepted
       return urlLang;
     }
 
-    const storedLang = localStorage.getItem("language") as LanguageCode | null;
-    if (storedLang && (storedLang === "en" || storedLang === "sk" || storedLang === "auto")) {
+    // 2. Use localStorage if no URL parameter
+    const storedLang = localStorage.getItem("language");
+    if (storedLang) {
       return storedLang;
     }
 
+    // 3. Default to auto
     return "auto";
   };
 
@@ -65,12 +72,8 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
     } else {
       searchParams.delete("lang");
     }
-    window.history.replaceState(
-      {},
-      "",
-      `${window.location.pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}${window.location.hash}`
-    );
-  }, [language, searchParams]);
+    setSearchParams(searchParams);
+  }, [language, searchParams, setSearchParams]);
 
   // Function to set language and save to localStorage
   const setLanguage = useCallback((lang: LanguageCode) => {
@@ -79,7 +82,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
   }, []);
 
   // Get the effective language (resolves 'auto' to actual language)
-  const effectiveLanguage = useMemo((): "en" | "sk" => {
+  const effectiveLanguage = useMemo((): LanguageCode => {
     return language === "auto" ? getBrowserLanguage() : language;
   }, [language]);
 
@@ -101,8 +104,13 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
       .catch((error) => {
         console.error("Error loading translations:", error);
         setIsLoading(false);
+
+        // Handle case when language file doesn't exist
+        if (effectiveLanguage !== DEFAULT_LANGUAGE && effectiveLanguage !== "auto") {
+          setLanguage(DEFAULT_LANGUAGE);
+        }
       });
-  }, [effectiveLanguage]);
+  }, [effectiveLanguage, setLanguage]);
 
   // Translation function
   const t = useCallback(
