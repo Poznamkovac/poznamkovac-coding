@@ -157,7 +157,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       if (!previewReadyRef.current) {
         await new Promise<void>((resolve, reject) => {
           const checkInterval = 100; // ms
-          const maxWaitTime = 10000; // 10 seconds timeout
+          const maxWaitTime = 30000; // 30 seconds timeout
           let elapsedTime = 0;
 
           const checkReadyState = () => {
