@@ -118,7 +118,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
       if (!translations) return key;
       return getNestedValue(translations, key) || key;
     },
-    [translations]
+    [translations],
   );
 
   const contextValue = useMemo(
@@ -128,7 +128,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
       t,
       isLoading,
     }),
-    [language, setLanguage, t, isLoading]
+    [language, setLanguage, t, isLoading],
   );
 
   return <I18nContext.Provider value={contextValue}>{children}</I18nContext.Provider>;
