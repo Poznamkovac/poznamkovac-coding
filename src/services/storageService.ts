@@ -225,4 +225,4 @@ class StorageService {
 export const storageService = new StorageService();
 
 // Migrate existing data from localStorage on initialization
-storageService.migrateFromLocalStorage("uloha_");
+//storageService.migrateFromLocalStorage("uloha_");
