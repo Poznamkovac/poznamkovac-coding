@@ -4,10 +4,10 @@ import { LanguageCode } from "../types/i18n";
  * Gets the effective language from the provided language code
  * If 'auto', returns the browser language (defaulting to 'en' if browser language is not supported)
  */
-export const getEffectiveLanguage = (language: LanguageCode): "en" | "sk" => {
+export const getEffectiveLanguage = (language: LanguageCode): string => {
   if (language === "auto") {
     const browserLang = navigator.language.split("-")[0];
-    return browserLang === "sk" ? "sk" : "en";
+    return browserLang;
   }
   return language;
 };
