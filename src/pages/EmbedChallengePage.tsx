@@ -11,11 +11,6 @@ import EmbedLayout from "../components/EmbedLayout";
 import { useI18n } from "../hooks/useI18n";
 import { getCategoryResourcePath } from "../services/i18nService";
 
-// Helper function to check if a string is numeric
-const isNumeric = (str: string): boolean => {
-  return /^\d+$/.test(str);
-};
-
 const EmbedChallengePage: React.FC = () => {
   const location = useLocation();
   const { options } = useQueryParams();

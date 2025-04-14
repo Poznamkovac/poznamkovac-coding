@@ -1,4 +1,4 @@
-import { HashRouter, Route, Routes, useLocation } from "react-router-dom";
+import { HashRouter, Route, Routes } from "react-router-dom";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faHtml5, faCss3, faJs, faPython } from "@fortawesome/free-brands-svg-icons";
@@ -54,8 +54,6 @@ function App() {
 
 // Helper component to determine if we're viewing a challenge or a category
 const CategoryOrChallengePage: React.FC = () => {
-  const location = useLocation();
-
   // Get the hash part without the leading # and any query parameters
   const hashPart = window.location.hash.split("?")[0];
 
