@@ -6,7 +6,7 @@ import { getLocalizedResourceUrl } from "../services/i18nService";
 const CHALLENGES_PER_PAGE = 6;
 
 /** Odošle `GET` request a načíta dáta úloh z ID kategórie z určitej strany. */
-export const useFetchChallenges = (categoryId: string, currentPage: number) => {
+export const useFetchChallenges = (categoryPath: string, currentPage: number) => {
   const [challenges, setChallenges] = useState<ChallengeList>({});
   const [isLastPage, setIsLastPage] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -15,7 +15,11 @@ export const useFetchChallenges = (categoryId: string, currentPage: number) => {
   const fetchChallenge = useCallback(
     async (index: number): Promise<ChallengeData | null> => {
       try {
-        const url = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${index}/assignment.json`, language);
+        // Convert any / in categoryPath to normal path structure
+        const normalizedPath = categoryPath.replace(/\//g, "/");
+
+        // Build the challenge URL with the full path
+        const url = getLocalizedResourceUrl(`/data/challenges/${normalizedPath}/${index}/assignment.json`, language);
         const response = await fetch(url);
         if (!response.ok) {
           return null;
@@ -25,7 +29,7 @@ export const useFetchChallenges = (categoryId: string, currentPage: number) => {
         return null;
       }
     },
-    [categoryId, language],
+    [categoryPath, language]
   );
 
   const fetchChallenges = useCallback(async () => {

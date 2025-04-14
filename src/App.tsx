@@ -20,9 +20,9 @@ function App() {
       <I18nProvider>
         <Routes>
           {/* Embed routes without header */}
-          <Route path="/embed/:categoryId/:challengeId" element={<EmbedChallengePage />} />
           <Route path="/embed/custom" element={<EmbedCustomPage />} />
           <Route path="/embed/create" element={<CreateEmbedPage />} />
+          <Route path="/embed/*/:challengeId" element={<EmbedChallengePage />} />
 
           {/* Regular routes with header */}
           <Route
@@ -33,8 +33,7 @@ function App() {
                 <main className="container flex-grow px-4 py-8 mx-auto">
                   <Routes>
                     <Route path="/" element={<HomePage />} />
-                    <Route path="/challenges/:categoryId" element={<CategoryPage />} />
-                    <Route path="/challenges/:categoryId/:challengeId" element={<ChallengePage />} />
+                    <Route path="/challenges/*" element={<CategoryPage />} />
                   </Routes>
                 </main>
               </div>

@@ -30,11 +30,24 @@ export const getLocalizedResourceUrl = (path: string, language: LanguageCode): s
 
   // If the path starts with "/data/" and is not one of the translation files
   if (path.startsWith("/data/") && !path.match(/\/data\/(en|sk)\.json$/)) {
+    // For nested paths, ensure we're handling hierarchical categories correctly
     // Insert the language code after "/data/"
     return path.replace("/data/", `/data/${effectiveLanguage}/`);
   }
 
   return path;
+};
+
+/**
+ * Determines the path for an assignment resource based on the category path
+ *
+ * @param categoryPath The full category path (e.g. "python/basic/variables")
+ * @param resourcePath The relative path within the category (e.g. "1/assignment.json")
+ * @param language The language code
+ * @returns The complete path to the resource
+ */
+export const getCategoryResourcePath = (categoryPath: string, resourcePath: string, language: LanguageCode): string => {
+  return getLocalizedResourceUrl(`/data/challenges/${categoryPath}/${resourcePath}`, language);
 };
 
 /**

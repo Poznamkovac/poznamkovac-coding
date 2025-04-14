@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useParams, useLocation } from "react-router-dom";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
 import ChallengeTests from "../components/ChallengeTests";
@@ -9,11 +9,11 @@ import { storageService } from "../services/storageService";
 import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 import EmbedLayout from "../components/EmbedLayout";
 import { useI18n } from "../hooks/useI18n";
-import { getLocalizedResourceUrl } from "../services/i18nService";
+import { getCategoryResourcePath } from "../services/i18nService";
 
 const EmbedChallengePage: React.FC = () => {
-  const { categoryId, challengeId } = useParams<{ categoryId: string; challengeId: string }>();
-  const { challengeData, fileSystem, isLoading } = useChallengeData(categoryId!, challengeId!);
+  const { challengeId } = useParams<{ challengeId: string }>();
+  const location = useLocation();
   const { options } = useQueryParams();
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [isScoreLoading, setIsScoreLoading] = useState(true);
@@ -21,11 +21,25 @@ const EmbedChallengePage: React.FC = () => {
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
   const { language, t } = useI18n();
 
+  // Extract the category path from the location
+  const categoryPath = useMemo(() => {
+    // Path format: /embed/category/path/challengeId
+    // Remove /embed/ prefix and the challengeId at the end
+    const fullPath = location.pathname.replace(/^\/embed\//, "");
+    const lastSlashIndex = fullPath.lastIndexOf("/");
+    if (lastSlashIndex !== -1) {
+      return fullPath.substring(0, lastSlashIndex);
+    }
+    return "";
+  }, [location.pathname]);
+
+  const { challengeData, fileSystem, isLoading } = useChallengeData(categoryPath, challengeId || "");
+
   useEffect(() => {
     if (challengeData) {
       const loadScore = async () => {
         setIsScoreLoading(true);
-        const score = await storageService.getChallengeScore(categoryId!, challengeId!, language);
+        const score = await storageService.getChallengeScore(categoryPath, challengeId || "", language);
         setCurrentScore(score);
         setIsScoreLoading(false);
       };
@@ -43,7 +57,7 @@ const EmbedChallengePage: React.FC = () => {
         } = customEvent.detail;
 
         if (
-          updatedCategoryId === categoryId &&
+          updatedCategoryId === categoryPath &&
           updatedChallengeId === challengeId &&
           (!eventLanguage || eventLanguage === language)
         ) {
@@ -71,7 +85,7 @@ const EmbedChallengePage: React.FC = () => {
         window.removeEventListener(FILE_CHANGE_EVENT, handleFileChange);
       };
     }
-  }, [challengeData, categoryId, challengeId, options.autoReload, language]);
+  }, [challengeData, categoryPath, challengeId, options.autoReload, language]);
 
   const handleTestRun = () => {
     setNeedsTestRun(false);
@@ -94,7 +108,7 @@ const EmbedChallengePage: React.FC = () => {
   // Prepare preview template path based on category
   const previewTemplatePath =
     challengeData.previewTemplatePath ||
-    (categoryId ? getLocalizedResourceUrl(`/data/challenges/${categoryId}/previewTemplate.js`, language) : undefined);
+    (categoryPath ? getCategoryResourcePath(categoryPath, "previewTemplate.js", language) : undefined);
 
   // Combine URL options with challenge data options
   const showPreview = options.showPreview && challengeData.showPreview;
@@ -113,8 +127,8 @@ const EmbedChallengePage: React.FC = () => {
     >
       {options.isScored && (
         <ChallengeTests
-          categoryId={categoryId!}
-          challengeId={challengeId!}
+          categoryId={categoryPath}
+          challengeId={challengeId || ""}
           maxScore={challengeData.maxScore}
           onTestRun={handleTestRun}
           needsTestRun={needsTestRun}

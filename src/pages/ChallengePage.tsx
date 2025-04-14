@@ -1,19 +1,21 @@
 import type React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { useChallengeData } from "../hooks/useChallengeData";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
 import ChallengeTests from "../components/ChallengeTests";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { storageService } from "../services/storageService";
 import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 import { useQueryParams } from "../hooks/useQueryParams";
 import { useI18n } from "../hooks/useI18n";
-import { getLocalizedResourceUrl } from "../services/i18nService";
+import { getLocalizedResourceUrl, getCategoryResourcePath } from "../services/i18nService";
+import { useLocalizedResource } from "../hooks/useLocalizedResource";
+import { Category } from "../types/category";
 
 const ChallengePage: React.FC = () => {
-  const { categoryId, challengeId } = useParams();
-  const { challengeData, fileSystem, isLoading } = useChallengeData(categoryId!, challengeId!);
+  const { challengeId } = useParams<{ challengeId: string }>();
+  const location = useLocation();
   const { options } = useQueryParams();
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [isScoreLoading, setIsScoreLoading] = useState(true);
@@ -22,11 +24,31 @@ const ChallengePage: React.FC = () => {
   const previewReadyRef = useRef<boolean>(false);
   const { language, t } = useI18n();
 
+  // Extract the category path from the location
+  const categoryPath = useMemo(() => {
+    // Path format: /challenges/category/path/challengeId
+    // Remove /challenges/ prefix and the challengeId at the end
+    const fullPath = location.pathname.replace(/^\/challenges\//, "");
+    const lastSlashIndex = fullPath.lastIndexOf("/");
+    if (lastSlashIndex !== -1) {
+      return fullPath.substring(0, lastSlashIndex);
+    }
+    return "";
+  }, [location.pathname]);
+
+  // Load all categories for breadcrumb navigation
+  const { data: allCategories } = useLocalizedResource<Category[]>("/data/categories.json");
+
+  // Split the category path into parts for breadcrumb
+  const categoryPathParts = useMemo(() => categoryPath.split("/").filter((part) => part !== ""), [categoryPath]);
+
+  const { challengeData, fileSystem, isLoading } = useChallengeData(categoryPath, challengeId || "");
+
   useEffect(() => {
     if (challengeData) {
       const loadScore = async () => {
         setIsScoreLoading(true);
-        const score = await storageService.getChallengeScore(categoryId!, challengeId!, language);
+        const score = await storageService.getChallengeScore(categoryPath, challengeId || "", language);
         setCurrentScore(score);
         setIsScoreLoading(false);
       };
@@ -44,7 +66,7 @@ const ChallengePage: React.FC = () => {
         } = customEvent.detail;
 
         if (
-          updatedCategoryId === categoryId &&
+          updatedCategoryId === categoryPath &&
           updatedChallengeId === challengeId &&
           (!eventLanguage || eventLanguage === language)
         ) {
@@ -83,7 +105,7 @@ const ChallengePage: React.FC = () => {
         window.removeEventListener("message", handlePreviewReady);
       };
     }
-  }, [challengeData, categoryId, challengeId, options.autoReload, language]);
+  }, [challengeData, categoryPath, challengeId, options.autoReload, language]);
 
   const handleTestRun = () => {
     setNeedsTestRun(false);
@@ -131,14 +153,39 @@ const ChallengePage: React.FC = () => {
   // Prepare preview template path based on category
   const previewTemplatePath =
     challengeData.previewTemplatePath ||
-    (categoryId ? getLocalizedResourceUrl(`/data/challenges/${categoryId}/previewTemplate.js`, language) : undefined);
+    (categoryPath ? getCategoryResourcePath(categoryPath, "previewTemplate.js", language) : undefined);
 
   // Get localized image URL
-  const imageUrl = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${challengeId}/obrazok.png`, language);
+  const imageUrl = getCategoryResourcePath(categoryPath, `${challengeId}/obrazok.png`, language);
 
   return (
     <div className="min-h-screen text-white">
       <main className="container p-4 mx-auto">
+        {/* Breadcrumb navigation */}
+        <div className="mb-6">
+          <Link to="/" className="text-blue-400 hover:underline">
+            {t("header.home")}
+          </Link>
+          {categoryPathParts.map((part, index) => {
+            // Create the path up to this part
+            const pathToHere = categoryPathParts.slice(0, index + 1).join("/");
+            return (
+              <span key={pathToHere}>
+                <span className="mx-2 text-gray-500">/</span>
+                <Link to={`/challenges/${pathToHere}`} className="text-blue-400 hover:underline">
+                  {part}
+                </Link>
+              </span>
+            );
+          })}
+          {challengeId && (
+            <>
+              <span className="mx-2 text-gray-500">/</span>
+              <span className="text-white">{challengeId}</span>
+            </>
+          )}
+        </div>
+
         {options.showAssignment && (
           <>
             <h2 className="my-4 text-3xl font-bold">
@@ -184,8 +231,8 @@ const ChallengePage: React.FC = () => {
 
             {options.isScored && (
               <ChallengeTests
-                categoryId={categoryId!}
-                challengeId={challengeId!}
+                categoryId={categoryPath}
+                challengeId={challengeId || ""}
                 maxScore={challengeData.maxScore}
                 onTestRun={handleTestRun}
                 needsTestRun={needsTestRun}

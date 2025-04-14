@@ -11,6 +11,40 @@
     "title": "Python",
     "icon": "python",
     "iconColor": "yellow",
-    "color": "#306998"
+    "color": "#306998",
+    "children": [
+      {
+        "id": "zaklad",
+        "title": "Základy",
+        "color": "#306998",
+        "children": [
+          {
+            "id": "uvod",
+            "title": "Úvod",
+            "color": "#306998"
+          },
+          {
+            "id": "premenne",
+            "title": "Premenné",
+            "color": "#306998"
+          },
+          {
+            "id": "datove-typy",
+            "title": "Datové typy",
+            "color": "#306998"
+          },
+          {
+            "id": "operatory",
+            "title": "Operátory",
+            "color": "#306998"
+          }
+        ]
+      },
+      {
+        "id": "oop",
+        "title": "OOP",
+        "color": "#306998"
+      }
+    ]
   }
 ]

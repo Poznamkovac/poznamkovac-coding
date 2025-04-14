@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createVirtualFileSystem } from "../services/virtualFileSystemService";
 import { useI18n } from "../hooks/useI18n";
-import { getLocalizedResourceUrl } from "../services/i18nService";
+import { getLocalizedResourceUrl, getCategoryResourcePath } from "../services/i18nService";
 
 export const useChallengeData = (categoryId: string, challengeId: string) => {
   const navigate = useNavigate();
@@ -17,7 +17,8 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
     const loadChallengeData = async () => {
       setIsLoading(true);
       try {
-        const url = getLocalizedResourceUrl(`/data/challenges/${categoryId}/${challengeId}/assignment.json`, language);
+        // Use the category path with the challenge ID
+        const url = getCategoryResourcePath(categoryId, `${challengeId}/assignment.json`, language);
         const response = await fetch(url);
         const data: ChallengeData = await response.json();
 
@@ -35,15 +36,15 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
           data.mainFile = data.files.find((f) => f.filename === "index.html")
             ? "index.html"
             : data.files.length > 0
-              ? data.files[0].filename
-              : "";
+            ? data.files[0].filename
+            : "";
         }
 
         // If no previewTemplatePath is specified, see if one exists at the category level
         if (!data.previewTemplatePath) {
           try {
             // Check if a previewTemplate.js exists for this category
-            const templateUrl = getLocalizedResourceUrl(`/data/challenges/${categoryId}/previewTemplate.js`, language);
+            const templateUrl = getCategoryResourcePath(categoryId, "previewTemplate.js", language);
             const templateResponse = await fetch(templateUrl, { method: "HEAD" });
             if (templateResponse.ok) {
               data.previewTemplatePath = templateUrl;

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { emitScoreUpdate } from "../services/scoreService";
 import { storageService } from "../services/storageService";
 import { useI18n } from "../hooks/useI18n";
-import { getEffectiveLanguage } from "../services/i18nService";
+import { getEffectiveLanguage, getCategoryResourcePath } from "../services/i18nService";
 
 interface ChallengeTestsProps {
   categoryId: string;
@@ -99,10 +99,14 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       // Get the effective language to use in the path
       const effectiveLanguage = getEffectiveLanguage(language);
 
+      // Convert any forward slashes in categoryId to path separators
+      const categoryPath = categoryId.replace(/\//g, "/");
+
       // Use the language-specific path with the original import method
-      const testModule = await import(
-        /* @vite-ignore */ `/data/${effectiveLanguage}/challenges/${categoryId}/${challengeId}/tests.js`
-      );
+      // Note: Using dynamic import with a template literal is risky and might be rejected by the bundler
+      // This approach assumes Vite will handle this pattern correctly with the @vite-ignore comment
+      const testsUrl = `/data/${effectiveLanguage}/challenges/${categoryPath}/${challengeId}/tests.js`;
+      const testModule = await import(/* @vite-ignore */ testsUrl);
       const tester = new testModule.default();
       testerRef.current = tester;
 
@@ -193,7 +197,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       }
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
-        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function",
+        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function"
       );
 
       const results = await Promise.all(
@@ -209,7 +213,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
               result: { details_wrong: `${t("tests.executionError")}: ${error}` },
             };
           }
-        }),
+        })
       );
 
       setTestResults(results);
@@ -253,9 +257,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         readonlyList = readonlyFiles || [];
       } else {
         // Fallback to fetching assignment.json if files aren't provided
-        const effectiveLanguage = getEffectiveLanguage(language);
-        const metadataUrl = `/data/${effectiveLanguage}/challenges/${categoryId}/${challengeId}/assignment.json`;
-        const metadataResponse = await fetch(metadataUrl);
+        const assignmentUrl = getCategoryResourcePath(categoryId, `${challengeId}/assignment.json`, language);
+        const metadataResponse = await fetch(assignmentUrl);
         if (!metadataResponse.ok) {
           setSolutionError(t("tests.assignmentMetadataNotAvailable"));
           return;
@@ -282,8 +285,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         }
 
         // Fetch the solution files
-        const effectiveLanguage = getEffectiveLanguage(language);
-        const solutionUrl = `/data/${effectiveLanguage}/challenges/${categoryId}/${challengeId}/solution/${filename}`;
+        const solutionUrl = getCategoryResourcePath(categoryId, `${challengeId}/solution/${filename}`, language);
         const response = await fetch(solutionUrl);
         if (!response.ok) {
           continue; // Skip files that don't have solutions
@@ -318,6 +320,12 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     return <div>{t("common.loading")}</div>;
   }
 
+  // Compute next challenge URL - handles nested categories
+  const getNextChallengeUrl = () => {
+    // For nested paths, maintain the path structure
+    return `#/challenges/${categoryId}/${parseInt(challengeId, 10) + 1}`;
+  };
+
   return (
     <div className="mx-4">
       <button
@@ -333,7 +341,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       {showNextButton && allTestsPassed && (
         <button
           onClick={() => {
-            window.location.hash = `#/challenges/${categoryId}/${parseInt(challengeId, 10) + 1}`;
+            window.location.hash = getNextChallengeUrl();
             window.location.reload();
           }}
           className="px-4 py-2 mt-4 ml-2 font-bold text-white bg-green-600 rounded hover:bg-green-700"
