@@ -22,7 +22,8 @@ function App() {
           {/* Embed routes without header */}
           <Route path="/embed/custom" element={<EmbedCustomPage />} />
           <Route path="/embed/create" element={<CreateEmbedPage />} />
-          <Route path="/embed/*/:challengeId" element={<EmbedChallengePage />} />
+          {/* Must come last in the embed routes so it doesn't match /embed/custom or /embed/create */}
+          <Route path="/embed/:categoryPath/:challengeId" element={<EmbedChallengePage />} />
 
           {/* Regular routes with header */}
           <Route
@@ -33,6 +34,13 @@ function App() {
                 <main className="container flex-grow px-4 py-8 mx-auto">
                   <Routes>
                     <Route path="/" element={<HomePage />} />
+
+                    {/* 
+                      Route order matters: 
+                      1. First try to match challenge routes with pattern like /challenges/python/basic/introduction/1
+                      2. Then fallback to the wildcard route for category listing
+                    */}
+                    <Route path="/challenges/:categoryPath/:challengeId" element={<ChallengePage />} />
                     <Route path="/challenges/*" element={<CategoryPage />} />
                   </Routes>
                 </main>

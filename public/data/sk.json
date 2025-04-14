@@ -29,7 +29,8 @@
     "loadingChallengeStatus": "Načítavam stav úloh...",
     "loadingChallenges": "Načítavam úlohy...",
     "noChallenges": "Ups, nie sú tu žiadne úlohy na zobrazenie.",
-    "backToPrevious": "Späť na predchádzajúcu stranu"
+    "backToPrevious": "Späť na predchádzajúcu stranu",
+    "notFound": "Ups, kategória, ktorú hľadáš, tu nie je."
   },
   "pagination": {
     "previous": "Predchádzajúca",

@@ -29,7 +29,8 @@
     "loadingChallengeStatus": "Loading challenge status...",
     "loadingChallenges": "Loading challenges...",
     "noChallenges": "Oops, there are no challenges to display.",
-    "backToPrevious": "Back to previous page"
+    "backToPrevious": "Back to previous page",
+    "notFound": "Oops, the category you're looking for doesn't exist."
   },
   "pagination": {
     "previous": "Previous",

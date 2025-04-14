@@ -6,7 +6,6 @@ import { useT } from "../services/i18nUtils";
 import { Category } from "../types/category";
 
 const CategoryCard: React.FC<{ category: Category; path: string }> = ({ category, path }) => {
-  const t = useT();
   const categoryPath = path ? `${path}/${category.id}` : category.id;
 
   return (

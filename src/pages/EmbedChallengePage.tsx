@@ -12,7 +12,7 @@ import { useI18n } from "../hooks/useI18n";
 import { getCategoryResourcePath } from "../services/i18nService";
 
 const EmbedChallengePage: React.FC = () => {
-  const { challengeId } = useParams<{ challengeId: string }>();
+  const { challengeId = "" } = useParams<{ challengeId: string }>();
   const location = useLocation();
   const { options } = useQueryParams();
   const [currentScore, setCurrentScore] = useState<number>(0);
@@ -21,7 +21,7 @@ const EmbedChallengePage: React.FC = () => {
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
   const { language, t } = useI18n();
 
-  // Extract the category path from the location
+  // Extract the category path from the location for embed URLs
   const categoryPath = useMemo(() => {
     // Path format: /embed/category/path/challengeId
     // Remove /embed/ prefix and the challengeId at the end
@@ -33,13 +33,13 @@ const EmbedChallengePage: React.FC = () => {
     return "";
   }, [location.pathname]);
 
-  const { challengeData, fileSystem, isLoading } = useChallengeData(categoryPath, challengeId || "");
+  const { challengeData, fileSystem, isLoading } = useChallengeData(categoryPath, challengeId);
 
   useEffect(() => {
     if (challengeData) {
       const loadScore = async () => {
         setIsScoreLoading(true);
-        const score = await storageService.getChallengeScore(categoryPath, challengeId || "", language);
+        const score = await storageService.getChallengeScore(categoryPath, challengeId, language);
         setCurrentScore(score);
         setIsScoreLoading(false);
       };
@@ -128,7 +128,7 @@ const EmbedChallengePage: React.FC = () => {
       {options.isScored && (
         <ChallengeTests
           categoryId={categoryPath}
-          challengeId={challengeId || ""}
+          challengeId={challengeId}
           maxScore={challengeData.maxScore}
           onTestRun={handleTestRun}
           needsTestRun={needsTestRun}

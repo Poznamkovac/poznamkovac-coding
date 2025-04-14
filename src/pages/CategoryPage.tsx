@@ -1,7 +1,7 @@
 import type React from "react";
 import type { ChallengeList } from "../types/challenge";
 import { useState, useMemo, useEffect } from "react";
-import { useParams, Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useFetchChallenges } from "../hooks/useFetchChallenges";
 import { storageService } from "../services/storageService";
 import { useI18n } from "../hooks/useI18n";
@@ -109,8 +109,6 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryPath: string 
 };
 
 const SubCategoryGrid: React.FC<{ categories: Category[]; currentPath: string }> = ({ categories, currentPath }) => {
-  const { t } = useI18n();
-
   if (!categories || categories.length === 0) {
     return null;
   }
@@ -120,7 +118,7 @@ const SubCategoryGrid: React.FC<{ categories: Category[]; currentPath: string }>
       {categories.map((category) => (
         <Link
           key={category.id}
-          to={`/challenges/${currentPath}/${category.id}`}
+          to={`/challenges/${currentPath ? `${currentPath}/` : ""}${category.id}`}
           className="flex flex-row items-center justify-start gap-4 px-6 py-4 font-bold text-white transition duration-300 rounded shadow hover:opacity-80"
           style={{ backgroundColor: category.color }}
         >

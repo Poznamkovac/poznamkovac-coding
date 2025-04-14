@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createVirtualFileSystem } from "../services/virtualFileSystemService";
 import { useI18n } from "../hooks/useI18n";
-import { getLocalizedResourceUrl, getCategoryResourcePath } from "../services/i18nService";
+import { getCategoryResourcePath } from "../services/i18nService";
 
 export const useChallengeData = (categoryId: string, challengeId: string) => {
   const navigate = useNavigate();
