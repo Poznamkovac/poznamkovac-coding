@@ -5,6 +5,11 @@ import { createVirtualFileSystem } from "../services/virtualFileSystemService";
 import { useI18n } from "../hooks/useI18n";
 import { getLocalizedResourceUrl, getCategoryResourcePath } from "../services/i18nService";
 
+// Helper function to extract the root category (first part before any slash)
+const getRootCategory = (fullCategoryPath: string): string => {
+  return fullCategoryPath.split("/")[0];
+};
+
 export const useChallengeData = (categoryId: string, challengeId: string) => {
   const navigate = useNavigate();
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
@@ -43,8 +48,11 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
         // If no previewTemplatePath is specified, see if one exists at the category level
         if (!data.previewTemplatePath) {
           try {
-            // Check if a previewTemplate.js exists for this category
-            const templateUrl = getCategoryResourcePath(categoryId, "previewTemplate.js", language);
+            // Extract the root category for previewTemplate.js
+            const rootCategory = getRootCategory(categoryId);
+
+            // Check if a previewTemplate.js exists for the ROOT category, not the nested path
+            const templateUrl = getCategoryResourcePath(rootCategory, "previewTemplate.js", language);
             const templateResponse = await fetch(templateUrl, { method: "HEAD" });
             if (templateResponse.ok) {
               data.previewTemplatePath = templateUrl;

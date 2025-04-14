@@ -1,6 +1,8 @@
 import type { ChallengeFile } from "../types/challenge";
 import React, { useEffect, useState, useRef } from "react";
 import { useQueryParams, EmbedOptions, DEFAULT_OPTIONS, toUrlSafeBase64 } from "../hooks/useQueryParams";
+import { useI18n } from "../hooks/useI18n";
+import { getEffectiveLanguage } from "../services/i18nService";
 
 // Function to safely encode UTF-8 strings to base64
 const utf8ToBase64 = (str: string): string => {
@@ -237,6 +239,7 @@ interface CustomAssignment {
 
 const CreateEmbedPage: React.FC = () => {
   const { customData, parseError: queryParseError } = useQueryParams();
+  const { language } = useI18n();
   const [assignment, setAssignment] = useState<CustomAssignment>({
     title: "Custom Assignment",
     assignment: "<p>Description of your assignment</p>",
@@ -458,25 +461,28 @@ const CreateEmbedPage: React.FC = () => {
 
   // Handle language change
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const language = e.target.value;
+    const selectedLanguage = e.target.value;
     const testIndex = assignment.files.findIndex((file) => file.filename === "test.js");
     const updatedFiles = [...assignment.files];
 
+    // Get effective language for localization
+    const effectiveLanguage = getEffectiveLanguage(language);
+
     // Update preview template path and test file
-    const previewTemplatePath = language ? `/data/challenges/${language}/previewTemplate.js` : undefined;
+    const previewTemplatePath = selectedLanguage ? `/data/${effectiveLanguage}/challenges/${selectedLanguage}/previewTemplate.js` : undefined;
 
     // If a test file exists, update its content based on the selected language
     if (testIndex !== -1) {
       updatedFiles[testIndex] = {
         ...updatedFiles[testIndex],
-        content: TEST_TEMPLATES[language as keyof typeof TEST_TEMPLATES] || TEST_TEMPLATES.html5,
+        content: TEST_TEMPLATES[selectedLanguage as keyof typeof TEST_TEMPLATES] || TEST_TEMPLATES.html5,
       };
     }
 
     // Add appropriate main file if not exist
     let mainFile = assignment.mainFile;
 
-    if (language === "python") {
+    if (selectedLanguage === "python") {
       // Check if Python main file exists, create if not
       const pythonMainExists = updatedFiles.some((file) => file.filename === "main.py");
       if (!pythonMainExists) {
@@ -489,7 +495,7 @@ const CreateEmbedPage: React.FC = () => {
         });
       }
       mainFile = "main.py";
-    } else if (language === "html5" || language === "css3" || language === "js") {
+    } else if (selectedLanguage === "html5" || selectedLanguage === "css3" || selectedLanguage === "js") {
       // For web-based languages, ensure index.html exists
       const htmlExists = updatedFiles.some((file) => file.filename === "index.html");
       if (!htmlExists) {
@@ -506,7 +512,7 @@ const CreateEmbedPage: React.FC = () => {
 
     setAssignment((prev) => ({
       ...prev,
-      previewType: language,
+      previewType: selectedLanguage,
       previewTemplatePath,
       files: updatedFiles,
       mainFile,
@@ -748,7 +754,7 @@ const CreateEmbedPage: React.FC = () => {
                 >
                   {file.filename}
                 </button>
-              ),
+              )
           )}
         </div>
 

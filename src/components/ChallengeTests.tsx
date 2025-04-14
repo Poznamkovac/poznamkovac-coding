@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { emitScoreUpdate } from "../services/scoreService";
 import { storageService } from "../services/storageService";
 import { useI18n } from "../hooks/useI18n";
-import { getEffectiveLanguage, getCategoryResourcePath } from "../services/i18nService";
+import { getEffectiveLanguage } from "../services/i18nService";
 
 interface ChallengeTestsProps {
   categoryId: string;
@@ -99,14 +99,10 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       // Get the effective language to use in the path
       const effectiveLanguage = getEffectiveLanguage(language);
 
-      // Convert any forward slashes in categoryId to path separators
-      const categoryPath = categoryId.replace(/\//g, "/");
-
       // Use the language-specific path with the original import method
-      // Note: Using dynamic import with a template literal is risky and might be rejected by the bundler
-      // This approach assumes Vite will handle this pattern correctly with the @vite-ignore comment
-      const testsUrl = `/data/${effectiveLanguage}/challenges/${categoryPath}/${challengeId}/tests.js`;
-      const testModule = await import(/* @vite-ignore */ testsUrl);
+      const testModule = await import(
+        /* @vite-ignore */ `/data/${effectiveLanguage}/challenges/${categoryId}/${challengeId}/tests.js`
+      );
       const tester = new testModule.default();
       testerRef.current = tester;
 
@@ -257,8 +253,9 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         readonlyList = readonlyFiles || [];
       } else {
         // Fallback to fetching assignment.json if files aren't provided
-        const assignmentUrl = getCategoryResourcePath(categoryId, `${challengeId}/assignment.json`, language);
-        const metadataResponse = await fetch(assignmentUrl);
+        const effectiveLanguage = getEffectiveLanguage(language);
+        const metadataUrl = `/data/${effectiveLanguage}/challenges/${categoryId}/${challengeId}/assignment.json`;
+        const metadataResponse = await fetch(metadataUrl);
         if (!metadataResponse.ok) {
           setSolutionError(t("tests.assignmentMetadataNotAvailable"));
           return;
@@ -285,7 +282,8 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
         }
 
         // Fetch the solution files
-        const solutionUrl = getCategoryResourcePath(categoryId, `${challengeId}/solution/${filename}`, language);
+        const effectiveLanguage = getEffectiveLanguage(language);
+        const solutionUrl = `/data/${effectiveLanguage}/challenges/${categoryId}/${challengeId}/solution/${filename}`;
         const response = await fetch(solutionUrl);
         if (!response.ok) {
           continue; // Skip files that don't have solutions
