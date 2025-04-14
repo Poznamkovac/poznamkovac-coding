@@ -29,7 +29,7 @@ export const useFetchChallenges = (categoryPath: string, currentPage: number) =>
         return null;
       }
     },
-    [categoryPath, language]
+    [categoryPath, language],
   );
 
   const fetchChallenges = useCallback(async () => {

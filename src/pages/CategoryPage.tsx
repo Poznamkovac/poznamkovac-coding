@@ -46,7 +46,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryPath: string 
             completed: score === challenge.maxScore,
             score: score,
           };
-        })
+        }),
       );
 
       setCompletionStatus(newCompletionStatus);
@@ -190,7 +190,7 @@ const findCategoryInHierarchy = (
   categories: Category[],
   pathParts: string[],
   currentIndex = 0,
-  currentPath = ""
+  currentPath = "",
 ): { category: Category | null; fullPath: string } => {
   if (pathParts.length === 0) return { category: null, fullPath: "" };
 

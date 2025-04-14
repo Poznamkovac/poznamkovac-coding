@@ -469,7 +469,9 @@ const CreateEmbedPage: React.FC = () => {
     const effectiveLanguage = getEffectiveLanguage(language);
 
     // Update preview template path and test file
-    const previewTemplatePath = selectedLanguage ? `/data/${effectiveLanguage}/challenges/${selectedLanguage}/previewTemplate.js` : undefined;
+    const previewTemplatePath = selectedLanguage
+      ? `/data/${effectiveLanguage}/challenges/${selectedLanguage}/previewTemplate.js`
+      : undefined;
 
     // If a test file exists, update its content based on the selected language
     if (testIndex !== -1) {
@@ -754,7 +756,7 @@ const CreateEmbedPage: React.FC = () => {
                 >
                   {file.filename}
                 </button>
-              )
+              ),
           )}
         </div>
 
