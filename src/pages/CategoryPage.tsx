@@ -20,6 +20,11 @@ interface ScoreUpdateDetail {
   language?: string;
 }
 
+// Function to check if a string is a numeric value
+const isNumeric = (str: string): boolean => {
+  return /^\d+$/.test(str);
+};
+
 const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryPath: string }> = ({ challenges, categoryPath }) => {
   const [completionStatus, setCompletionStatus] = useState<{ [key: string]: { completed: boolean; score: number } }>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -179,6 +184,12 @@ const findCategoryInHierarchy = (
   if (pathParts.length === 0) return { category: null, fullPath: "" };
 
   const currentId = pathParts[currentIndex];
+
+  // If the current part is numeric, it's likely a challenge ID, not a category
+  if (isNumeric(currentId)) {
+    return { category: null, fullPath: "" };
+  }
+
   const nextPath = currentPath ? `${currentPath}/${currentId}` : currentId;
 
   const foundCategory = categories.find((cat) => cat.id === currentId);
@@ -207,19 +218,30 @@ const CategoryPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(parseInt(searchParams.get("strana") || "1", 10));
   const { t } = useI18n();
 
-  // Extract categoryId from path (supports nested paths)
-  const categoryPath = useMemo(() => {
+  // Extract path parts from the location
+  const rawPathParts = useMemo(() => {
     // Remove /challenges/ from the beginning of the path
     const path = location.pathname.replace(/^\/challenges\//, "");
-    // Use empty string for root path
-    return path || "";
+    return path.split("/").filter((part) => part !== "");
   }, [location.pathname]);
+
+  // Filter out any numeric path part at the end (which would be a challenge ID)
+  const categoryPathParts = useMemo(() => {
+    if (rawPathParts.length === 0) return [];
+
+    // If the last part is numeric, it's a challenge ID and should not be included in the category path
+    const lastPart = rawPathParts[rawPathParts.length - 1];
+    if (isNumeric(lastPart)) {
+      return rawPathParts.slice(0, rawPathParts.length - 1);
+    }
+    return rawPathParts;
+  }, [rawPathParts]);
+
+  // Join the path parts to form the category path
+  const categoryPath = useMemo(() => categoryPathParts.join("/"), [categoryPathParts]);
 
   // Load all categories
   const { data: allCategories, loading: loadingCategories } = useLocalizedResource<Category[]>("/data/categories.json");
-
-  // Split the category path into parts
-  const categoryPathParts = useMemo(() => categoryPath.split("/").filter((part) => part !== ""), [categoryPath]);
 
   // Find the current category and its children in the hierarchy
   const categoryInfo = useMemo(() => {

@@ -1,5 +1,5 @@
 import type React from "react";
-import { useParams, Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useChallengeData } from "../hooks/useChallengeData";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
@@ -12,8 +12,7 @@ import { useI18n } from "../hooks/useI18n";
 import { getCategoryResourcePath } from "../services/i18nService";
 
 const ChallengePage: React.FC = () => {
-  // We now receive the categoryPath as a URL parameter
-  const { categoryPath = "", challengeId = "" } = useParams<{ categoryPath: string; challengeId: string }>();
+  const location = useLocation();
   const { options } = useQueryParams();
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [isScoreLoading, setIsScoreLoading] = useState(true);
@@ -22,8 +21,29 @@ const ChallengePage: React.FC = () => {
   const previewReadyRef = useRef<boolean>(false);
   const { language, t } = useI18n();
 
-  // Split the category path into parts for breadcrumb
-  const categoryPathParts = useMemo(() => categoryPath.split("/").filter((part) => part !== ""), [categoryPath]);
+  // Extract path parts from the location
+  const pathParts = useMemo(() => {
+    // Remove /challenges/ from the beginning of the path
+    const path = location.pathname.replace(/^\/challenges\//, "");
+    return path.split("/").filter((part) => part !== "");
+  }, [location.pathname]);
+
+  // The last part is the challenge ID if it's numeric
+  const challengeId = useMemo(() => {
+    const lastPart = pathParts[pathParts.length - 1];
+    return lastPart;
+  }, [pathParts]);
+
+  // Everything before the challenge ID is the category path
+  const categoryPath = useMemo(() => {
+    // Remove the challenge ID from the path parts
+    return pathParts.slice(0, pathParts.length - 1).join("/");
+  }, [pathParts]);
+
+  // Category path parts for breadcrumb (excluding challenge ID)
+  const categoryPathParts = useMemo(() => {
+    return pathParts.slice(0, pathParts.length - 1);
+  }, [pathParts]);
 
   const { challengeData, fileSystem, isLoading } = useChallengeData(categoryPath, challengeId);
 

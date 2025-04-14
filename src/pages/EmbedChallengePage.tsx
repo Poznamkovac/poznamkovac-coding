@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
 import ChallengeTests from "../components/ChallengeTests";
@@ -12,7 +12,6 @@ import { useI18n } from "../hooks/useI18n";
 import { getCategoryResourcePath } from "../services/i18nService";
 
 const EmbedChallengePage: React.FC = () => {
-  const { challengeId = "" } = useParams<{ challengeId: string }>();
   const location = useLocation();
   const { options } = useQueryParams();
   const [currentScore, setCurrentScore] = useState<number>(0);
@@ -21,17 +20,24 @@ const EmbedChallengePage: React.FC = () => {
   const previewApiRef = useRef<{ forceReload: () => Promise<void> } | null>(null);
   const { language, t } = useI18n();
 
-  // Extract the category path from the location for embed URLs
-  const categoryPath = useMemo(() => {
-    // Path format: /embed/category/path/challengeId
-    // Remove /embed/ prefix and the challengeId at the end
-    const fullPath = location.pathname.replace(/^\/embed\//, "");
-    const lastSlashIndex = fullPath.lastIndexOf("/");
-    if (lastSlashIndex !== -1) {
-      return fullPath.substring(0, lastSlashIndex);
-    }
-    return "";
+  // Extract path parts from the location
+  const pathParts = useMemo(() => {
+    // Remove /embed/ from the beginning of the path
+    const path = location.pathname.replace(/^\/embed\//, "");
+    return path.split("/").filter((part) => part !== "");
   }, [location.pathname]);
+
+  // The last part is the challenge ID
+  const challengeId = useMemo(() => {
+    const lastPart = pathParts[pathParts.length - 1];
+    return lastPart;
+  }, [pathParts]);
+
+  // Everything before the challenge ID is the category path
+  const categoryPath = useMemo(() => {
+    // Remove the challenge ID from the path parts
+    return pathParts.slice(0, pathParts.length - 1).join("/");
+  }, [pathParts]);
 
   const { challengeData, fileSystem, isLoading } = useChallengeData(categoryPath, challengeId);
 

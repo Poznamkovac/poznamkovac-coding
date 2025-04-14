@@ -14,6 +14,11 @@ import CreateEmbedPage from "./pages/CreateEmbedPage";
 
 library.add(faHtml5, faCss3, faJs, faPython);
 
+// Helper function to check if a string is numeric
+const isNumeric = (str: string): boolean => {
+  return /^\d+$/.test(str);
+};
+
 function App() {
   return (
     <HashRouter>
@@ -23,7 +28,7 @@ function App() {
           <Route path="/embed/custom" element={<EmbedCustomPage />} />
           <Route path="/embed/create" element={<CreateEmbedPage />} />
           {/* Must come last in the embed routes so it doesn't match /embed/custom or /embed/create */}
-          <Route path="/embed/:categoryPath/:challengeId" element={<EmbedChallengePage />} />
+          <Route path="/embed/*" element={<EmbedChallengePage />} />
 
           {/* Regular routes with header */}
           <Route
@@ -34,14 +39,8 @@ function App() {
                 <main className="container flex-grow px-4 py-8 mx-auto">
                   <Routes>
                     <Route path="/" element={<HomePage />} />
-
-                    {/* 
-                      Route order matters: 
-                      1. First try to match challenge routes with pattern like /challenges/python/basic/introduction/1
-                      2. Then fallback to the wildcard route for category listing
-                    */}
-                    <Route path="/challenges/:categoryPath/:challengeId" element={<ChallengePage />} />
-                    <Route path="/challenges/*" element={<CategoryPage />} />
+                    {/* Use a catch-all route and handle the distinction between challenge and category in the components */}
+                    <Route path="/challenges/*" element={<CategoryOrChallengePage />} />
                   </Routes>
                 </main>
               </div>
@@ -52,5 +51,27 @@ function App() {
     </HashRouter>
   );
 }
+
+// Helper component to determine if we're viewing a challenge or a category
+const CategoryOrChallengePage: React.FC = () => {
+  const location = window.location;
+  const path = location.hash.replace(/#\/challenges\//, '');
+  const pathParts = path.split('/').filter(Boolean);
+  
+  // Route decision logic:
+  // 1. If there are no path parts, it's the category listing page
+  if (pathParts.length === 0) {
+    return <CategoryPage />;
+  }
+  
+  // 2. If the last segment is numeric, it's a challenge page (e.g., /python/basic/1)
+  const lastPart = pathParts[pathParts.length - 1];
+  if (isNumeric(lastPart)) {
+    return <ChallengePage />;
+  }
+  
+  // 3. Otherwise it's a category page (e.g., /python/basic)
+  return <CategoryPage />;
+};
 
 export default App;
