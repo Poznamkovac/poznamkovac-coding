@@ -1,5 +1,5 @@
 import type React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useChallengeData } from "../hooks/useChallengeData";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
@@ -11,8 +11,14 @@ import { useQueryParams } from "../hooks/useQueryParams";
 import { useI18n } from "../hooks/useI18n";
 import { getCategoryResourcePath } from "../services/i18nService";
 
+// Helper function to check if a string is numeric
+const isNumeric = (str: string): boolean => {
+  return /^\d+$/.test(str);
+};
+
 const ChallengePage: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { options } = useQueryParams();
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [isScoreLoading, setIsScoreLoading] = useState(true);
@@ -46,6 +52,11 @@ const ChallengePage: React.FC = () => {
   const categoryPathParts = useMemo(() => {
     return pathParts.slice(0, pathParts.length - 1);
   }, [pathParts]);
+
+  // Get the root category for previewTemplate.js
+  const rootCategory = useMemo(() => {
+    return categoryPathParts.length > 0 ? categoryPathParts[0] : "";
+  }, [categoryPathParts]);
 
   const { challengeData, fileSystem, isLoading } = useChallengeData(categoryPath, challengeId);
 
@@ -155,13 +166,21 @@ const ChallengePage: React.FC = () => {
 
   if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>{t("common.loading")}</div>;
 
-  // Prepare preview template path based on category
+  // Prepare preview template path based on the ROOT category, not the full path
   const previewTemplatePath =
     challengeData.previewTemplatePath ||
-    (categoryPath ? getCategoryResourcePath(categoryPath, "previewTemplate.js", language) : undefined);
+    (rootCategory ? getCategoryResourcePath(rootCategory, "previewTemplate.js", language) : undefined);
 
   // Get localized image URL
   const imageUrl = getCategoryResourcePath(categoryPath, `${challengeId}/obrazok.png`, language);
+
+  // Function to navigate to category (keeping query params)
+  const navigateToCategory = (path: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    const queryParams = new URLSearchParams(location.search).toString();
+    const destination = `/challenges/${path}${queryParams ? `?${queryParams}` : ""}`;
+    navigate(destination);
+  };
 
   return (
     <div className="min-h-screen text-white">
@@ -177,9 +196,17 @@ const ChallengePage: React.FC = () => {
             return (
               <span key={pathToHere}>
                 <span className="mx-2 text-gray-500">/</span>
-                <Link to={`/challenges/${pathToHere}`} className="text-blue-400 hover:underline">
-                  {part}
-                </Link>
+                {index === categoryPathParts.length - 1 ? (
+                  <span className="text-white">{part}</span>
+                ) : (
+                  <a
+                    href={`#/challenges/${pathToHere}`}
+                    className="text-blue-400 hover:underline"
+                    onClick={navigateToCategory(pathToHere)}
+                  >
+                    {part}
+                  </a>
+                )}
               </span>
             );
           })}

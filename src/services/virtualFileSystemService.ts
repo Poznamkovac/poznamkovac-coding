@@ -1,7 +1,7 @@
 import { ChallengeFile, VirtualFileSystem } from "../types/challenge";
 import { storageService } from "./storageService";
 import { LanguageCode } from "../types/i18n";
-import { getCategoryResourcePath } from "./i18nService";
+import { getLocalizedResourceUrl, getCategoryResourcePath } from "./i18nService";
 
 // Custom event for file change notifications
 export const FILE_CHANGE_EVENT = "fileChange";

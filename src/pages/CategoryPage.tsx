@@ -29,6 +29,8 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryPath: string 
   const [completionStatus, setCompletionStatus] = useState<{ [key: string]: { completed: boolean; score: number } }>({});
   const [isLoading, setIsLoading] = useState(true);
   const { t, language } = useI18n();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Initial load from IndexedDB
@@ -84,13 +86,22 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryPath: string 
     return <div>{t("category.loadingChallengeStatus")}</div>;
   }
 
+  // Function to navigate to challenge (keeping query params)
+  const handleChallengeClick = (id: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    const queryParams = new URLSearchParams(location.search).toString();
+    const destination = `/challenges/${categoryPath}/${id}${queryParams ? `?${queryParams}` : ""}`;
+    navigate(destination);
+  };
+
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
       {Object.entries(challenges).map(([id, challenge]) => (
-        <Link
+        <a
           key={id}
-          to={`/challenges/${categoryPath}/${id}`}
+          href={`#/challenges/${categoryPath}/${id}`}
           className="p-6 transition duration-300 bg-blue-700 rounded-lg shadow-md hover:shadow-lg"
+          onClick={handleChallengeClick(id)}
         >
           <h2 className="text-xl font-semibold">
             <div className="inline-block px-2 py-1 mr-2 text-white bg-blue-900 rounded-full text-bold">{id}.</div>
@@ -107,7 +118,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryPath: string 
             }}
           />
           <div className="mt-2 text-sm"></div>
-        </Link>
+        </a>
       ))}
     </div>
   );

@@ -11,6 +11,11 @@ import EmbedLayout from "../components/EmbedLayout";
 import { useI18n } from "../hooks/useI18n";
 import { getCategoryResourcePath } from "../services/i18nService";
 
+// Helper function to check if a string is numeric
+const isNumeric = (str: string): boolean => {
+  return /^\d+$/.test(str);
+};
+
 const EmbedChallengePage: React.FC = () => {
   const location = useLocation();
   const { options } = useQueryParams();
@@ -41,6 +46,12 @@ const EmbedChallengePage: React.FC = () => {
     if (pathParts.length <= 1) return "";
     // Remove the challenge ID from the path parts
     return pathParts.slice(0, pathParts.length - 1).join("/");
+  }, [pathParts]);
+
+  // Get the root category for previewTemplate.js
+  const rootCategory = useMemo(() => {
+    if (pathParts.length <= 1) return "";
+    return pathParts[0]; // First part is the root category
   }, [pathParts]);
 
   const { challengeData, fileSystem, isLoading } = useChallengeData(categoryPath, challengeId);
@@ -115,10 +126,10 @@ const EmbedChallengePage: React.FC = () => {
 
   if (!challengeData || isLoading || isScoreLoading || !fileSystem) return <div>{t("common.loading")}</div>;
 
-  // Prepare preview template path based on category
+  // Prepare preview template path based on the ROOT category, not the nested path
   const previewTemplatePath =
     challengeData.previewTemplatePath ||
-    (categoryPath ? getCategoryResourcePath(categoryPath, "previewTemplate.js", language) : undefined);
+    (rootCategory ? getCategoryResourcePath(rootCategory, "previewTemplate.js", language) : undefined);
 
   // Combine URL options with challenge data options
   const showPreview = options.showPreview && challengeData.showPreview;

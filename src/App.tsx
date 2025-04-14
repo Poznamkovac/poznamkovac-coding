@@ -1,4 +1,4 @@
-import { HashRouter, Route, Routes } from "react-router-dom";
+import { HashRouter, Route, Routes, useLocation } from "react-router-dom";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faHtml5, faCss3, faJs, faPython } from "@fortawesome/free-brands-svg-icons";
@@ -54,6 +54,8 @@ function App() {
 
 // Helper component to determine if we're viewing a challenge or a category
 const CategoryOrChallengePage: React.FC = () => {
+  const location = useLocation();
+
   // Get the hash part without the leading # and any query parameters
   const hashPart = window.location.hash.split("?")[0];
 
@@ -72,13 +74,11 @@ const CategoryOrChallengePage: React.FC = () => {
 
   // Make sure to only check the actual ID, not any query parameters
   if (isNumeric(lastPart)) {
-    console.log(`Detected challenge ID: ${lastPart}`);
-    return <ChallengePage />;
+    return <ChallengePage key={fullPath} />;
   }
 
   // 3. Otherwise it's a category page
-  console.log(`Detected category path: ${fullPath}`);
-  return <CategoryPage />;
+  return <CategoryPage key={fullPath} />;
 };
 
 export default App;

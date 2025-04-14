@@ -6,6 +6,7 @@ import { useT } from "../services/i18nUtils";
 import { Category } from "../types/category";
 
 const CategoryCard: React.FC<{ category: Category; path: string }> = ({ category, path }) => {
+  const t = useT();
   const categoryPath = path ? `${path}/${category.id}` : category.id;
 
   return (
@@ -24,7 +25,7 @@ const CategoryCard: React.FC<{ category: Category; path: string }> = ({ category
           style={{ color: category.iconColor }}
         />
       )}
-      {category.title}
+      {t(`categories.${category.id}.title`) || category.title}
     </Link>
   );
 };
