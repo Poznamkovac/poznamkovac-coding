@@ -23,13 +23,15 @@ const ChallengePage: React.FC = () => {
 
   // Extract path parts from the location
   const pathParts = useMemo(() => {
-    // Remove /challenges/ from the beginning of the path
-    const path = location.pathname.replace(/^\/challenges\//, "");
+    // Remove /challenges/ from the beginning of the path, and strip any query parameters
+    const pathname = location.pathname;
+    const path = pathname.replace(/^\/challenges\//, "");
     return path.split("/").filter((part) => part !== "");
   }, [location.pathname]);
 
   // The last part is the challenge ID if it's numeric
   const challengeId = useMemo(() => {
+    if (pathParts.length === 0) return "";
     const lastPart = pathParts[pathParts.length - 1];
     return lastPart;
   }, [pathParts]);

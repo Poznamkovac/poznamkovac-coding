@@ -54,23 +54,30 @@ function App() {
 
 // Helper component to determine if we're viewing a challenge or a category
 const CategoryOrChallengePage: React.FC = () => {
-  const location = window.location;
-  const path = location.hash.replace(/#\/challenges\//, '');
-  const pathParts = path.split('/').filter(Boolean);
-  
+  // Get the hash part without the leading # and any query parameters
+  const hashPart = window.location.hash.split("?")[0];
+
+  // Clean up the path to get just the parts after /challenges/
+  const fullPath = hashPart.replace(/#\/challenges\//, "");
+  const pathParts = fullPath.split("/").filter(Boolean);
+
   // Route decision logic:
   // 1. If there are no path parts, it's the category listing page
   if (pathParts.length === 0) {
     return <CategoryPage />;
   }
-  
-  // 2. If the last segment is numeric, it's a challenge page (e.g., /python/basic/1)
+
+  // 2. If the last segment is numeric, it's a challenge page
   const lastPart = pathParts[pathParts.length - 1];
+
+  // Make sure to only check the actual ID, not any query parameters
   if (isNumeric(lastPart)) {
+    console.log(`Detected challenge ID: ${lastPart}`);
     return <ChallengePage />;
   }
-  
-  // 3. Otherwise it's a category page (e.g., /python/basic)
+
+  // 3. Otherwise it's a category page
+  console.log(`Detected category path: ${fullPath}`);
   return <CategoryPage />;
 };
 

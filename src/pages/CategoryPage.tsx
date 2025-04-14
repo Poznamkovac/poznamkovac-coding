@@ -218,11 +218,12 @@ const CategoryPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(parseInt(searchParams.get("strana") || "1", 10));
   const { t } = useI18n();
 
-  // Extract path parts from the location
+  // Extract path parts from the location (excluding query parameters)
   const rawPathParts = useMemo(() => {
-    // Remove /challenges/ from the beginning of the path
-    const path = location.pathname.replace(/^\/challenges\//, "");
-    return path.split("/").filter((part) => part !== "");
+    // Get the raw path (without query string) and remove /challenges/ prefix
+    const rawPath = location.pathname.replace(/^\/challenges\//, "");
+    // Split into parts and filter empty segments
+    return rawPath.split("/").filter((part) => part !== "");
   }, [location.pathname]);
 
   // Filter out any numeric path part at the end (which would be a challenge ID)
@@ -257,7 +258,10 @@ const CategoryPage: React.FC = () => {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1) {
       setCurrentPage(newPage);
-      navigate(`?strana=${newPage}`);
+      // Preserve existing query parameters
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("strana", newPage.toString());
+      navigate(`?${newParams.toString()}`);
     }
   };
 

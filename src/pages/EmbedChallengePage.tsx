@@ -27,14 +27,18 @@ const EmbedChallengePage: React.FC = () => {
     return path.split("/").filter((part) => part !== "");
   }, [location.pathname]);
 
-  // The last part is the challenge ID
+  // The last part is the challenge ID - ensure we're not including query params
   const challengeId = useMemo(() => {
+    if (pathParts.length === 0) return "";
+
     const lastPart = pathParts[pathParts.length - 1];
+    // Extract just the ID part in case there are query parameters
     return lastPart;
   }, [pathParts]);
 
   // Everything before the challenge ID is the category path
   const categoryPath = useMemo(() => {
+    if (pathParts.length <= 1) return "";
     // Remove the challenge ID from the path parts
     return pathParts.slice(0, pathParts.length - 1).join("/");
   }, [pathParts]);
