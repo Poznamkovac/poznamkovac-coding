@@ -14,8 +14,8 @@ interface ChallengePreviewProps {
 }
 
 const getPlaceholderHTML = (t: (key: string) => string) => {
-  let title = t("preview.runYourCode");
-  let languageSpecificMessage = `
+  const title = t("preview.runYourCode");
+  const languageSpecificMessage = `
   <p>${t("preview.autoReloadDisabled")}</p>
 `;
 

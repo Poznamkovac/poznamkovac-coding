@@ -284,7 +284,7 @@ const CreateEmbedPage: React.FC = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [effectiveLanguage]);
 
   // Display parse error from query params
   useEffect(() => {
@@ -592,7 +592,6 @@ const CreateEmbedPage: React.FC = () => {
               value={assignment.rootCategory}
             >
               {categories
-                .filter((category) => !category.children)
                 .map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.title}
