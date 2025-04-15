@@ -46,9 +46,9 @@ const EmbedCustomPage: React.FC = () => {
         assignment: t("embed.customAssignmentFromUrl"),
         maxScore: 0,
         showPreview: true,
-        previewType: "web",
         mainFile: "index.html",
         files: [],
+        rootCategory: "web",
       };
 
       // Merge with custom data
@@ -58,7 +58,6 @@ const EmbedCustomPage: React.FC = () => {
       };
 
       // Ensure all required fields are present
-      if (!assignmentData.previewType) assignmentData.previewType = "web";
       if (!assignmentData.files || !Array.isArray(assignmentData.files) || assignmentData.files.length === 0) {
         // Create default files if none provided
         assignmentData.files = [
@@ -79,11 +78,13 @@ const EmbedCustomPage: React.FC = () => {
           : assignmentData.files[0].filename;
       }
 
+      // Use rootCategory from assignment data or default to "web"
+      const rootCategory = assignmentData.rootCategory || "web";
+
       // Set correct preview template path with language
       const effectiveLanguage = language === "auto" ? (navigator.language.split("-")[0] === "sk" ? "sk" : "en") : language;
-
-      if (!assignmentData.previewTemplatePath && assignmentData.previewType) {
-        assignmentData.previewTemplatePath = `/data/${effectiveLanguage}/challenges/${assignmentData.previewType}/previewTemplate.js`;
+      if (!assignmentData.previewTemplatePath) {
+        assignmentData.previewTemplatePath = `/data/${effectiveLanguage}/challenges/${rootCategory}/previewTemplate.js`;
       }
 
       // Create file system
@@ -230,7 +231,7 @@ const EmbedCustomPage: React.FC = () => {
         `
         ${testCode}
         return typeof runTests === 'function' ? runTests(window) : [];
-        `,
+        `
       );
 
       // Execute the tests in the iframe context
@@ -296,8 +297,8 @@ const EmbedCustomPage: React.FC = () => {
               isTestRunning
                 ? "opacity-50 cursor-not-allowed bg-blue-600"
                 : needsTestRun
-                  ? "bg-orange-600 hover:bg-orange-700 animate-pulse"
-                  : "bg-blue-600 hover:bg-blue-700"
+                ? "bg-orange-600 hover:bg-orange-700 animate-pulse"
+                : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
             {isTestRunning ? "⌛️" : needsTestRun ? "🔄" : "⏯️"}
@@ -328,12 +329,11 @@ const EmbedCustomPage: React.FC = () => {
           <ChallengePreview
             fileSystem={fileSystem}
             mainFile={assignmentData.mainFile}
-            previewType={assignmentData.previewType}
             previewTemplatePath={
-              assignmentData.previewTemplatePath && assignmentData.previewType
+              assignmentData.previewTemplatePath
                 ? `/data/${
                     language === "auto" ? (navigator.language.split("-")[0] === "sk" ? "sk" : "en") : language
-                  }/challenges/${assignmentData.previewType}/previewTemplate.js`
+                  }/challenges/${assignmentData.rootCategory || "web"}/previewTemplate.js`
                 : assignmentData.previewTemplatePath
             }
             autoReload={options.autoReload}

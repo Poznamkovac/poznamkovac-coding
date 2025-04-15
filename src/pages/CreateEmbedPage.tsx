@@ -15,6 +15,7 @@ interface Category {
   icon: string;
   iconColor: string;
   color: string;
+  children?: Category[];
 }
 
 // Default file templates
@@ -233,8 +234,8 @@ interface CustomAssignment {
   maxScore: number;
   files: ChallengeFile[];
   mainFile: string;
-  previewType: string;
   previewTemplatePath?: string;
+  rootCategory: string;
 }
 
 const CreateEmbedPage: React.FC = () => {
@@ -251,8 +252,8 @@ const CreateEmbedPage: React.FC = () => {
       { filename: "test.js", readonly: false, hidden: true, autoreload: false, content: TEST_TEMPLATES.html5 },
     ],
     mainFile: "index.html",
-    previewType: "web",
     previewTemplatePath: "/data/challenges/web/previewTemplate.js",
+    rootCategory: "web",
   });
   const [iframeCode, setIframeCode] = useState<string>("");
   const [fullEmbedUrl, setFullEmbedUrl] = useState<string>("");
@@ -264,11 +265,13 @@ const CreateEmbedPage: React.FC = () => {
   const [testEditorOpen, setTestEditorOpen] = useState<boolean>(false);
   const initializedRef = useRef(false);
 
+  const effectiveLanguage = getEffectiveLanguage(language);
+
   // Fetch available categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("/data/categories.json");
+        const response = await fetch(`/data/${effectiveLanguage}/categories.json`);
         if (!response.ok) {
           throw new Error("Failed to fetch categories");
         }
@@ -465,9 +468,6 @@ const CreateEmbedPage: React.FC = () => {
     const testIndex = assignment.files.findIndex((file) => file.filename === "test.js");
     const updatedFiles = [...assignment.files];
 
-    // Get effective language for localization
-    const effectiveLanguage = getEffectiveLanguage(language);
-
     // Update preview template path and test file
     const previewTemplatePath = selectedLanguage
       ? `/data/${effectiveLanguage}/challenges/${selectedLanguage}/previewTemplate.js`
@@ -514,10 +514,10 @@ const CreateEmbedPage: React.FC = () => {
 
     setAssignment((prev) => ({
       ...prev,
-      previewType: selectedLanguage,
       previewTemplatePath,
       files: updatedFiles,
       mainFile,
+      rootCategory: selectedLanguage,
     }));
   };
 
@@ -587,15 +587,17 @@ const CreateEmbedPage: React.FC = () => {
           <div className="mb-4">
             <label className="block mb-1">Programming Language</label>
             <select
-              value={assignment.previewType}
               onChange={handleLanguageChange}
               className="w-full px-3 py-2 text-gray-200 bg-gray-700 rounded"
+              value={assignment.rootCategory}
             >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.title}
-                </option>
-              ))}
+              {categories
+                .filter((category) => !category.children)
+                .map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.title}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
@@ -756,7 +758,7 @@ const CreateEmbedPage: React.FC = () => {
                 >
                   {file.filename}
                 </button>
-              ),
+              )
           )}
         </div>
 

@@ -2,7 +2,6 @@
   "title": "Hello Python",
   "assignment": "Write a Python program that defines function <code>hello()</code> which returns <code>'Hello, World!'</code>.",
   "maxScore": 5,
-  "previewType": "python",
   "showPreview": true,
   "mainFile": "test.py",
   "files": [

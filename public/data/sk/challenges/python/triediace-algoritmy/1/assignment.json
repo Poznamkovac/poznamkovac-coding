@@ -2,7 +2,6 @@
   "title": "Bubble sort",
   "assignment": "Implementuj funkciu <code>bubble_sort(pole)</code>, ktorá realizuje algoritmus Bubble sort v Pythone. Vstupom je zoznam náhodných čísiel, výstupom je zoznam čísiel usporiadaných vzostupne.",
   "maxScore": 10,
-  "previewType": "python",
   "showPreview": true,
   "mainFile": "test.py",
   "files": [

@@ -7,32 +7,17 @@ import { useI18n } from "../hooks/useI18n";
 interface ChallengePreviewProps {
   fileSystem: VirtualFileSystem;
   mainFile: string;
-  previewType: string;
   previewTemplatePath?: string;
   autoReload?: boolean;
   hidden: boolean;
   onIframeLoad?: (api: { forceReload: () => Promise<void> }) => void;
 }
 
-// Create dynamic placeholder HTML based on previewType
-const getPlaceholderHTML = (previewType: string, t: (key: string) => string) => {
-  // Customize message based on language
-  let languageSpecificMessage = "";
+const getPlaceholderHTML = (t: (key: string) => string) => {
   let title = t("preview.runYourCode");
-
-  switch (previewType.toLowerCase()) {
-    case "python":
-      title = t("preview.pythonCodeReady");
-      languageSpecificMessage = `
-        <p>${t("preview.pythonExecutionMessage")}</p>
-        <p class="tech-note">${t("preview.pythonTechNote")} <a href="https://pyodide.org" target="_blank">Pyodide</a>.</p>
-      `;
-      break;
-    default:
-      languageSpecificMessage = `
-        <p>${t("preview.autoReloadDisabled")}</p>
-      `;
-  }
+  let languageSpecificMessage = `
+  <p>${t("preview.autoReloadDisabled")}</p>
+`;
 
   return `
 <!DOCTYPE html>
@@ -104,7 +89,6 @@ const getPlaceholderHTML = (previewType: string, t: (key: string) => string) => 
 const ChallengePreview: React.FC<ChallengePreviewProps> = ({
   fileSystem,
   mainFile,
-  previewType,
   previewTemplatePath,
   autoReload = true,
   hidden = false,
@@ -198,7 +182,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         iframe.srcdoc = generatedHTML;
       } else {
         const htmlFile = Array.from(fs.files.values()).find(
-          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
+          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html"
         );
 
         if (htmlFile?.content) {
@@ -280,7 +264,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         new MessageEvent("message", {
           data: { type: "PREVIEW_RELOADING" },
           origin: window.location.origin,
-        }),
+        })
       );
 
       const handleLoad = () => {
@@ -304,7 +288,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         iframe.srcdoc = generatedHTML;
       } else {
         const htmlFile = Array.from(fs.files.values()).find(
-          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
+          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html"
         );
 
         if (htmlFile?.content) {
@@ -402,7 +386,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
     // If explicitly set to false in the file, or global autoReload is false
     if (fileAutoreload === false || !autoReload) {
       // If autoreload is disabled, show a placeholder initially
-      iframe.srcdoc = getPlaceholderHTML(previewType, t);
+      iframe.srcdoc = getPlaceholderHTML(t);
 
       // Initial file content snapshot still needed for change detection
       const initialFiles = fileSystem.getAllFiles();
@@ -449,7 +433,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         fileContentRef.current[file.filename] = file.content;
       }
     });
-  }, [mainFile, fileSystem, processHTML, autoReload, previewType, t]);
+  }, [mainFile, fileSystem, processHTML, autoReload, t]);
 
   // Handle iframe load event and expose API
   useEffect(() => {
@@ -471,7 +455,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
           new MessageEvent("message", {
             data: event.data,
             origin: window.location.origin,
-          }),
+          })
         );
       }
     };

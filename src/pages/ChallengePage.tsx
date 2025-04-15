@@ -249,7 +249,6 @@ const ChallengePage: React.FC = () => {
             <ChallengePreview
               fileSystem={fileSystem}
               mainFile={challengeData.mainFile}
-              previewType={challengeData.previewType}
               previewTemplatePath={previewTemplatePath}
               autoReload={options.autoReload}
               hidden={!options.showPreview || !challengeData.showPreview}

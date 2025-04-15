@@ -6,7 +6,7 @@ import { useI18n } from "../hooks/useI18n";
 import { getCategoryResourcePath } from "../services/i18nService";
 
 // Helper function to extract the root category (first part before any slash)
-const getRootCategory = (fullCategoryPath: string): string => {
+export const getRootCategory = (fullCategoryPath: string): string => {
   return fullCategoryPath.split("/")[0];
 };
 
@@ -26,11 +26,6 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
         const url = getCategoryResourcePath(categoryId, `${challengeId}/assignment.json`, language);
         const response = await fetch(url);
         const data: ChallengeData = await response.json();
-
-        // Set defaults if properties are missing
-        if (!data.previewType) {
-          data.previewType = "web";
-        }
 
         if (data.showPreview === undefined) {
           data.showPreview = true; // Default to true if not specified

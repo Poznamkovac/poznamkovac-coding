@@ -16,14 +16,14 @@ export interface ChallengeData {
   assignment: string;
   /** Maximálne skóre ktoré možno za túto úlohu dostať. */
   maxScore: number;
-  /** Type of preview to use: "web", "preview", etc. */
-  previewType: string;
   /** Whether or not to show the preview. */
   showPreview: boolean;
   /** The main file to execute or display in preview */
   mainFile: string;
   /** Category specific preview template path (optional) */
   previewTemplatePath?: string;
+  /** Root category for the challenge (e.g. 'web', 'python') */
+  rootCategory?: string;
   files: ChallengeFile[];
 }
 
