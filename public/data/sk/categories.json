@@ -44,6 +44,11 @@
         "id": "oop",
         "title": "OOP",
         "color": "#306998"
+      },
+      {
+        "id": "triediace-algoritmy",
+        "title": "Triediace algoritmy",
+        "color": "goldenrod"
       }
     ]
   }
