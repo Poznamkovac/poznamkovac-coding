@@ -259,7 +259,7 @@ const CategoryPage: React.FC = () => {
   const categoryInfo = useMemo(() => {
     if (!allCategories || categoryPathParts.length === 0) {
       // For the home page, return a special value
-      return { category: { id: "", title: t("app.welcome"), color: "#333", children: allCategories }, fullPath: "" };
+      return { category: { id: "", title: "🏠", color: "#333", children: allCategories }, fullPath: "" };
     }
     return findCategoryInHierarchy(allCategories, categoryPathParts);
   }, [allCategories, categoryPathParts, t]);

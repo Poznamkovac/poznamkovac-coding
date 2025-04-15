@@ -1,10 +1,5 @@
 {
-  "app": {
-    "title": "Poznámkovač Webúlohy",
-    "welcome": "Vitajte v Poznámkovač (Webúlohy)!"
-  },
   "header": {
-    "back": "⏪ Späť",
     "home": "Domov",
     "language": "Jazyk",
     "auto": "Automaticky"

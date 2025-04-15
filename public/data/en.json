@@ -1,10 +1,5 @@
 {
-  "app": {
-    "title": "Notist Web Assignments",
-    "welcome": "Welcome to Notist (Web Assignments)!"
-  },
   "header": {
-    "back": "⏪ Back",
     "home": "Home",
     "language": "Language",
     "auto": "Auto"
