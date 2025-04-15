@@ -114,7 +114,10 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryPath: string 
           <p
             className="mt-2 text-sm"
             dangerouslySetInnerHTML={{
-              __html: challenge.assignment.split(" ").slice(0, 15).join(" ") + "...",
+              __html:
+                typeof challenge.assignment === "string"
+                  ? challenge.assignment.slice(0, 50) + "..."
+                  : challenge.assignment.join(" ").slice(0, 50) + "...",
             }}
           />
           <div className="mt-2 text-sm"></div>
@@ -262,7 +265,7 @@ const CategoryPage: React.FC = () => {
       return { category: { id: "", title: "🏠", color: "#333", children: allCategories }, fullPath: "" };
     }
     return findCategoryInHierarchy(allCategories, categoryPathParts);
-  }, [allCategories, categoryPathParts, t]);
+  }, [allCategories, categoryPathParts]);
 
   const { challenges, isLastPage, isLoading: loadingChallenges } = useFetchChallenges(categoryPath, currentPage);
 

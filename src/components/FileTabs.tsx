@@ -52,8 +52,10 @@ const FileTabs: React.FC<FileTabsProps> = ({ fileSystem }) => {
       {visibleFiles.map((file) => (
         <div
           key={file.filename}
-          className={`px-3 py-2 cursor-pointer border-r border-gray-700 flex items-center
-            ${activeFile === file.filename ? "bg-gray-700" : "hover:bg-gray-700"}`}
+          className={`px-3 py-2 cursor-pointer flex items-center ${
+            activeFile === file.filename ? "" : "bg-gray-800 hover:text-blue-300"
+          }`}
+          style={activeFile === file.filename ? { backgroundColor: "#1e1e1e" } : undefined}
           onClick={() => handleTabClick(file.filename)}
         >
           <span className="mr-2">{getFileIcon(file.filename)}</span>

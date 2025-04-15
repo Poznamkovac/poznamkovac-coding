@@ -46,9 +46,48 @@
         "color": "#306998"
       },
       {
-        "id": "triediace-algoritmy",
-        "title": "Triediace algoritmy",
-        "color": "goldenrod"
+        "id": "algoritmy",
+        "title": "Algoritmy",
+        "color": "goldenrod",
+        "children": [
+          {
+            "id": "triedenie",
+            "title": "Triedenie",
+            "color": "purple"
+          },
+          {
+            "id": "prehladavanie",
+            "title": "Prehľadávanie",
+            "color": "forestgreen"
+          },
+          {
+            "id": "ostatne",
+            "title": "Ostatné",
+            "color": "firebrick",
+            "children": [
+              {
+                "id": "rekurzia",
+                "title": "Rekurzia",
+                "color": "rebeccapurple"
+              },
+              {
+                "id": "greedy",
+                "title": "Pažravé algoritmy",
+                "color": "firebrick"
+              },
+              {
+                "id": "dp",
+                "title": "Dynamické programovanie",
+                "color": "orange"
+              },
+              {
+                "id": "backtracking",
+                "title": "Backtracking",
+                "color": "coral"
+              }
+            ]
+          }
+        ]
       }
     ]
   }

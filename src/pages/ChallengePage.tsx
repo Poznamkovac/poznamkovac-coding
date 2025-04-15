@@ -226,7 +226,14 @@ const ChallengePage: React.FC = () => {
               )}
             </h2>
 
-            <p className="mb-6" dangerouslySetInnerHTML={{ __html: challengeData.assignment }} />
+            {typeof challengeData.assignment === "string" ? (
+              <p className="my-3" dangerouslySetInnerHTML={{ __html: challengeData.assignment }} />
+            ) : (
+              challengeData.assignment.map((item, index) => (
+                <p key={index} className="my-3" dangerouslySetInnerHTML={{ __html: item }} />
+              ))
+            )}
+
             <div className="mb-6">
               <img
                 src={imageUrl}

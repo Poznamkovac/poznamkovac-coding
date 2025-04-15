@@ -591,12 +591,11 @@ const CreateEmbedPage: React.FC = () => {
               className="w-full px-3 py-2 text-gray-200 bg-gray-700 rounded"
               value={assignment.rootCategory}
             >
-              {categories
-                .map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.title}
-                  </option>
-                ))}
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.title}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -757,7 +756,7 @@ const CreateEmbedPage: React.FC = () => {
                 >
                   {file.filename}
                 </button>
-              )
+              ),
           )}
         </div>
 

@@ -135,7 +135,7 @@ const EmbedChallengePage: React.FC = () => {
   return (
     <EmbedLayout
       title={challengeData.title}
-      description={challengeData.assignment}
+      description={typeof challengeData.assignment === "string" ? challengeData.assignment : challengeData.assignment.join(" ")}
       score={currentScore}
       maxScore={challengeData.maxScore}
       options={options}

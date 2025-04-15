@@ -231,7 +231,7 @@ const EmbedCustomPage: React.FC = () => {
         `
         ${testCode}
         return typeof runTests === 'function' ? runTests(window) : [];
-        `
+        `,
       );
 
       // Execute the tests in the iframe context
@@ -282,7 +282,9 @@ const EmbedCustomPage: React.FC = () => {
   return (
     <EmbedLayout
       title={assignmentData.title}
-      description={assignmentData.assignment}
+      description={
+        typeof assignmentData.assignment === "string" ? assignmentData.assignment : assignmentData.assignment.join(" ")
+      }
       score={currentScore}
       maxScore={assignmentData.maxScore}
       options={options}
@@ -297,8 +299,8 @@ const EmbedCustomPage: React.FC = () => {
               isTestRunning
                 ? "opacity-50 cursor-not-allowed bg-blue-600"
                 : needsTestRun
-                ? "bg-orange-600 hover:bg-orange-700 animate-pulse"
-                : "bg-blue-600 hover:bg-blue-700"
+                  ? "bg-orange-600 hover:bg-orange-700 animate-pulse"
+                  : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
             {isTestRunning ? "⌛️" : needsTestRun ? "🔄" : "⏯️"}

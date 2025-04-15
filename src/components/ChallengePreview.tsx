@@ -182,7 +182,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         iframe.srcdoc = generatedHTML;
       } else {
         const htmlFile = Array.from(fs.files.values()).find(
-          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html"
+          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
         );
 
         if (htmlFile?.content) {
@@ -264,7 +264,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         new MessageEvent("message", {
           data: { type: "PREVIEW_RELOADING" },
           origin: window.location.origin,
-        })
+        }),
       );
 
       const handleLoad = () => {
@@ -288,7 +288,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         iframe.srcdoc = generatedHTML;
       } else {
         const htmlFile = Array.from(fs.files.values()).find(
-          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html"
+          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
         );
 
         if (htmlFile?.content) {
@@ -455,7 +455,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
           new MessageEvent("message", {
             data: event.data,
             origin: window.location.origin,
-          })
+          }),
         );
       }
     };

@@ -13,7 +13,7 @@ export interface ChallengeData {
   /** Názov/nadpis úlohy. Nepodporuje HTML tagy. */
   title: string;
   /** Zadanie úlohy. Môže obsahovať HTML tagy. */
-  assignment: string;
+  assignment: string | string[];
   /** Maximálne skóre ktoré možno za túto úlohu dostať. */
   maxScore: number;
   /** Whether or not to show the preview. */
@@ -33,7 +33,7 @@ export interface ChallengeData {
 export interface ChallengeList {
   [id: string]: {
     title: string;
-    assignment: string;
+    assignment: string | string[];
     maxScore: number;
   };
 }
