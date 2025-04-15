@@ -1,5 +1,3 @@
-import { useSearchParams } from "react-router-dom";
-
 export interface EmbedOptions {
   autoReload: boolean;
   showAssignment: boolean;
@@ -47,22 +45,24 @@ export function useQueryParams(): {
   customData: CustomData | null;
   parseError: string | null;
 } {
-  const [searchParams] = useSearchParams();
+  // Get search params directly from the URL rather than using useSearchParams
+  // since we're now keeping params before the hash
+  const urlSearchParams = new URLSearchParams(window.location.search);
 
   // Parse display options
   const options: EmbedOptions = {
-    autoReload: searchParams.get("autoReload") !== "false",
-    showAssignment: searchParams.get("showAssignment") !== "false",
-    isScored: searchParams.get("isScored") !== "false",
-    showEditors: searchParams.get("showEditors") !== "false",
-    showPreview: searchParams.get("showPreview") !== "false",
-    theme: searchParams.get("theme") === "light" ? "light" : "dark",
+    autoReload: urlSearchParams.get("autoReload") !== "false",
+    showAssignment: urlSearchParams.get("showAssignment") !== "false",
+    isScored: urlSearchParams.get("isScored") !== "false",
+    showEditors: urlSearchParams.get("showEditors") !== "false",
+    showPreview: urlSearchParams.get("showPreview") !== "false",
+    theme: urlSearchParams.get("theme") === "light" ? "light" : "dark",
   };
 
   // Parse custom data (if any)
   let customData = null;
   let parseError = null;
-  const dataParam = searchParams.get("data");
+  const dataParam = urlSearchParams.get("data");
 
   if (dataParam) {
     try {

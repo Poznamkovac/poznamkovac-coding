@@ -1,5 +1,5 @@
 import type React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useChallengeData } from "../hooks/useChallengeData";
 import ChallengeIDE from "../components/ChallengeIDE";
 import ChallengePreview from "../components/ChallengePreview";
@@ -13,7 +13,6 @@ import { getCategoryResourcePath } from "../services/i18nService";
 
 const ChallengePage: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { options } = useQueryParams();
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [isScoreLoading, setIsScoreLoading] = useState(true);
@@ -169,14 +168,6 @@ const ChallengePage: React.FC = () => {
   // Get localized image URL
   const imageUrl = getCategoryResourcePath(categoryPath, `${challengeId}/obrazok.png`, language);
 
-  // Function to navigate to category (keeping query params)
-  const navigateToCategory = (path: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    const queryParams = new URLSearchParams(location.search).toString();
-    const destination = `/challenges/${path}${queryParams ? `?${queryParams}` : ""}`;
-    navigate(destination);
-  };
-
   return (
     <div className="min-h-screen text-white">
       <main className="container p-4 mx-auto">
@@ -194,13 +185,9 @@ const ChallengePage: React.FC = () => {
                 {index === categoryPathParts.length - 1 ? (
                   <span className="text-white">{part}</span>
                 ) : (
-                  <a
-                    href={`#/challenges/${pathToHere}`}
-                    className="text-blue-400 hover:underline"
-                    onClick={navigateToCategory(pathToHere)}
-                  >
+                  <Link to={`/challenges/${pathToHere}`} className="text-blue-400 hover:underline">
                     {part}
-                  </a>
+                  </Link>
                 )}
               </span>
             );

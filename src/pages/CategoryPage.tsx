@@ -1,7 +1,7 @@
 import type React from "react";
 import type { ChallengeList } from "../types/challenge";
 import { useState, useMemo, useEffect } from "react";
-import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { Link, useSearchParams, useLocation } from "react-router-dom";
 import { useFetchChallenges } from "../hooks/useFetchChallenges";
 import { storageService } from "../services/storageService";
 import { useI18n } from "../hooks/useI18n";
@@ -29,8 +29,6 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryPath: string 
   const [completionStatus, setCompletionStatus] = useState<{ [key: string]: { completed: boolean; score: number } }>({});
   const [isLoading, setIsLoading] = useState(true);
   const { t, language } = useI18n();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     // Initial load from IndexedDB
@@ -86,22 +84,13 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryPath: string 
     return <div>{t("category.loadingChallengeStatus")}</div>;
   }
 
-  // Function to navigate to challenge (keeping query params)
-  const handleChallengeClick = (id: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    const queryParams = new URLSearchParams(location.search).toString();
-    const destination = `/challenges/${categoryPath}/${id}${queryParams ? `?${queryParams}` : ""}`;
-    navigate(destination);
-  };
-
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
       {Object.entries(challenges).map(([id, challenge]) => (
-        <a
+        <Link
           key={id}
-          href={`#/challenges/${categoryPath}/${id}`}
+          to={`/challenges/${categoryPath}/${id}`}
           className="p-6 transition duration-300 bg-blue-700 rounded-lg shadow-md hover:shadow-lg"
-          onClick={handleChallengeClick(id)}
         >
           <h2 className="text-xl font-semibold">
             <div className="inline-block px-2 py-1 mr-2 text-white bg-blue-900 rounded-full text-bold">{id}.</div>
@@ -121,7 +110,7 @@ const ChallengeGrid: React.FC<{ challenges: ChallengeList; categoryPath: string 
             }}
           />
           <div className="mt-2 text-sm"></div>
-        </a>
+        </Link>
       ))}
     </div>
   );
@@ -228,7 +217,6 @@ const findCategoryInHierarchy = (
 const CategoryPage: React.FC = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState<number>(parseInt(searchParams.get("strana") || "1", 10));
   const { t } = useI18n();
 
@@ -272,10 +260,16 @@ const CategoryPage: React.FC = () => {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1) {
       setCurrentPage(newPage);
-      // Preserve existing query parameters
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set("strana", newPage.toString());
-      navigate(`?${newParams.toString()}`);
+
+      // Get the current URL to modify properly
+      const url = new URL(window.location.href);
+
+      // Update the page parameter in the search params (before the hash)
+      url.searchParams.set("strana", newPage.toString());
+
+      // Preserve the path after the hash
+      const newUrl = `${url.origin}${url.pathname}${url.search}${url.hash}`;
+      window.history.replaceState(null, "", newUrl);
     }
   };
 

@@ -40,7 +40,7 @@ interface I18nProviderProps {
 }
 
 export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [translations, setTranslations] = useState<Translations | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -67,13 +67,21 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
 
   // Effect to update URL when language changes
   useEffect(() => {
+    // Since we're using HashRouter, we need to handle query params correctly
+    // Get the current URL without the search params
+    const url = new URL(window.location.href);
+
+    // Build the new URL with the language parameter in the right place (before the hash)
     if (language !== "auto") {
-      searchParams.set("lang", language);
+      url.searchParams.set("lang", language);
     } else {
-      searchParams.delete("lang");
+      url.searchParams.delete("lang");
     }
-    setSearchParams(searchParams);
-  }, [language, searchParams, setSearchParams]);
+
+    // Update the URL without causing a navigation/reload
+    const newUrl = `${url.origin}${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState(null, "", newUrl);
+  }, [language]);
 
   // Function to set language and save to localStorage
   const setLanguage = useCallback((lang: LanguageCode) => {
