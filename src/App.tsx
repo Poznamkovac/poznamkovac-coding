@@ -54,8 +54,8 @@ function App() {
 
 // Helper component to determine if we're viewing a challenge or a category
 const CategoryOrChallengePage: React.FC = () => {
-  // has to be like this for some reason, else the assignment card is not clickable,
-  // nor the breadcrumb navigation on assignments:
+  // Has to be there, so that React Router forces re-render when URL changes:
+  // (otherwise, breadcrumb navigation, etc. doesn't work correctly)
   useLocation();
 
   // Get the hash part without the leading # and any query parameters
