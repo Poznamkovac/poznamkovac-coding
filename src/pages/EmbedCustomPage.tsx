@@ -231,7 +231,7 @@ const EmbedCustomPage: React.FC = () => {
         `
         ${testCode}
         return typeof runTests === 'function' ? runTests(window) : [];
-        `
+        `,
       );
 
       // Execute the tests in the iframe context
@@ -291,6 +291,36 @@ const EmbedCustomPage: React.FC = () => {
       className="bg-transparent"
     >
       <div className={useGridLayout ? "grid grid-cols-1 gap-4 md:grid-cols-2" : ""}>
+        {options.isScored && (
+          <div className="flex flex-col md:hidden w-full mb-4">
+            <button
+              onClick={runTests}
+              disabled={isTestRunning}
+              className={`px-4 py-2 font-bold text-white rounded hover:bg-blue-700 ${
+                isTestRunning
+                  ? "opacity-50 cursor-not-allowed bg-blue-600"
+                  : needsTestRun
+                    ? "bg-orange-600 hover:bg-orange-700 animate-pulse"
+                    : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {isTestRunning ? "⌛️" : needsTestRun ? "🔄" : "⏯️"}
+            </button>
+
+            <div className="mt-4">
+              {testResults.map(({ name, success, message }, index) => (
+                <div key={index} className={`p-2 mb-2 rounded ${success ? "bg-green-800" : "bg-red-800"}`}>
+                  <b>
+                    {success ? "✓" : "✗"} {name}
+                  </b>
+                  <br />
+                  <span className="text-sm text-gray-300">{message}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {options.showEditors && (
           <div className="flex flex-col h-[500px]">
             <ChallengeIDE fileSystem={fileSystem} />
@@ -314,7 +344,7 @@ const EmbedCustomPage: React.FC = () => {
           />
 
           {options.isScored && (
-            <div className="mt-4">
+            <div className="mt-4 hidden md:block">
               <button
                 onClick={runTests}
                 disabled={isTestRunning}
@@ -322,8 +352,8 @@ const EmbedCustomPage: React.FC = () => {
                   isTestRunning
                     ? "opacity-50 cursor-not-allowed bg-blue-600"
                     : needsTestRun
-                    ? "bg-orange-600 hover:bg-orange-700 animate-pulse"
-                    : "bg-blue-600 hover:bg-blue-700"
+                      ? "bg-orange-600 hover:bg-orange-700 animate-pulse"
+                      : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
                 {isTestRunning ? "⌛️" : needsTestRun ? "🔄" : "⏯️"}

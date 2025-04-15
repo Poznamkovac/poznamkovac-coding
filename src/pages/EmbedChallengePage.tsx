@@ -142,6 +142,20 @@ const EmbedChallengePage: React.FC = () => {
       className="bg-transparent"
     >
       <div className={useGridLayout ? "grid grid-cols-1 gap-4 md:grid-cols-2" : ""}>
+        {options.isScored && (
+          <div className="flex flex-col md:hidden w-full mb-4">
+            <ChallengeTests
+              categoryId={categoryPath}
+              challengeId={challengeId}
+              maxScore={challengeData.maxScore}
+              onTestRun={handleTestRun}
+              needsTestRun={needsTestRun}
+              showNextButton={false}
+              forceReloadPreview={forceReloadPreview}
+            />
+          </div>
+        )}
+
         {options.showEditors && (
           <div className="flex flex-col h-[500px]">
             <ChallengeIDE fileSystem={fileSystem} />
@@ -159,15 +173,17 @@ const EmbedChallengePage: React.FC = () => {
           />
 
           {options.isScored && (
-            <ChallengeTests
-              categoryId={categoryPath}
-              challengeId={challengeId}
-              maxScore={challengeData.maxScore}
-              onTestRun={handleTestRun}
-              needsTestRun={needsTestRun}
-              showNextButton={false}
-              forceReloadPreview={forceReloadPreview}
-            />
+            <div className="hidden md:block">
+              <ChallengeTests
+                categoryId={categoryPath}
+                challengeId={challengeId}
+                maxScore={challengeData.maxScore}
+                onTestRun={handleTestRun}
+                needsTestRun={needsTestRun}
+                showNextButton={false}
+                forceReloadPreview={forceReloadPreview}
+              />
+            </div>
           )}
         </div>
       </div>
