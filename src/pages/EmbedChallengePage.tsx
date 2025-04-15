@@ -141,18 +141,6 @@ const EmbedChallengePage: React.FC = () => {
       options={options}
       className="bg-transparent"
     >
-      {options.isScored && (
-        <ChallengeTests
-          categoryId={categoryPath}
-          challengeId={challengeId}
-          maxScore={challengeData.maxScore}
-          onTestRun={handleTestRun}
-          needsTestRun={needsTestRun}
-          showNextButton={false}
-          forceReloadPreview={forceReloadPreview}
-        />
-      )}
-
       <div className={useGridLayout ? "grid grid-cols-1 gap-4 md:grid-cols-2" : ""}>
         {options.showEditors && (
           <div className="flex flex-col h-[500px]">
@@ -169,6 +157,18 @@ const EmbedChallengePage: React.FC = () => {
             hidden={!showPreview}
             onIframeLoad={handleIframeLoad}
           />
+
+          {options.isScored && (
+            <ChallengeTests
+              categoryId={categoryPath}
+              challengeId={challengeId}
+              maxScore={challengeData.maxScore}
+              onTestRun={handleTestRun}
+              needsTestRun={needsTestRun}
+              showNextButton={false}
+              forceReloadPreview={forceReloadPreview}
+            />
+          )}
         </div>
       </div>
     </EmbedLayout>
