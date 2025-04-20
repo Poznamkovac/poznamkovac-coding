@@ -19,7 +19,7 @@ export default class PythonTester {
       }
 
       return {
-        details_ok: "Program funguje správne!",
+        details_ok: "Počas behu programu nenastali žiadne chyby.",
       };
     } catch (error) {
       return {
