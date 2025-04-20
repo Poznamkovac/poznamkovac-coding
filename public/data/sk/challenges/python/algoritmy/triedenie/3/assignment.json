@@ -1,0 +1,15 @@
+{
+  "title": "Python merge-sort",
+  "assignment": "Implementácia algoritmu merge-sort v Pythone.",
+  "maxScore": 1,
+  "showPreview": true,
+  "mainFile": "mergesort.py",
+  "files": [
+    {
+      "filename": "mergesort.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    }
+  ]
+}
