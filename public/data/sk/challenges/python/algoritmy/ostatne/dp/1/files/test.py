@@ -16,7 +16,7 @@ try:
     assert dp[10] == 55
     assert dp[15] == 610
     assert dp[20] == 6765
-except AssertionError:
+except (KeyError, AssertionError):
     raise AssertionError("Premenná `dp` obsahuje nesprávne hodnoty.")
 
 print("OK")
