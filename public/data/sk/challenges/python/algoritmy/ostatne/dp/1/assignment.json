@@ -1,0 +1,21 @@
+{
+  "title": "Fibonacciho postupnosť s memoizáciou",
+  "assignment": "Uprav funkciu `fibonacci()` tak, aby používala memoizáciu. Výsledky sa budú ukladať do premennej <code>dp</code> (typ: <code>dict</code>), ktorá je globálna.",
+  "maxScore": 5,
+  "showPreview": true,
+  "mainFile": "test.py",
+  "files": [
+    {
+      "filename": "test.py",
+      "readonly": true,
+      "hidden": true,
+      "autoreload": false
+    },
+    {
+      "filename": "fibonacci_dp.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    }
+  ]
+}

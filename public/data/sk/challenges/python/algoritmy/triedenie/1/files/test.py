@@ -1,5 +1,5 @@
 try:
-    from main import bubble_sort
+    from bubble_sort import bubble_sort
 except ImportError:
     raise ImportError("Funkcia `bubble_sort()` nie je definovaná.")
 
