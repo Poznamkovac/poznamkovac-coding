@@ -11,6 +11,10 @@ function previewTemplate(mainFile, fileSystem) {
     return acc;
   }, {});
 
+  // Check if autoreload is disabled for the main file
+  const mainFileObject = Array.from(fileSystem.files.values()).find(file => file.filename === mainFile);
+  const autoReloadDisabled = mainFileObject?.autoreload === false;
+
   // Escape content to prevent HTML parsing issues
   const escapeContent = (content) => {
     return content.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\${/g, "\\${");
@@ -109,12 +113,39 @@ function previewTemplate(mainFile, fileSystem) {
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
+      #manual-run {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 100%;
+        padding: 20px;
+      }
+      #run-button {
+        margin-top: 15px;
+        padding: 8px 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      #run-button:hover {
+        background-color: #45a049;
+      }
     </style>
   </head>
   <body>
     <div id="loader">
       <div class="spinner"></div>
       <p>⌛️...</p>
+    </div>
+    <div id="manual-run">
+      <h3>Python kód je pripravený na spustenie</h3>
+      <p>Automatické spúšťanie je vypnuté pre tento súbor.</p>
+      <button id="run-button">▶️ Spustiť kód</button>
     </div>
     <div id="console">
       <div id="stdout"></div>
@@ -134,6 +165,12 @@ function previewTemplate(mainFile, fileSystem) {
       const stdout = document.getElementById('stdout');
       const stderr = document.getElementById('stderr');
       const loader = document.getElementById('loader');
+      const manualRun = document.getElementById('manual-run');
+      const runButton = document.getElementById('run-button');
+      const consoleOutput = document.getElementById('console');
+      
+      // Check if autoreload is disabled
+      const autoReloadDisabled = ${autoReloadDisabled};
       
       // Function to add output to the console
       function addOutput(text, stream) {
@@ -147,13 +184,25 @@ function previewTemplate(mainFile, fileSystem) {
       window.pyodideReady = false;
       
       // Main function to initialize Pyodide and run Python code
-      async function main() {
+      async function main(shouldRunCode = true) {
         try {
           // Initialize Pyodide
           window.pyodide = await loadPyodide();
           
           // Hide loader once Pyodide is loaded
           loader.style.display = 'none';
+          
+          // If autoreload is disabled, show manual run button
+          if (autoReloadDisabled && !shouldRunCode) {
+            manualRun.style.display = 'flex';
+            consoleOutput.style.display = 'none';
+            window.pyodideReady = true;
+            notifyReady();
+            return;
+          } else {
+            manualRun.style.display = 'none';
+            consoleOutput.style.display = 'flex';
+          }
           
           // Set up stdout/stderr capture
           window.pyodide.runPython(\`
@@ -206,20 +255,54 @@ function previewTemplate(mainFile, fileSystem) {
           console.error('Chyba inicializácie Pyodide:', error);
         } finally {
           // Notify that we're ready for tests
+          window.pyodideReady = true;
           notifyReady();
         }
       }
       
-      // Start the main function
-      main();
-
+      // Start the main function with or without code execution based on autoreload setting
+      main(!autoReloadDisabled);
+      
+      // Set up manual run button event listener
+      runButton.addEventListener('click', function() {
+        manualRun.style.display = 'none';
+        consoleOutput.style.display = 'flex';
+        main(true);
+      });
+      
       // Function to notify parent that the iframe is ready for testing
       function notifyReady() {
-        window.pyodideReady = true;
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: 'PREVIEW_READY', language: 'python' }, '*');
         }
       }
+      
+      // Also notify on DOM content loaded (safety measure)
+      document.addEventListener('DOMContentLoaded', function() {
+        // Mark a setTimeout to check for readiness periodically
+        let readyCheckCount = 0;
+        const checkPyodideReady = setInterval(() => {
+          readyCheckCount++;
+          if (window.pyodideReady) {
+            notifyReady();
+            clearInterval(checkPyodideReady);
+          } else if (readyCheckCount > 10) {
+            // After ~5 seconds, give up and notify anyway
+            window.pyodideReady = true; // Force ready state
+            notifyReady();
+            clearInterval(checkPyodideReady);
+          }
+        }, 500);
+      });
+      
+      // Absolute fallback - in case all else fails, ensure we notify after 10 seconds
+      setTimeout(() => {
+        if (!window.pyodideReady) {
+          console.warn('Forcing ready state after timeout');
+          window.pyodideReady = true;
+          notifyReady();
+        }
+      }, 10000);
     </script>
   </body>
 </html>
