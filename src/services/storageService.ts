@@ -119,7 +119,7 @@ class StorageService {
   async getChallengeScore(categoryId: string, challengeId: string, language: LanguageCode = "auto"): Promise<number> {
     // We ALWAYS want to use the effective language, NOT "auto" for storage
     const effectiveLanguage = getEffectiveLanguage(language);
-    const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_skore`;
+    const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_score`;
     const score = await this.getValue(key);
     return typeof score === "number" ? score : typeof score === "string" ? parseInt(score, 10) : 0;
   }
@@ -139,7 +139,7 @@ class StorageService {
   ): Promise<void> {
     // We ALWAYS want to use the effective language, NOT "auto" for storage
     const effectiveLanguage = getEffectiveLanguage(language);
-    const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_skore`;
+    const key = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_score`;
     await this.setValue(key, score);
   }
 
@@ -205,7 +205,7 @@ class StorageService {
       const prefix = `uloha_${effectiveLanguage}_${categoryId}_${challengeId}_`;
 
       const fileKeys = allKeys.filter(
-        (key) => key.startsWith(prefix) && key !== `${prefix}skore`, // Exclude score
+        (key) => key.startsWith(prefix) && key !== `${prefix}score`, // Exclude score
       );
 
       const result: Record<string, string> = {};

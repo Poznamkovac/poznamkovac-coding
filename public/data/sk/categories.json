@@ -90,5 +90,12 @@
         ]
       }
     ]
+  },
+  {
+    "id": "uml",
+    "title": "UML",
+    "icon": "uml",
+    "iconColor": "#fafafa",
+    "color": "#73c7eb"
   }
 ]

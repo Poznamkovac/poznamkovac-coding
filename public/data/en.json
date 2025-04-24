@@ -79,6 +79,9 @@
     },
     "python": {
       "title": "Python"
+    },
+    "uml": {
+      "title": "UML (Mermaid)"
     }
   }
 }

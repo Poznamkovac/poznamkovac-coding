@@ -226,5 +226,4 @@ function previewTemplate(mainFile, fileSystem) {
 `;
 }
 
-// Export using CommonJS style
 exports.default = previewTemplate;

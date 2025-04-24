@@ -47,7 +47,7 @@ export default class HTMLChallengeTester {
     }
 
     return {
-      skore: 1,
+      score: 1,
       details_ok: "Funkcia <code>bubblesort</code> je správne implementovaná.",
     };
   }
