@@ -88,13 +88,13 @@ function previewTemplate(mainFile, fileSystem) {
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
+        min-height: 200px;
+        order: 2;
       }
-      #plots {
+      /* Control the order of elements in the body */
+      body > div:not(#console):not(#loader) {
+        order: 1;
         width: 100%;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        padding: 10px;
       }
       #stdout, #stderr {
         white-space: pre-wrap;
@@ -116,6 +116,19 @@ function previewTemplate(mainFile, fileSystem) {
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
+      /* Make matplotlib plots responsive */
+      [id^="matplotlib_"] {
+        max-width: 100%;
+        margin: 0 auto;
+        overflow: auto;
+      }
+      [id^="matplotlib_"] canvas {
+        max-width: 100% !important;
+        height: auto !important;
+      }
+      [id^="matplotlib_"] div {
+        max-width: 100%;
+      }
     </style>
   </head>
   <body>
@@ -123,7 +136,6 @@ function previewTemplate(mainFile, fileSystem) {
       <div class="spinner"></div>
       <p>⌛️...</p>
     </div>
-    <div id="plots"></div>
     <div id="console">
       <div id="stdout"></div>
       <div id="stderr"></div>
@@ -142,7 +154,6 @@ function previewTemplate(mainFile, fileSystem) {
       const stdout = document.getElementById('stdout');
       const stderr = document.getElementById('stderr');
       const loader = document.getElementById('loader');
-      const plots = document.getElementById('plots');
       
       // Function to add output to the console
       function addOutput(text, stream) {
@@ -255,8 +266,7 @@ import sklearn
           if (window.pyodideReady) {
             notifyReady();
             clearInterval(checkPyodideReady);
-          } else if (readyCheckCount > 20) {
-            // After ~10 seconds, give up and notify anyway
+          } else if (readyCheckCount > 60) {
             window.pyodideReady = true; // Force ready state
             notifyReady();
             clearInterval(checkPyodideReady);
