@@ -44,6 +44,7 @@
   "tests": {
     "previewWindowNotAvailable": "Preview window not available",
     "previewReadyTimeout": "Timeout waiting for preview to be ready",
+    "previewLoadTimeout": "Python environment failed to initialize in time",
     "executionError": "Test execution error",
     "error": "Error",
     "errorOccurred": "An error occurred during testing",

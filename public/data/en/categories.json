@@ -5,46 +5,5 @@
     "icon": "html5",
     "iconColor": "#ffffff",
     "color": "#E34F26"
-  },
-  {
-    "id": "python",
-    "title": "Python",
-    "icon": "python",
-    "iconColor": "yellow",
-    "color": "#306998",
-    "children": [
-      {
-        "id": "basic",
-        "title": "Basic",
-        "color": "#306998",
-        "children": [
-          {
-            "id": "introduction",
-            "title": "Introduction",
-            "color": "#306998"
-          },
-          {
-            "id": "variables",
-            "title": "Variables",
-            "color": "#306998"
-          },
-          {
-            "id": "data-types",
-            "title": "Data Types",
-            "color": "#306998"
-          },
-          {
-            "id": "operators",
-            "title": "Operators",
-            "color": "#306998"
-          }
-        ]
-      },
-      {
-        "id": "oop",
-        "title": "OOP",
-        "color": "#306998"
-      }
-    ]
   }
 ]

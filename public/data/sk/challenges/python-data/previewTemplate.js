@@ -260,10 +260,10 @@ import sklearn
       }
       
       // Function to notify parent that the iframe is ready for testing
-      function notifyReady() {
+      function notifyReady(failure = false) {
         window.pyodideReady = true;
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'PREVIEW_READY', language: 'python' }, '*');
+          window.parent.postMessage({ type: 'PREVIEW_READY', language: 'python', failure }, '*');
         }
       }
 
@@ -281,7 +281,7 @@ import sklearn
             clearInterval(checkPyodideReady);
           } else if (readyCheckCount > 60) {
             window.pyodideReady = true; // Force ready state
-            notifyReady();
+            notifyReady(true); // Notify with failure=true
             clearInterval(checkPyodideReady);
           }
         }, 500);
@@ -292,7 +292,7 @@ import sklearn
         if (!window.pyodideReady) {
           console.warn('Forcing ready state after timeout');
           window.pyodideReady = true;
-          notifyReady();
+          notifyReady(true); // Notify with failure=true
         }
       }, 30000);
     </script>

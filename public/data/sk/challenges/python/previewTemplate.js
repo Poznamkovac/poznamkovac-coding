@@ -211,10 +211,10 @@ function previewTemplate(mainFile, fileSystem) {
       }
       
       // Function to notify parent that the iframe is ready for testing
-      function notifyReady() {
+      function notifyReady(failure = false) {
         window.pyodideReady = true;
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'PREVIEW_READY', language: 'python' }, '*');
+          window.parent.postMessage({ type: 'PREVIEW_READY', language: 'python', failure }, '*');
         }
       }
 
@@ -233,7 +233,7 @@ function previewTemplate(mainFile, fileSystem) {
           } else if (readyCheckCount > 10) {
             // After ~5 seconds, give up and notify anyway
             window.pyodideReady = true; // Force ready state
-            notifyReady();
+            notifyReady(true); // Notify with failure=true
             clearInterval(checkPyodideReady);
           }
         }, 500);
@@ -244,7 +244,7 @@ function previewTemplate(mainFile, fileSystem) {
         if (!window.pyodideReady) {
           console.warn('Forcing ready state after timeout');
           window.pyodideReady = true;
-          notifyReady();
+          notifyReady(true); // Notify with failure=true
         }
       }, 30000);
     </script>

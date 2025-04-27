@@ -66,6 +66,19 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     const handlePreviewMessages = (event: MessageEvent) => {
       if (event.data && event.data.type === "PREVIEW_READY") {
         previewReadyRef.current = true;
+
+        // If the preview reports a timeout failure, show an error
+        if (event.data.failure) {
+          setTestResults([
+            {
+              name: t("tests.error"),
+              result: {
+                details_wrong: t("tests.previewLoadTimeout"),
+              },
+            },
+          ]);
+          setIsTestRunning(false);
+        }
       } else if (event.data && event.data.type === "PREVIEW_RELOADING") {
         // Reset ready state when preview is being reloaded
         previewReadyRef.current = false;
@@ -193,7 +206,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       }
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
-        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function",
+        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function"
       );
 
       const results = await Promise.all(
@@ -209,7 +222,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
               result: { details_wrong: `${t("tests.executionError")}: ${error}` },
             };
           }
-        }),
+        })
       );
 
       setTestResults(results);

@@ -44,6 +44,7 @@
   "tests": {
     "previewWindowNotAvailable": "Okno náhľadu nie je dostupné",
     "previewReadyTimeout": "Vypršal časový limit čakania na pripravenosť náhľadu",
+    "previewLoadTimeout": "Python prostredie sa nepodarilo načítať včas",
     "executionError": "Chyba pri vykonávaní testu",
     "error": "Chyba",
     "errorOccurred": "Počas testovania sa vyskytla chyba",

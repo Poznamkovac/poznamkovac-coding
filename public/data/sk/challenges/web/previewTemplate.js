@@ -70,8 +70,16 @@ function previewTemplate(mainFile, fileSystem) {
       document.addEventListener('DOMContentLoaded', function() {
         // Signal to parent window that the preview is ready for testing
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'PREVIEW_READY', language: 'html' }, '*');
+          window.parent.postMessage({ type: 'PREVIEW_READY', language: 'html', failure: false }, '*');
         }
+        
+        // Add a timeout fallback in case of loading issues
+        setTimeout(function() {
+          if (document.readyState !== 'complete') {
+            console.warn('Page may not have fully loaded, notifying with failure');
+            window.parent.postMessage({ type: 'PREVIEW_READY', language: 'html', failure: true }, '*');
+          }
+        }, 10000);
       });
     `;
   doc.head.appendChild(notifyScript);
