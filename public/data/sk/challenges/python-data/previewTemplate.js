@@ -59,11 +59,13 @@ function previewTemplate(mainFile, fileSystem) {
     <title>Python</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js"></script>
     <style>
-      html, body {
+      body {
         height: 100%;
-        margin: 0;
+        width: 80%;
+        margin: 0 auto;
         padding: 0;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
       }
       body {
         font-family: monospace;
@@ -82,18 +84,19 @@ function previewTemplate(mainFile, fileSystem) {
       }
       #console {
         width: 100%;
-        flex: 1;
         overflow: auto;
         padding: 10px;
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        min-height: 200px;
-        order: 2;
+        min-height: 50px;
+        max-height: 200px;
+        font-size: 12px;
+        margin-bottom: 20px;
+        display: none; /* Hide by default */
       }
       /* Control the order of elements in the body */
       body > div:not(#console):not(#loader) {
-        order: 1;
         width: 100%;
       }
       #stdout, #stderr {
@@ -116,10 +119,10 @@ function previewTemplate(mainFile, fileSystem) {
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
-      /* Make matplotlib plots responsive */
+      /* Ensure matplotlib plots are displayed correctly */
       [id^="matplotlib_"] {
         max-width: 100%;
-        margin: 0 auto;
+        margin: 0 auto 20px auto;
         overflow: auto;
       }
       [id^="matplotlib_"] canvas {
@@ -157,7 +160,14 @@ function previewTemplate(mainFile, fileSystem) {
       
       // Function to add output to the console
       function addOutput(text, stream) {
+        const consoleElement = document.getElementById('console');
         const outputElement = document.getElementById(stream);
+        
+        // Show console if it's hidden
+        if (consoleElement.style.display === 'none') {
+          consoleElement.style.display = 'flex';
+        }
+        
         const line = document.createElement('span');
         line.textContent = text;
         outputElement.appendChild(line);
@@ -199,6 +209,9 @@ import sklearn
                 
                 def write(self, text):
                     super().write(text)
+                    if "is building the font cache" in text:
+                      return
+
                     # Send output to JS with stream information
                     from js import addOutput
                     addOutput(text, self.stream_name)
