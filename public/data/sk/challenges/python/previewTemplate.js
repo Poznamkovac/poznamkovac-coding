@@ -246,7 +246,7 @@ function previewTemplate(mainFile, fileSystem) {
           window.pyodideReady = true;
           notifyReady();
         }
-      }, 10000);
+      }, 30000);
     </script>
   </body>
 </html>

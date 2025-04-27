@@ -271,7 +271,7 @@ import sklearn
           window.pyodideReady = true;
           notifyReady();
         }
-      }, 15000);
+      }, 30000);
     </script>
   </body>
 </html>
