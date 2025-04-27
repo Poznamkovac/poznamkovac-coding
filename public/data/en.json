@@ -77,6 +77,9 @@
     "python": {
       "title": "Python"
     },
+    "python-data": {
+      "title": "Data Science (Python)"
+    },
     "uml": {
       "title": "UML (Mermaid)"
     }

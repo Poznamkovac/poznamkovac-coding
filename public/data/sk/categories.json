@@ -92,6 +92,20 @@
     ]
   },
   {
+    "id": "python-data",
+    "title": "Dátová veda (Python)",
+    "icon": "database",
+    "iconColor": "#fafafa",
+    "color": "#73c7eb",
+    "children": [
+      {
+        "id": "vypoctova-zlozitost",
+        "title": "Výpočtová zložitosť",
+        "color": "#73c7eb"
+      }
+    ]
+  },
+  {
     "id": "uml",
     "title": "UML",
     "icon": "uml",

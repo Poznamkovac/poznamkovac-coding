@@ -82,12 +82,19 @@ function previewTemplate(mainFile, fileSystem) {
       }
       #console {
         width: 100%;
-        height: 100%;
+        flex: 1;
         overflow: auto;
         padding: 10px;
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
+      }
+      #plots {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 10px;
       }
       #stdout, #stderr {
         white-space: pre-wrap;
@@ -116,6 +123,7 @@ function previewTemplate(mainFile, fileSystem) {
       <div class="spinner"></div>
       <p>⌛️...</p>
     </div>
+    <div id="plots"></div>
     <div id="console">
       <div id="stdout"></div>
       <div id="stderr"></div>
@@ -134,6 +142,7 @@ function previewTemplate(mainFile, fileSystem) {
       const stdout = document.getElementById('stdout');
       const stderr = document.getElementById('stderr');
       const loader = document.getElementById('loader');
+      const plots = document.getElementById('plots');
       
       // Function to add output to the console
       function addOutput(text, stream) {
@@ -150,12 +159,24 @@ function previewTemplate(mainFile, fileSystem) {
       async function main() {
         try {
           // Initialize Pyodide
-          window.pyodide = await loadPyodide();
+          window.pyodide = await loadPyodide({
+            stdout: (text) => addOutput(text, 'stdout'),
+            stderr: (text) => addOutput(text, 'stderr')
+          });
+          
+          // Load required packages
+          await window.pyodide.loadPackagesFromImports(\`
+import numpy
+import matplotlib
+import pandas
+import scipy
+import sklearn
+          \`);
           
           // Hide loader once Pyodide is loaded
           loader.style.display = 'none';
           
-          // Set up stdout/stderr capture
+          // Set up stdout/stderr capture and configure matplotlib
           window.pyodide.runPython(\`
             import sys
             import io
@@ -173,6 +194,10 @@ function previewTemplate(mainFile, fileSystem) {
             
             sys.stdout = CaptureIO('stdout')
             sys.stderr = CaptureIO('stderr')
+            
+            # Set up matplotlib for web display
+            import matplotlib
+            matplotlib.use("module://matplotlib_pyodide.html5_canvas_backend")
             
             # Set up import paths for modules
             import sys
@@ -230,8 +255,8 @@ function previewTemplate(mainFile, fileSystem) {
           if (window.pyodideReady) {
             notifyReady();
             clearInterval(checkPyodideReady);
-          } else if (readyCheckCount > 10) {
-            // After ~5 seconds, give up and notify anyway
+          } else if (readyCheckCount > 20) {
+            // After ~10 seconds, give up and notify anyway
             window.pyodideReady = true; // Force ready state
             notifyReady();
             clearInterval(checkPyodideReady);
@@ -239,14 +264,14 @@ function previewTemplate(mainFile, fileSystem) {
         }, 500);
       });
       
-      // Absolute fallback - in case all else fails, ensure we notify after 10 seconds
+      // Absolute fallback - in case all else fails, ensure we notify after 15 seconds
       setTimeout(() => {
         if (!window.pyodideReady) {
           console.warn('Forcing ready state after timeout');
           window.pyodideReady = true;
           notifyReady();
         }
-      }, 10000);
+      }, 15000);
     </script>
   </body>
 </html>
