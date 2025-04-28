@@ -90,7 +90,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
     return () => {
       window.removeEventListener("message", handlePreviewMessages);
     };
-  }, [categoryId, challengeId, language]);
+  }, [categoryId, challengeId, language, t]);
 
   const saveHighestScore = async (newScore: number) => {
     if (newScore > currentScore) {
@@ -206,7 +206,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
       }
 
       const testMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(tester)).filter(
-        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function"
+        (prop) => prop.startsWith("test_") && typeof tester[prop as keyof typeof tester] === "function",
       );
 
       const results = await Promise.all(
@@ -222,7 +222,7 @@ const ChallengeTests: React.FC<ChallengeTestsProps> = ({
               result: { details_wrong: `${t("tests.executionError")}: ${error}` },
             };
           }
-        })
+        }),
       );
 
       setTestResults(results);
