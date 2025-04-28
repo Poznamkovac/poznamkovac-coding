@@ -170,11 +170,14 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
       return fileContentRef.current[filename] !== content;
     });
 
+    // Check if we're transitioning from placeholder to content
+    const isFirstLoad = iframe.srcdoc && iframe.srcdoc.includes(t("preview.runYourCode"));
+
     // Update content references for future change detection
     fileContentRef.current = { ...currentFileContents };
 
-    // Force a complete reload if there are significant changes
-    if (shouldRefreshPreview || hasSignificantChanges) {
+    // Force a complete reload if there are significant changes or if coming from placeholder
+    if (shouldRefreshPreview || hasSignificantChanges || isFirstLoad) {
       // Re-process the HTML with the latest file content
       if (previewTemplateRef.current) {
         // Use the custom preview template if available
@@ -237,12 +240,23 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         }
       });
     }
-  }, [mainFile, shouldRefreshPreview, processHTML]);
+  }, [mainFile, shouldRefreshPreview, processHTML, t]);
 
   // Force reload the preview
   const reloadPreview = () => {
     setShouldRefreshPreview(true);
     setIsLoading(true);
+
+    const iframe = iframeRef.current;
+    if (iframe) {
+      const handleReloadComplete = () => {
+        setIsLoading(false);
+        iframe.removeEventListener("load", handleReloadComplete);
+      };
+
+      iframe.addEventListener("load", handleReloadComplete);
+    }
+
     requestAnimationFrame(() => {
       updateIframeContent();
       setNeedsManualReload(false);

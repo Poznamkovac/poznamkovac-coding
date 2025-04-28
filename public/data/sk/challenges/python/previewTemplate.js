@@ -151,7 +151,22 @@ function previewTemplate(mainFile, fileSystem) {
         try {
           // Initialize Pyodide
           window.pyodide = await loadPyodide();
-          
+          await window.pyodide.loadPackage("micropip");
+          const micropip = pyodide.pyimport("micropip");
+
+          // Check for and install requirements.txt if it exists
+          if (files["requirements.txt"]) {
+            try {
+              const requirements = files["requirements.txt"].split("\\n").filter(line => line.trim() && !line.trim().startsWith("#"));
+              if (requirements.length > 0) {
+                await micropip.install(requirements);
+              }
+            } catch (error) {
+              console.warn("Failed to install requirements:", error);
+              addOutput("Warning: Failed to install some requirements from requirements.txt", "stderr");
+            }
+          }
+
           // Hide loader once Pyodide is loaded
           loader.style.display = 'none';
           
@@ -167,6 +182,9 @@ function previewTemplate(mainFile, fileSystem) {
                 
                 def write(self, text):
                     super().write(text)
+                    if "Matplotlib is building the font cache" in text:
+                      return
+
                     # Send output to JS with stream information
                     from js import addOutput
                     addOutput(text, self.stream_name)
@@ -190,7 +208,7 @@ function previewTemplate(mainFile, fileSystem) {
           if (files[mainFilePath]) {
             try {
               // Run the main script
-              window.pyodide.runPython(files[mainFilePath]);
+              await window.pyodide.runPython(files[mainFilePath]);
             } catch (error) {
               // Handle Python execution errors
               addOutput(\`\${error.message}\`, 'stderr');
