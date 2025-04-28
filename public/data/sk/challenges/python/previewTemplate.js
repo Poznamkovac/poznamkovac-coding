@@ -149,10 +149,50 @@ function previewTemplate(mainFile, fileSystem) {
       // Main function to initialize Pyodide and run Python code
       async function main() {
         try {
-          // Initialize Pyodide
-          window.pyodide = await loadPyodide();
-          await window.pyodide.loadPackage("micropip");
-          const micropip = pyodide.pyimport("micropip");
+          // Initialize Pyodide and load packages in parallel
+          const [pyodide] = await Promise.all([
+            loadPyodide(),
+            // Pre-load micropip in parallel with Pyodide initialization
+            new Promise((resolve) => {
+              const script = document.createElement('script');
+              script.src = 'https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js';
+              script.onload = resolve;
+              document.head.appendChild(script);
+            })
+          ]);
+          
+          window.pyodide = pyodide;
+          
+          // Load micropip and set up requirements in parallel
+          const [micropip] = await Promise.all([
+            pyodide.loadPackage("micropip").then(() => pyodide.pyimport("micropip")),
+            // Set up stdout/stderr capture in parallel
+            pyodide.runPython(\`
+              import sys
+              import io
+              
+              class CaptureIO(io.StringIO):
+                  def __init__(self, stream_name):
+                      super().__init__()
+                      self.stream_name = stream_name
+                  
+                  def write(self, text):
+                      super().write(text)
+                      if "Matplotlib is building the font cache" in text:
+                        return
+
+                      # Send output to JS with stream information
+                      from js import addOutput
+                      addOutput(text, self.stream_name)
+              
+              sys.stdout = CaptureIO('stdout')
+              sys.stderr = CaptureIO('stderr')
+              
+              # Set up import paths for modules
+              import sys
+              ${importPathsSetup}
+            \`)
+          ]);
 
           // Check for and install requirements.txt if it exists
           if (files["requirements.txt"]) {
@@ -170,45 +210,19 @@ function previewTemplate(mainFile, fileSystem) {
           // Hide loader once Pyodide is loaded
           loader.style.display = 'none';
           
-          // Set up stdout/stderr capture
-          window.pyodide.runPython(\`
-            import sys
-            import io
-            
-            class CaptureIO(io.StringIO):
-                def __init__(self, stream_name):
-                    super().__init__()
-                    self.stream_name = stream_name
-                
-                def write(self, text):
-                    super().write(text)
-                    if "Matplotlib is building the font cache" in text:
-                      return
-
-                    # Send output to JS with stream information
-                    from js import addOutput
-                    addOutput(text, self.stream_name)
-            
-            sys.stdout = CaptureIO('stdout')
-            sys.stderr = CaptureIO('stderr')
-            
-            # Set up import paths for modules
-            import sys
-            ${importPathsSetup}
-          \`);
-          
-          // Create a Python virtual filesystem and load all files
-          for (const [filename, content] of Object.entries(files)) {
-            // Create file in Pyodide filesystem
-            const pyodideFilename = filename.replace(/\\\\/g, '/');
-            window.pyodide.FS.writeFile(pyodideFilename, content);
-          }
+          // Create a Python virtual filesystem and load all files in parallel
+          await Promise.all(
+            Object.entries(files).map(([filename, content]) => {
+              const pyodideFilename = filename.replace(/\\\\/g, '/');
+              return pyodide.FS.writeFile(pyodideFilename, content);
+            })
+          );
           
           // Execute the main Python file
           if (files[mainFilePath]) {
             try {
               // Run the main script
-              await window.pyodide.runPython(files[mainFilePath]);
+              await pyodide.runPython(files[mainFilePath]);
             } catch (error) {
               // Handle Python execution errors
               addOutput(\`\${error.message}\`, 'stderr');
