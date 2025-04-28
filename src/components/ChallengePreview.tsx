@@ -281,7 +281,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
       // Get the latest content
       const fs = fileSystemRef.current;
 
-      // Tests should always show the result, not the placeholder
+      // Always load content when explicitly requested through manual action
       if (previewTemplateRef.current) {
         // Use the custom preview template if available
         const generatedHTML = previewTemplateRef.current(mainFile, fs);
@@ -357,8 +357,20 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
               const iframe = iframeRef.current;
               if (iframe) {
                 setIsLoading(true);
-                const generatedHTML = previewTemplateRef.current(mainFile, fileSystemRef.current);
-                iframe.srcdoc = generatedHTML;
+
+                // Check if the main file or the current file type has autoreload disabled
+                const mainFileData = Array.from(fileSystemRef.current.files.values()).find((file) => file.filename === mainFile);
+                const fileAutoreload = mainFileData?.autoreload;
+
+                // If explicitly set to false in the file, or global autoReload is false
+                if (fileAutoreload === false || !autoReload) {
+                  // If autoreload is disabled, show a placeholder initially
+                  iframe.srcdoc = getPlaceholderHTML(t);
+                  setNeedsManualReload(true);
+                } else {
+                  const generatedHTML = previewTemplateRef.current(mainFile, fileSystemRef.current);
+                  iframe.srcdoc = generatedHTML;
+                }
 
                 // Initial file content snapshot for change detection
                 const initialFiles = fileSystemRef.current.getAllFiles();
@@ -386,7 +398,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
     };
 
     loadPreviewTemplate();
-  }, [previewTemplatePath, t, mainFile]);
+  }, [previewTemplatePath, t, mainFile, autoReload]);
 
   // Initialize the iframe with HTML content - only for non-template cases or when auto-reload is disabled
   useLayoutEffect(() => {
@@ -408,6 +420,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
     if (fileAutoreload === false || !autoReload) {
       // If autoreload is disabled, show a placeholder initially
       iframe.srcdoc = getPlaceholderHTML(t);
+      setNeedsManualReload(true);
 
       // Initial file content snapshot still needed for change detection
       const initialFiles = fileSystem.getAllFiles();
