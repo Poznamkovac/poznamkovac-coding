@@ -2,9 +2,10 @@
  * Preview template for HTML challenges
  * @param {string} mainFile - The main file to render
  * @param {object} fileSystem - The virtual file system
+ * @param {function} t - Translation function
  * @returns {string} - HTML content to render in the preview iframe
  */
-function previewTemplate(mainFile, fileSystem) {
+function previewTemplate(mainFile, fileSystem, t) {
   // Get the main HTML file content
   const htmlFile = Array.from(fileSystem.files.values()).find(
     (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
@@ -17,10 +18,10 @@ function previewTemplate(mainFile, fileSystem) {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>HTML Preview</title>
+  <title>${t("preview.title")}</title>
 </head>
 <body>
-  <div id="app">No HTML content found</div>
+  <div id="app">${t("preview.noContent")}</div>
 </body>
 </html>`;
 
@@ -72,11 +73,11 @@ function previewTemplate(mainFile, fileSystem) {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: 'PREVIEW_READY', language: 'html', failure: false }, '*');
         }
-        
+
         // Add a timeout fallback in case of loading issues
         setTimeout(function() {
           if (document.readyState !== 'complete') {
-            console.warn('Page may not have fully loaded, notifying with failure');
+            console.warn('${t("preview.loadingTimeout")}');
             window.parent.postMessage({ type: 'PREVIEW_READY', language: 'html', failure: true }, '*');
           }
         }, 10000);

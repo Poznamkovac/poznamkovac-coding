@@ -36,8 +36,8 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
           data.mainFile = data.files.find((f) => f.filename === "index.html")
             ? "index.html"
             : data.files.length > 0
-              ? data.files[0].filename
-              : "";
+            ? data.files[0].filename
+            : "";
         }
 
         // If no previewTemplatePath is specified, see if one exists at the category level
@@ -46,8 +46,8 @@ export const useChallengeData = (categoryId: string, challengeId: string) => {
             // Extract the root category for previewTemplate.js
             const rootCategory = getRootCategory(categoryId);
 
-            // Check if a previewTemplate.js exists for the ROOT category, not the nested path
-            const templateUrl = getCategoryResourcePath(rootCategory, "previewTemplate.js", language);
+            // Check if a previewTemplate.js exists for the ROOT category in the new location
+            const templateUrl = `/data/previewTemplates/${rootCategory}.js`;
             const templateResponse = await fetch(templateUrl, { method: "HEAD" });
             if (templateResponse.ok) {
               data.previewTemplatePath = templateUrl;

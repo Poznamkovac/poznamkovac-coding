@@ -9,7 +9,6 @@ import { storageService } from "../services/storageService";
 import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 import EmbedLayout from "../components/EmbedLayout";
 import { useI18n } from "../hooks/useI18n";
-import { getCategoryResourcePath } from "../services/i18nService";
 
 const EmbedChallengePage: React.FC = () => {
   const location = useLocation();
@@ -123,8 +122,7 @@ const EmbedChallengePage: React.FC = () => {
 
   // Prepare preview template path based on the ROOT category, not the nested path
   const previewTemplatePath =
-    challengeData.previewTemplatePath ||
-    (rootCategory ? getCategoryResourcePath(rootCategory, "previewTemplate.js", language) : undefined);
+    challengeData.previewTemplatePath || (rootCategory ? `/data/previewTemplates/${rootCategory}.js` : undefined);
 
   // Combine URL options with challenge data options
   const showPreview = options.showPreview && challengeData.showPreview;
@@ -143,7 +141,7 @@ const EmbedChallengePage: React.FC = () => {
     >
       <div className={useGridLayout ? "grid grid-cols-1 gap-4 md:grid-cols-2" : ""}>
         {options.isScored && (
-          <div className="flex flex-col md:hidden w-full mb-4">
+          <div className="flex flex-col w-full mb-4 md:hidden">
             <ChallengeTests
               categoryId={categoryPath}
               challengeId={challengeId}

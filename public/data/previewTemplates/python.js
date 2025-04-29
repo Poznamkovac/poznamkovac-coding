@@ -2,9 +2,10 @@
  * Preview template for Python challenges
  * @param {string} mainFile - The main file to execute
  * @param {object} fileSystem - The virtual file system
+ * @param {function} t - Translation function
  * @returns {string} - HTML content to render in the preview iframe with Python execution via Pyodide
  */
-function previewTemplate(mainFile, fileSystem) {
+function previewTemplate(mainFile, fileSystem, t) {
   // Get all files and their content
   const allFiles = Array.from(fileSystem.files.values()).reduce((acc, file) => {
     acc[file.filename] = file.content || "";
@@ -56,7 +57,7 @@ function previewTemplate(mainFile, fileSystem) {
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Python</title>
+    <title>${t("preview.title")}</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js"></script>
     <style>
       html, body {
@@ -126,7 +127,7 @@ function previewTemplate(mainFile, fileSystem) {
   <body>
     <div id="loader">
       <div class="spinner"></div>
-      <p>⌛️...</p>
+      <p>${t("preview.loading")}</p>
     </div>
     <div id="console">
       <div id="stdout"></div>
@@ -281,30 +282,20 @@ function previewTemplate(mainFile, fileSystem) {
       
       // Also notify on DOM content loaded (safety measure)
       document.addEventListener('DOMContentLoaded', function() {
-        // Mark a setTimeout to check for readiness periodically
-        let readyCheckCount = 0;
-        const checkPyodideReady = setInterval(() => {
-          readyCheckCount++;
-          if (window.pyodideReady) {
-            notifyReady();
-            clearInterval(checkPyodideReady);
-          } else if (readyCheckCount > 10) {
-            // After ~5 seconds, give up and notify anyway
-            window.pyodideReady = true; // Force ready state
-            notifyReady(true); // Notify with failure=true
-            clearInterval(checkPyodideReady);
-          }
-        }, 500);
-      });
-      
-      // Absolute fallback - in case all else fails, ensure we notify after 10 seconds
-      setTimeout(() => {
-        if (!window.pyodideReady) {
-          console.warn('Forcing ready state after timeout');
-          window.pyodideReady = true;
-          notifyReady(true); // Notify with failure=true
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'PREVIEW_READY', language: 'python', failure: false }, '*');
         }
-      }, 30000);
+        
+        // Add timeout fallback for Python initialization
+        setTimeout(function() {
+          if (!window.pyodideReady) {
+            console.warn('${t("preview.loadingTimeout")}');
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'PREVIEW_READY', language: 'python', failure: true }, '*');
+            }
+          }
+        }, 30000);
+      });
     </script>
   </body>
 </html>

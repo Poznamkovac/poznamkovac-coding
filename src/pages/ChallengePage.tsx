@@ -162,8 +162,7 @@ const ChallengePage: React.FC = () => {
 
   // Prepare preview template path based on the ROOT category, not the full path
   const previewTemplatePath =
-    challengeData.previewTemplatePath ||
-    (rootCategory ? getCategoryResourcePath(rootCategory, "previewTemplate.js", language) : undefined);
+    challengeData.previewTemplatePath || (rootCategory ? `/data/previewTemplates/${rootCategory}.js` : undefined);
 
   // Get localized image URL
   const imageUrl = getCategoryResourcePath(categoryPath, `${challengeId}/obrazok.png`, language);

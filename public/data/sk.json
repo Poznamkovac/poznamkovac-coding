@@ -39,7 +39,10 @@
     "autoReloadDisabled": "Automatické obnovenie je pre tento typ súboru vypnuté. Klikni na tlačidlo \"Obnoviť\" vyššie alebo na tlačidlo \"⏯️\" (pre spustenie testov) nižšie, keď budeš pripravený vidieť svoje zmeny.",
     "templateNotFunction": "Šablóna nevrátila funkciu",
     "errorEvaluatingTemplate": "Chyba pri vyhodnocovaní šablóny:",
-    "failedToLoadTemplate": "Zlyhalo načítanie šablóny náhľadu:"
+    "failedToLoadTemplate": "Zlyhalo načítanie šablóny náhľadu:",
+    "loading": "Načítavam...",
+    "loadingTimeout": "Náhľad sa možno nenačítal správne",
+    "noContent": "Nenašiel sa žiadny obsah"
   },
   "tests": {
     "previewWindowNotAvailable": "Okno náhľadu nie je dostupné",

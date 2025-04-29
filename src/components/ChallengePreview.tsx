@@ -100,7 +100,9 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const fileSystemRef = useRef(fileSystem);
   const autoReloadRef = useRef(autoReload);
-  const previewTemplateRef = useRef<((mainFile: string, fileSystem: VirtualFileSystem) => string) | null>(null);
+  const previewTemplateRef = useRef<
+    ((mainFile: string, fileSystem: VirtualFileSystem, t: (key: string) => string) => string) | null
+  >(null);
   const { t } = useI18n();
 
   // Track file changes to force full reloads when needed
@@ -181,11 +183,11 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
       // Re-process the HTML with the latest file content
       if (previewTemplateRef.current) {
         // Use the custom preview template if available
-        const generatedHTML = previewTemplateRef.current(mainFile, fs);
+        const generatedHTML = previewTemplateRef.current(mainFile, fs, t);
         iframe.srcdoc = generatedHTML;
       } else {
         const htmlFile = Array.from(fs.files.values()).find(
-          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
+          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html"
         );
 
         if (htmlFile?.content) {
@@ -278,7 +280,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         new MessageEvent("message", {
           data: { type: "PREVIEW_RELOADING" },
           origin: window.location.origin,
-        }),
+        })
       );
 
       const handleLoad = () => {
@@ -298,11 +300,11 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
       // Always load content when explicitly requested through manual action
       if (previewTemplateRef.current) {
         // Use the custom preview template if available
-        const generatedHTML = previewTemplateRef.current(mainFile, fs);
+        const generatedHTML = previewTemplateRef.current(mainFile, fs, t);
         iframe.srcdoc = generatedHTML;
       } else {
         const htmlFile = Array.from(fs.files.values()).find(
-          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
+          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html"
         );
 
         if (htmlFile?.content) {
@@ -329,7 +331,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         resolve();
       }, 5000);
     });
-  }, [mainFile, processHTML]);
+  }, [mainFile, processHTML, t]);
 
   // Update fileSystemRef when fileSystem changes
   useEffect(() => {
@@ -365,7 +367,8 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
 
             if (typeof templateFunction === "function") {
               // Use type assertion to ensure TypeScript understands the type
-              previewTemplateRef.current = templateFunction as (mainFile: string, fileSystem: VirtualFileSystem) => string;
+              previewTemplateRef.current = (mainFile: string, fileSystem: VirtualFileSystem, t: (key: string) => string) =>
+                templateFunction(mainFile, fileSystem, t);
 
               // Template loaded successfully, now set the initial content
               const iframe = iframeRef.current;
@@ -382,7 +385,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
                   iframe.srcdoc = getPlaceholderHTML(t);
                   setNeedsManualReload(true);
                 } else {
-                  const generatedHTML = previewTemplateRef.current(mainFile, fileSystemRef.current);
+                  const generatedHTML = previewTemplateRef.current(mainFile, fileSystemRef.current, t);
                   iframe.srcdoc = generatedHTML;
                 }
 
@@ -448,7 +451,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
 
     if (previewTemplateRef.current) {
       // Use the custom preview template if available
-      const generatedHTML = previewTemplateRef.current(mainFile, fileSystem);
+      const generatedHTML = previewTemplateRef.current(mainFile, fileSystem, t);
       iframe.srcdoc = generatedHTML;
     } else {
       // Get HTML content - try to find the main file first
@@ -503,7 +506,7 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
           new MessageEvent("message", {
             data: event.data,
             origin: window.location.origin,
-          }),
+          })
         );
       }
     };

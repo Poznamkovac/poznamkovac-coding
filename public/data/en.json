@@ -39,7 +39,10 @@
     "autoReloadDisabled": "Auto-reload is disabled for this type of file. Click the \"Reload\" button above or the \"Run Tests\" button below when you're ready to see your changes.",
     "templateNotFunction": "Template did not return a function",
     "errorEvaluatingTemplate": "Error evaluating template:",
-    "failedToLoadTemplate": "Failed to load preview template:"
+    "failedToLoadTemplate": "Failed to load preview template:",
+    "loading": "Loading...",
+    "loadingTimeout": "Preview may not have loaded correctly",
+    "noContent": "No content found"
   },
   "tests": {
     "previewWindowNotAvailable": "Preview window not available",
