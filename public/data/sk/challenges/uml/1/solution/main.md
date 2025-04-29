@@ -1,7 +1,7 @@
 classDiagram
-    class Bankomat {
-        +vydatPohlad()
-        +vydatPohlad()
-        +vydatPohlad()
-        +vydatPohlad()
-    }
+class Bankomat {
++vydatPohlad()
++vydatPohlad()
++vydatPohlad()
++vydatPohlad()
+}

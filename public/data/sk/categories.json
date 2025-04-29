@@ -99,7 +99,7 @@
   {
     "id": "uml",
     "title": "UML",
-    "icon": "uml",
+    "icon": "project-diagram",
     "iconColor": "#fafafa",
     "color": "#73c7eb"
   }

@@ -63,7 +63,7 @@ function previewTemplate(mainFile, fileSystem) {
         height: 100%;
         margin: 0;
         padding: 0;
-        overflow: hidden;
+        overflow: auto;
       }
       body {
         font-family: monospace;
@@ -82,12 +82,13 @@ function previewTemplate(mainFile, fileSystem) {
       }
       #console {
         width: 100%;
-        height: 100%;
         overflow: auto;
         padding: 10px;
         box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
+        display: none;
+      }
+      #console.has-content {
+        display: block;
       }
       #stdout, #stderr {
         white-space: pre-wrap;
@@ -108,6 +109,17 @@ function previewTemplate(mainFile, fileSystem) {
       }
       @keyframes spin {
         to { transform: rotate(360deg); }
+      }
+
+      /* Style for matplotlib plots */
+      .matplotlib-figure {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: calc(100vh - 20px) !important;
+        object-fit: contain !important;
+        display: block !important;
+        margin: 0 auto !important;
       }
     </style>
   </head>
@@ -141,6 +153,12 @@ function previewTemplate(mainFile, fileSystem) {
         const line = document.createElement('span');
         line.textContent = text;
         outputElement.appendChild(line);
+        
+        // Show console if there's content
+        const console = document.getElementById('console');
+        if (outputElement.children.length > 0) {
+          console.classList.add('has-content');
+        }
       }
       
       // Flag to indicate when Pyodide is ready
@@ -223,6 +241,14 @@ function previewTemplate(mainFile, fileSystem) {
             try {
               // Run the main script
               await pyodide.runPython(files[mainFilePath]);
+              
+              // Handle matplotlib plots
+              const plots = document.querySelectorAll('[id^="matplotlib_"]');
+              plots.forEach(plot => {
+                plot.classList.add('matplotlib-figure');
+                // Ensure plot is visible
+                plot.style.display = 'block';
+              });
             } catch (error) {
               // Handle Python execution errors
               addOutput(\`\${error.message}\`, 'stderr');
