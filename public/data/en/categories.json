@@ -2,7 +2,7 @@
   {
     "id": "web",
     "title": "Web (HTML/CSS/JS)",
-    "icon": "html5",
+    "icon": ["fab", "html5"],
     "iconColor": "#ffffff",
     "color": "#E34F26"
   }

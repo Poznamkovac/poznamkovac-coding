@@ -2,14 +2,14 @@
   {
     "id": "web",
     "title": "Web (HTML/CSS/JS)",
-    "icon": "html5",
+    "icon": ["fab", "html5"],
     "iconColor": "#ffffff",
     "color": "#E34F26"
   },
   {
     "id": "python",
     "title": "Python",
-    "icon": "python",
+    "icon": ["fab", "python"],
     "iconColor": "yellow",
     "color": "#306998",
     "children": [
@@ -99,7 +99,7 @@
   {
     "id": "uml",
     "title": "UML",
-    "icon": "project-diagram",
+    "icon": ["fas", "project-diagram"],
     "iconColor": "#fafafa",
     "color": "#73c7eb"
   }

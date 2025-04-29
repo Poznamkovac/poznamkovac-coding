@@ -20,7 +20,7 @@ const CategoryCard: React.FC<{ category: Category; path: string }> = ({ category
         <FontAwesomeIcon
           size="2x"
           // @ts-expect-error FontAwesome icon prop expects a different type but our API returns string array
-          icon={["fab", category.icon]}
+          icon={category.icon}
           className="mr-2"
           style={{ color: category.iconColor }}
         />
