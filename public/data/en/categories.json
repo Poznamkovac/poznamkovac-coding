@@ -5,5 +5,12 @@
     "icon": ["fab", "html5"],
     "iconColor": "#ffffff",
     "color": "#E34F26"
+  },
+  {
+    "id": "python",
+    "title": "Python",
+    "icon": ["fab", "python"],
+    "iconColor": "#ffffff",
+    "color": "#306998"
   }
 ]
