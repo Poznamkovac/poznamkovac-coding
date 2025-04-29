@@ -282,20 +282,30 @@ function previewTemplate(mainFile, fileSystem, t) {
       
       // Also notify on DOM content loaded (safety measure)
       document.addEventListener('DOMContentLoaded', function() {
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'PREVIEW_READY', language: 'python', failure: false }, '*');
-        }
-        
-        // Add timeout fallback for Python initialization
-        setTimeout(function() {
-          if (!window.pyodideReady) {
-            console.warn('${t("preview.loadingTimeout")}');
-            if (window.parent && window.parent !== window) {
-              window.parent.postMessage({ type: 'PREVIEW_READY', language: 'python', failure: true }, '*');
-            }
+        // Mark a setTimeout to check for readiness periodically
+        let readyCheckCount = 0;
+        const checkPyodideReady = setInterval(() => {
+          readyCheckCount++;
+          if (window.pyodideReady) {
+            notifyReady();
+            clearInterval(checkPyodideReady);
+          } else if (readyCheckCount > 10) {
+            // After ~5 seconds, give up and notify anyway
+            window.pyodideReady = true; // Force ready state
+            notifyReady(true); // Notify with failure=true
+            clearInterval(checkPyodideReady);
           }
-        }, 30000);
+        }, 500);
       });
+      
+      // Absolute fallback - in case all else fails, ensure we notify after 30 seconds
+      setTimeout(() => {
+        if (!window.pyodideReady) {
+          console.warn('${t("preview.loadingTimeout")}');
+          window.pyodideReady = true;
+          notifyReady(true); // Notify with failure=true
+        }
+      }, 30000);
     </script>
   </body>
 </html>
