@@ -44,10 +44,26 @@
     "loadingTimeout": "Náhľad sa možno nenačítal správne",
     "noContent": "Nenašiel sa žiadny obsah"
   },
+  "sqlite": {
+    "queryExecutedNoResults": "Dotaz bol úspešne vykonaný (žiadne výsledky)",
+    "executionTime": "Čas vykonania",
+    "rows": "riadkov",
+    "row": "riadok",
+    "columns": "stĺpcov",
+    "column": "stĺpec",
+    "null": "NULL",
+    "errorInitSql": "Chyba pri vykonávaní init.sql",
+    "executing": "Vykonávam",
+    "errorExecutingStatement": "Chyba pri vykonávaní príkazu",
+    "failedStatement": "Neúspešný príkaz",
+    "errorExecutingSql": "Chyba pri vykonávaní SQL",
+    "errorMainFileNotFound": "Chyba: Hlavný súbor nenájdený",
+    "failedToInitialize": "Nepodarilo sa inicializovať SQL prostredie"
+  },
   "tests": {
     "previewWindowNotAvailable": "Okno náhľadu nie je dostupné",
     "previewReadyTimeout": "Vypršal časový limit čakania na pripravenosť náhľadu",
-    "previewLoadTimeout": "Python prostredie sa nepodarilo načítať včas",
+    "previewLoadTimeout": "Prostredie sa nepodarilo načítať včas",
     "executionError": "Chyba pri vykonávaní testu",
     "error": "Chyba",
     "errorOccurred": "Počas testovania sa vyskytla chyba",

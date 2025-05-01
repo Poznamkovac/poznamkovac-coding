@@ -2,7 +2,7 @@ import { HashRouter, Route, Routes, useLocation } from "react-router-dom";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faHtml5, faCss3, faJs, faPython } from "@fortawesome/free-brands-svg-icons";
-import { faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
+import { faDatabase, faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
 
 import { I18nProvider } from "./contexts/I18nContext";
 import Header from "./components/Header";
@@ -13,7 +13,7 @@ import EmbedChallengePage from "./pages/EmbedChallengePage";
 import EmbedCustomPage from "./pages/EmbedCustomPage";
 import CreateEmbedPage from "./pages/CreateEmbedPage";
 
-library.add(faHtml5, faCss3, faJs, faPython, faProjectDiagram);
+library.add(faHtml5, faCss3, faJs, faPython, faProjectDiagram, faDatabase);
 
 // Helper function to check if a string is numeric
 const isNumeric = (str: string): boolean => {

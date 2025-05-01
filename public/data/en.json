@@ -44,6 +44,22 @@
     "loadingTimeout": "Preview may not have loaded correctly",
     "noContent": "No content found"
   },
+  "sqlite": {
+    "queryExecutedNoResults": "Query executed successfully (no results returned)",
+    "executionTime": "Execution time",
+    "rows": "rows",
+    "row": "row",
+    "columns": "columns",
+    "column": "column",
+    "null": "NULL",
+    "errorInitSql": "Error executing init.sql",
+    "executing": "Executing",
+    "errorExecutingStatement": "Error executing statement",
+    "failedStatement": "Failed statement",
+    "errorExecutingSql": "Error executing SQL",
+    "errorMainFileNotFound": "Error: Main file not found",
+    "failedToInitialize": "Failed to initialize SQL environment"
+  },
   "tests": {
     "previewWindowNotAvailable": "Preview window not available",
     "previewReadyTimeout": "Timeout waiting for preview to be ready",

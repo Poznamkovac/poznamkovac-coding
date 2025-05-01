@@ -102,5 +102,12 @@
     "icon": ["fas", "project-diagram"],
     "iconColor": "#fafafa",
     "color": "#73c7eb"
+  },
+  {
+    "id": "sqlite",
+    "title": "SQLite",
+    "icon": ["fas", "database"],
+    "iconColor": "#fafafa",
+    "color": "#003b5c"
   }
 ]
