@@ -22,15 +22,15 @@ class IPv4Packet:
         ecn: int,  # Explicit Congestion Notification (2 bity)
         total_length: int,  # celková dĺžka paketu vrátane hlavičky (16 bitov)
         identification: int,  # identifikátor (16 bitov)
-        dont_fragment: bool,  # DF vlajka (boolean, 1 bit)
-        more_fragments: bool,  # MF vlajka (boolean, 1 bit)
+        dont_fragment: bool,  # DF vlajka (boolean, 1 bit)   \  príznaky
+        more_fragments: bool,  # MF vlajka (boolean, 1 bit)  /  (3 bity), prvý bit je vždy 0 pretože je vyhradený
         fragment_offset: int,  # posun fragmentu (13 bitov)
         ttl: int,  # Time To Live (8 bitov)
         protocol: int,  # protokol (8 bitov), napr. 6 = TCP, 17 = UDP
         header_checksum: int,  # kontrolný súčet hlavičky (16 bitov)
-        source_address: str,  # IP adresa zdroja (4 oktety)
-        destination_address: str,  # IP adresa cieľa (4 oktety)
-        options: bytes | None = None,  # voliteľné rozšírenia hlavičky
+        source_address: str,  # IP adresa zdroja (4 oktety, spolu 32 bitov)
+        destination_address: str,  # IP adresa cieľa (4 oktety, spolu 32 bitov)
+        options: bytes | None = None,  # voliteľné rozšírenia hlavičky (max 40 bajtov)
         data: bytes = b"",  # užívateľské dáta (obsah paketu, to čo posielame)
     ):
         self.version = version  # verzia (4 bity), zvyčajne 4
@@ -60,6 +60,8 @@ class IPv4Packet:
         if options is None:
             self.options = b""
         else:
+            if len(options) > 40:
+                raise ValueError("rozšírenia hlavičky môžu mať maximálne 40 bajtov")
             self.options = options
         self.data = data
 
