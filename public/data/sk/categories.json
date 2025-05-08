@@ -93,6 +93,11 @@
         "id": "grafy",
         "title": "Grafy",
         "color": "goldenrod"
+      },
+      {
+        "id": "ostatne",
+        "title": "Ostatné",
+        "color": "lightgray"
       }
     ]
   },
