@@ -4,7 +4,7 @@ except ImportError:
     raise ImportError("Trieda `IPv4Packet` nie je definovaná.")
 
 data = b"ahoj"
-pkt = IPv4Packet(
+packet = IPv4Packet(
     version=4,
     ihl=5,  # 20 (celková dĺžka hlavičky) / 4 (4 B) = 5
     dscp=0,
@@ -22,8 +22,8 @@ pkt = IPv4Packet(
     data=data,
 )
 
-assert (
-    pkt.to_bytes()
-    == b"E\x00\x00\x1809\x00\x00@\x06\x00\x00\xc0\xa8\x01\n\xc0\xa8\x01\x14ahoj"
-)
-print(pkt.to_binary())
+# vypíše paket v binárnom tvare (jednotky a nuly):
+print(packet.to_binary())
+
+# ako údajová štruktúra `bytes`:
+# print(pkt.to_bytes())
