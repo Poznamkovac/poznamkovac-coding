@@ -82,10 +82,9 @@ class StorageService {
   async getEditorCode(
     coursePath: string,
     challengeId: string,
-    filename: string,
-    language: "sk" | "en"
+    filename: string
   ): Promise<string | null> {
-    const key = `challenge_${language}_${coursePath}_${challengeId}_${filename}`;
+    const key = `challenge_${coursePath}_${challengeId}_${filename}`;
     const code = await this.getValue(key);
     return typeof code === "string" ? code : null;
   }
@@ -94,11 +93,19 @@ class StorageService {
     coursePath: string,
     challengeId: string,
     filename: string,
-    code: string,
-    language: "sk" | "en"
+    code: string
   ): Promise<void> {
-    const key = `challenge_${language}_${coursePath}_${challengeId}_${filename}`;
+    const key = `challenge_${coursePath}_${challengeId}_${filename}`;
     await this.setValue(key, code);
+  }
+
+  async deleteEditorCode(
+    coursePath: string,
+    challengeId: string,
+    filename: string
+  ): Promise<void> {
+    const key = `challenge_${coursePath}_${challengeId}_${filename}`;
+    await this.deleteValue(key);
   }
 
   async getAllChallengeFiles(

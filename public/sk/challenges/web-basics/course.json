@@ -1,0 +1,12 @@
+{
+  "title": "Web Základy",
+  "description": "Naučte sa základy tvorby webových stránok",
+  "challenges": [
+    {
+      "id": "1",
+      "title": "HTML Stránka s Tlačidlom",
+      "type": "code",
+      "difficulty": "easy"
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import QuizAnswer from "../components/QuizAnswer.vue";
+import CodeChallenge from "../components/CodeChallenge.vue";
 import { validateQuizAnswer } from "../utils/quiz";
 import { titleCase } from "../utils";
 import { useI18nStore } from "../stores/i18n";
@@ -14,6 +15,7 @@ export default defineComponent({
   components: {
     DefaultLayout,
     QuizAnswer,
+    CodeChallenge,
   },
 
   setup() {
@@ -55,6 +57,10 @@ export default defineComponent({
 
     isCodeChallenge(): boolean {
       return this.challengeData?.type === "code";
+    },
+
+    coursePath(): string {
+      return this.pathSegments.slice(0, -1).join("/");
     },
 
     breadcrumbs(): Array<{ text: string; path: string }> {
@@ -282,9 +288,13 @@ export default defineComponent({
         </div>
 
         <!-- Code Challenge -->
-        <div v-else-if="isCodeChallenge" class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6">
-          <h3 class="text-xl font-semibold text-white mb-4">Code Editor</h3>
-          <p class="text-gray-400">Monaco editor integration will be implemented here.</p>
+        <div v-else-if="isCodeChallenge && challengeData.type === 'code'">
+          <CodeChallenge
+            :challenge-data="challengeData"
+            :course-path="coursePath"
+            :challenge-id="challengeId"
+            :language="language"
+          />
         </div>
       </div>
 

@@ -1,0 +1,12 @@
+{
+  "title": "Python Základy",
+  "description": "Naučte sa základy programovania v Pythone",
+  "challenges": [
+    {
+      "id": "1",
+      "title": "Hello World v Pythone",
+      "type": "code",
+      "difficulty": "easy"
+    }
+  ]
+}
