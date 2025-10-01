@@ -1,0 +1,14 @@
+{
+  "type": "quiz",
+  "title": "Programovacie paradigmy",
+  "assignment": "Ako sa nazýva programovacia paradigma, ktorá používa objekty a triedy?",
+  "maxScore": 8,
+  "answer": {
+    "type": "input",
+    "correctAnswer": "objektovo orientované programovanie",
+    "caseSensitive": false,
+    "diacriticSensitive": false,
+    "correctFeedback": "Presne tak! OOP (objektovo orientované programovanie) organizuje kód okolo objektov.",
+    "incorrectFeedback": "Hľadáme paradigmu, kde sa používajú triedy a dedičnosť."
+  }
+}

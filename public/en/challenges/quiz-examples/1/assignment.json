@@ -1,0 +1,17 @@
+{
+  "type": "quiz",
+  "title": "TypeScript Basics",
+  "assignment": "Which of the following languages is statically typed?",
+  "maxScore": 10,
+  "answer": {
+    "type": "radio",
+    "options": [
+      { "id": "a", "text": "Python", "correct": false },
+      { "id": "b", "text": "JavaScript", "correct": false },
+      { "id": "c", "text": "TypeScript", "correct": true },
+      { "id": "d", "text": "Ruby", "correct": false }
+    ],
+    "correctFeedback": "Excellent! TypeScript adds static types to JavaScript.",
+    "incorrectFeedback": "TypeScript is a superset of JavaScript that adds static typing."
+  }
+}

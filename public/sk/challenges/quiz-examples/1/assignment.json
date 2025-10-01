@@ -1,0 +1,17 @@
+{
+  "type": "quiz",
+  "title": "Základy TypeScript",
+  "assignment": "Ktorý z nasledujúcich jazykov je typovaný staticky?",
+  "maxScore": 10,
+  "answer": {
+    "type": "radio",
+    "options": [
+      { "id": "a", "text": "Python", "correct": false },
+      { "id": "b", "text": "JavaScript", "correct": false },
+      { "id": "c", "text": "TypeScript", "correct": true },
+      { "id": "d", "text": "Ruby", "correct": false }
+    ],
+    "correctFeedback": "Výborne! TypeScript pridáva statické typy k JavaScriptu.",
+    "incorrectFeedback": "TypeScript je nadstavba JavaScriptu, ktorá pridáva statické typovanie."
+  }
+}

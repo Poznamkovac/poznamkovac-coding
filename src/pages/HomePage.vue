@@ -41,6 +41,7 @@ export default defineComponent({
     async loadCourses() {
       try {
         this.courses = [
+          { slug: "quiz-examples", title: "Quiz Examples", color: hashStringToColor("quiz-examples"), challengeCount: 4 },
           { slug: "python", title: "Python", color: hashStringToColor("python"), challengeCount: 0 },
           { slug: "web", title: "Web Development", color: hashStringToColor("web"), challengeCount: 0 },
           { slug: "sqlite", title: "SQLite", color: hashStringToColor("sqlite"), challengeCount: 0 },

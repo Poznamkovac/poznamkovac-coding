@@ -1,0 +1,14 @@
+{
+  "type": "quiz",
+  "title": "Text Answer - JavaScript Basics",
+  "assignment": "What is the output of the following code in JavaScript?<br><code>console.log(typeof null)</code>",
+  "maxScore": 5,
+  "answer": {
+    "type": "input",
+    "correctAnswer": "object",
+    "caseSensitive": false,
+    "diacriticSensitive": true,
+    "correctFeedback": "Yes! In JavaScript, typeof null === 'object', which is a historical bug in the language.",
+    "incorrectFeedback": "Hint: It's a bit unexpected, but it has historical reasons in JavaScript."
+  }
+}

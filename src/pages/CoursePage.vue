@@ -3,6 +3,9 @@ import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import ChallengeCard from "../components/ChallengeCard.vue";
 import CourseCard from "../components/CourseCard.vue";
+import { titleCase } from "../utils";
+import { useI18nStore } from "../stores/i18n";
+import { storeToRefs } from "pinia";
 import type { Course, Challenge } from "../types";
 
 export default defineComponent({
@@ -12,6 +15,15 @@ export default defineComponent({
     DefaultLayout,
     ChallengeCard,
     CourseCard,
+  },
+
+  setup() {
+    const i18nStore = useI18nStore();
+    const { language } = storeToRefs(i18nStore);
+
+    return {
+      language,
+    };
   },
 
   data() {
@@ -30,7 +42,8 @@ export default defineComponent({
 
     courseTitle(): string {
       const segments = this.coursePath.split("/");
-      return segments[segments.length - 1] || "Course";
+      const slug = segments[segments.length - 1] || "Course";
+      return titleCase(slug);
     },
   },
 
@@ -51,11 +64,29 @@ export default defineComponent({
       this.isLoading = true;
       try {
         this.subcourses = [];
-        this.challenges = [
-          { id: 1, title: "Challenge 1 - Placeholder", maxScore: 100, currentScore: 0 },
-          { id: 2, title: "Challenge 2 - Placeholder", maxScore: 100, currentScore: 50 },
-          { id: 3, title: "Challenge 3 - Placeholder", maxScore: 100, currentScore: 100 },
-        ];
+
+        // Try to load challenges for this course
+        const challengeIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const loadedChallenges: typeof this.challenges = [];
+
+        for (const id of challengeIds) {
+          try {
+            const response = await fetch(`/${this.language}/challenges/${this.coursePath}/${id}/assignment.json`);
+            if (response.ok) {
+              const data = await response.json();
+              loadedChallenges.push({
+                id,
+                title: data.title,
+                maxScore: data.maxScore,
+                currentScore: 0,
+              });
+            }
+          } catch (err) {
+            // Challenge doesn't exist, skip it
+          }
+        }
+
+        this.challenges = loadedChallenges;
       } catch (error) {
         console.error("Failed to load course data:", error);
       } finally {

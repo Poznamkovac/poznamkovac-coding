@@ -1,0 +1,14 @@
+{
+  "type": "quiz",
+  "title": "Textová odpoveď - Základy JavaScriptu",
+  "assignment": "Aký je výstup nasledujúceho kódu v JavaScripte?<br><code>console.log(typeof null)</code>",
+  "maxScore": 5,
+  "answer": {
+    "type": "input",
+    "correctAnswer": "object",
+    "caseSensitive": false,
+    "diacriticSensitive": true,
+    "correctFeedback": "Áno! V JavaScripte je typeof null === 'object', čo je historická chyba v jazyku.",
+    "incorrectFeedback": "Tip: Je to trochu nečakané, ale má to historické dôvody v JavaScripte."
+  }
+}

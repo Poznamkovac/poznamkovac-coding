@@ -1,0 +1,18 @@
+{
+  "type": "quiz",
+  "title": "Multiple Correct Answers",
+  "assignment": "Which of the following languages are interpreted? (Select all correct answers)",
+  "maxScore": 15,
+  "answer": {
+    "type": "checkbox",
+    "options": [
+      { "id": "a", "text": "Python", "correct": true },
+      { "id": "b", "text": "C++", "correct": false },
+      { "id": "c", "text": "JavaScript", "correct": true },
+      { "id": "d", "text": "Java", "correct": false },
+      { "id": "e", "text": "Ruby", "correct": true }
+    ],
+    "correctFeedback": "Correct! Python, JavaScript, and Ruby are interpreted languages.",
+    "incorrectFeedback": "Interpreted languages execute code directly, without compilation to machine code."
+  }
+}

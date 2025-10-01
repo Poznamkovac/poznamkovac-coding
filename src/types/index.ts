@@ -22,7 +22,37 @@ export interface ChallengeFile {
   autoreload?: boolean;
 }
 
-export interface ChallengeData {
+export type ChallengeType = "code" | "quiz";
+
+export type QuizAnswerType = "radio" | "checkbox" | "input";
+
+export interface QuizOption {
+  id: string;
+  text: string;
+  correct: boolean;
+}
+
+export interface QuizAnswerConfig {
+  type: QuizAnswerType;
+  options?: QuizOption[];
+  correctAnswer?: string;
+  caseSensitive?: boolean;
+  diacriticSensitive?: boolean;
+  correctFeedback?: string;
+  incorrectFeedback?: string;
+}
+
+export interface QuizChallengeData {
+  type: "quiz";
+  title: string;
+  assignment: string | string[];
+  maxScore: number;
+  answer: QuizAnswerConfig;
+  imageUrl?: string;
+}
+
+export interface CodeChallengeData {
+  type: "code";
   title: string;
   assignment: string | string[];
   maxScore: number;
@@ -38,6 +68,8 @@ export interface ChallengeData {
   }>;
   imageUrl?: string;
 }
+
+export type ChallengeData = QuizChallengeData | CodeChallengeData;
 
 export interface TestResult {
   score?: number;

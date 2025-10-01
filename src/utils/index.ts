@@ -28,6 +28,13 @@ export function parseUrlPath(path: string): { segments: string[]; isChallenge: b
   const segments = path.split("/").filter(Boolean);
   const lastSegment = segments[segments.length - 1];
   const isChallenge = lastSegment ? isNumeric(lastSegment) : false;
-  
+
   return { segments, isChallenge };
+}
+
+export function titleCase(slug: string): string {
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
