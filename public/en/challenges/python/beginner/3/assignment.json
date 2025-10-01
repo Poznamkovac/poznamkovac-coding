@@ -1,0 +1,21 @@
+{
+  "type": "code",
+  "title": "Even Number Check",
+  "assignment": "Write a function <code>is_even(n)</code> that returns <code>True</code> if the number is even, otherwise <code>False</code>.",
+  "maxScore": 20,
+  "mainFile": "main.py",
+  "files": [
+    {
+      "filename": "main.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    },
+    {
+      "filename": "test.py",
+      "readonly": true,
+      "hidden": false,
+      "autoreload": false
+    }
+  ]
+}

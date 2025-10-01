@@ -1,0 +1,30 @@
+{
+  "title": "Kvízové príklady",
+  "description": "Testové otázky na precvičenie",
+  "challenges": [
+    {
+      "id": "1",
+      "title": "Základy TypeScript",
+      "type": "quiz",
+      "difficulty": "easy"
+    },
+    {
+      "id": "2",
+      "title": "Výber frameworku",
+      "type": "quiz",
+      "difficulty": "easy"
+    },
+    {
+      "id": "3",
+      "title": "Skratky pojmov",
+      "type": "quiz",
+      "difficulty": "easy"
+    },
+    {
+      "id": "4",
+      "title": "Textové odpovede",
+      "type": "quiz",
+      "difficulty": "easy"
+    }
+  ]
+}

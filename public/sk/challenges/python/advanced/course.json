@@ -1,0 +1,12 @@
+{
+  "title": "Python pre pokročilých",
+  "description": "Pokročilé techniky v Pythone",
+  "challenges": [
+    {
+      "id": "1",
+      "title": "Dekorátory a generátory",
+      "type": "code",
+      "difficulty": "hard"
+    }
+  ]
+}

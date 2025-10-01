@@ -14,7 +14,7 @@ export class PythonRunner extends BaseCodeRunner {
       try {
         const { loadPyodide } = await import("pyodide");
         this.pyodide = await loadPyodide({
-          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/",
+          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.28.3/full/",
         });
 
         // Setup matplotlib for image capture

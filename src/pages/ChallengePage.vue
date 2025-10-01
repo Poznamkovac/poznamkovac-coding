@@ -7,6 +7,7 @@ import { validateQuizAnswer } from "../utils/quiz";
 import { titleCase } from "../utils";
 import { useI18nStore } from "../stores/i18n";
 import { storeToRefs } from "pinia";
+import { storageService } from "../services/storage";
 import type { ChallengeData } from "../types";
 
 export default defineComponent({
@@ -151,7 +152,7 @@ export default defineComponent({
       }
     },
 
-    checkAnswer() {
+    async checkAnswer() {
       if (!this.challengeData || this.challengeData.type !== "quiz") return;
 
       const result = validateQuizAnswer(this.userAnswer, this.challengeData.answer);
@@ -159,9 +160,16 @@ export default defineComponent({
       this.attemptCount++;
       this.hasCheckedOnce = true;
 
-      if (this.isCorrect) {
-        // TODO: Save score to storage
-        console.log("Answer result:", result);
+      if (this.isCorrect && this.challengeData.maxScore) {
+        // Save score to storage
+        const lang = this.language === "auto" ? "sk" : this.language;
+        await storageService.setChallengeScore(
+          this.coursePath,
+          this.challengeId,
+          this.challengeData.maxScore,
+          lang as "sk" | "en"
+        );
+        console.log(`Score saved: ${this.challengeData.maxScore} points`);
       }
     },
 

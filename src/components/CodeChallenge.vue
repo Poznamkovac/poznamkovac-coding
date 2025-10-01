@@ -5,6 +5,7 @@ import CodeEditor from "./CodeEditor.vue";
 import { createVirtualFileSystem, type VirtualFileSystem, type VirtualFile } from "../services/virtualFileSystem";
 import { codeRunnerRegistry } from "../services/codeRunners";
 import { runTests, type TestResult } from "../services/testRunner";
+import { storageService } from "../services/storage";
 import type { CodeChallengeData } from "../types";
 
 export default defineComponent({
@@ -239,6 +240,17 @@ export default defineComponent({
         }
         if (this.testResult.error) {
           this.executionError = this.testResult.error;
+        }
+
+        // Save score to storage if test passed
+        if (this.testResult.passed && this.testResult.score > 0) {
+          await storageService.setChallengeScore(
+            this.coursePath,
+            this.challengeId,
+            this.testResult.score,
+            this.language as "sk" | "en"
+          );
+          console.log(`Code challenge score saved: ${this.testResult.score}/${this.testResult.maxScore} points`);
         }
       } catch (error: any) {
         this.executionError = error.message || String(error);

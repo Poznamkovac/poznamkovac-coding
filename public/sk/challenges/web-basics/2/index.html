@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulár</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Registračný formulár</h1>
+
+        <form id="myForm">
+            <div class="form-group">
+                <label for="name">Meno:</label>
+                <input type="text" id="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" required>
+            </div>
+
+            <button type="submit">Odoslať</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('myForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+
+            document.getElementById('result').innerHTML =
+                `<h3>Zadané údaje:</h3>
+                 <p><strong>Meno:</strong> ${name}</p>
+                 <p><strong>Email:</strong> ${email}</p>`;
+        });
+    </script>
+</body>
+</html>

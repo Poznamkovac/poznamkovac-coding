@@ -3,7 +3,7 @@ import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import ChallengeCard from "../components/ChallengeCard.vue";
 import CourseCard from "../components/CourseCard.vue";
-import { titleCase } from "../utils";
+import { titleCase, hashStringToColor } from "../utils";
 import { useI18nStore } from "../stores/i18n";
 import { storeToRefs } from "pinia";
 import type { Course, Challenge } from "../types";
@@ -64,35 +64,64 @@ export default defineComponent({
       this.isLoading = true;
       try {
         this.subcourses = [];
+        this.challenges = [];
 
-        // Try to load challenges for this course
-        const challengeIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        const loadedChallenges: typeof this.challenges = [];
-
-        for (const id of challengeIds) {
-          try {
-            const response = await fetch(`/${this.language}/challenges/${this.coursePath}/${id}/assignment.json`);
-            if (response.ok) {
-              const data = await response.json();
-              loadedChallenges.push({
-                id,
-                title: data.title,
-                maxScore: data.maxScore,
-                currentScore: 0,
-              });
-            }
-          } catch (err) {
-            // Challenge doesn't exist, skip it
-          }
+        // Load from index.json for better performance
+        const response = await fetch('/index.json');
+        if (!response.ok) {
+          throw new Error('Failed to load course index');
         }
 
-        this.challenges = loadedChallenges;
+        const courseIndex = await response.json();
+        const lang = this.language === 'auto' ? 'sk' : this.language;
+        const courses = courseIndex[lang] || [];
+
+        // Find the course by path
+        const course = this.findCourseByPath(courses, this.coursePath);
+
+        if (course) {
+          // Load subcourses if any
+          if (course.subcourses && course.subcourses.length > 0) {
+            this.subcourses = course.subcourses.map((sub: any) => ({
+              slug: sub.slug,
+              title: sub.title,
+              color: hashStringToColor(sub.slug),
+              challengeCount: sub.challengeCount,
+            }));
+          }
+
+          // Load challenges if any
+          if (course.challenges && course.challenges.length > 0) {
+            this.challenges = course.challenges.map((challenge: any) => ({
+              id: parseInt(challenge.id, 10),
+              title: challenge.title,
+              maxScore: 0, // Will be loaded from assignment if needed
+              currentScore: 0,
+            }));
+          }
+        }
       } catch (error) {
         console.error("Failed to load course data:", error);
       } finally {
         this.isLoading = false;
       }
     },
+
+    findCourseByPath(courses: any[], targetPath: string): any | null {
+      for (const course of courses) {
+        if (course.path === targetPath) {
+          return course;
+        }
+
+        // Check subcourses recursively
+        if (course.subcourses && course.subcourses.length > 0) {
+          const found = this.findCourseByPath(course.subcourses, targetPath);
+          if (found) return found;
+        }
+      }
+      return null;
+    },
+
   },
 });
 </script>

@@ -1,0 +1,24 @@
+{
+  "title": "Python Basics",
+  "description": "Learn the basics of Python programming",
+  "challenges": [
+    {
+      "id": "1",
+      "title": "Hello World in Python",
+      "type": "code",
+      "difficulty": "easy"
+    },
+    {
+      "id": "2",
+      "title": "Addition Calculator",
+      "type": "code",
+      "difficulty": "easy"
+    },
+    {
+      "id": "3",
+      "title": "Even Number Check",
+      "type": "code",
+      "difficulty": "easy"
+    }
+  ]
+}

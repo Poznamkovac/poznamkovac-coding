@@ -1,16 +1,16 @@
 {
-  "title": "Web Základy",
-  "description": "Naučte sa základy tvorby webových stránok",
+  "title": "Web Basics",
+  "description": "Learn the basics of web development",
   "challenges": [
     {
       "id": "1",
-      "title": "HTML Stránka s Tlačidlom",
+      "title": "HTML Page with Button",
       "type": "code",
       "difficulty": "easy"
     },
     {
       "id": "2",
-      "title": "Jednoduchý formulár",
+      "title": "Simple Form",
       "type": "code",
       "difficulty": "easy"
     }

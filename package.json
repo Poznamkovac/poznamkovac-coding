@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "dev": "npm run generate-course-index && vite",
+    "build": "npm run generate-course-index && vue-tsc -b && vite build",
+    "generate-course-index": "node scripts/generate-course-index.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "format": "bunx prettier --write ."

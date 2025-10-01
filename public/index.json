@@ -1,0 +1,210 @@
+{
+  "sk": [
+    {
+      "slug": "python",
+      "path": "python",
+      "title": "Python",
+      "description": "",
+      "challengeCount": 4,
+      "challenges": [],
+      "subcourses": [
+        {
+          "slug": "advanced",
+          "path": "python/advanced",
+          "title": "Python pre pokročilých",
+          "description": "Pokročilé techniky v Pythone",
+          "challengeCount": 1,
+          "challenges": [
+            {
+              "id": "1",
+              "title": "Dekorátory a generátory",
+              "type": "code",
+              "difficulty": "hard"
+            }
+          ],
+          "subcourses": []
+        },
+        {
+          "slug": "beginner",
+          "path": "python/beginner",
+          "title": "Python Základy",
+          "description": "Naučte sa základy programovania v Pythone",
+          "challengeCount": 3,
+          "challenges": [
+            {
+              "id": "1",
+              "title": "Hello World v Pythone",
+              "type": "code",
+              "difficulty": "easy"
+            },
+            {
+              "id": "2",
+              "title": "Kalkulačka súčtu",
+              "type": "code",
+              "difficulty": "easy"
+            },
+            {
+              "id": "3",
+              "title": "Kontrola párnosti čísla",
+              "type": "code",
+              "difficulty": "easy"
+            }
+          ],
+          "subcourses": []
+        }
+      ]
+    },
+    {
+      "slug": "quiz-examples",
+      "path": "quiz-examples",
+      "title": "Kvízové príklady",
+      "description": "Testové otázky na precvičenie",
+      "challengeCount": 4,
+      "challenges": [
+        {
+          "id": "1",
+          "title": "Základy TypeScript",
+          "type": "quiz",
+          "difficulty": "easy"
+        },
+        {
+          "id": "2",
+          "title": "Výber frameworku",
+          "type": "quiz",
+          "difficulty": "easy"
+        },
+        {
+          "id": "3",
+          "title": "Skratky pojmov",
+          "type": "quiz",
+          "difficulty": "easy"
+        },
+        {
+          "id": "4",
+          "title": "Textové odpovede",
+          "type": "quiz",
+          "difficulty": "easy"
+        }
+      ],
+      "subcourses": []
+    },
+    {
+      "slug": "web-basics",
+      "path": "web-basics",
+      "title": "Web Základy",
+      "description": "Naučte sa základy tvorby webových stránok",
+      "challengeCount": 2,
+      "challenges": [
+        {
+          "id": "1",
+          "title": "HTML Stránka s Tlačidlom",
+          "type": "code",
+          "difficulty": "easy"
+        },
+        {
+          "id": "2",
+          "title": "Jednoduchý formulár",
+          "type": "code",
+          "difficulty": "easy"
+        }
+      ],
+      "subcourses": []
+    }
+  ],
+  "en": [
+    {
+      "slug": "python",
+      "path": "python",
+      "title": "Python",
+      "description": "",
+      "challengeCount": 3,
+      "challenges": [],
+      "subcourses": [
+        {
+          "slug": "beginner",
+          "path": "python/beginner",
+          "title": "Python Basics",
+          "description": "Learn the basics of Python programming",
+          "challengeCount": 3,
+          "challenges": [
+            {
+              "id": "1",
+              "title": "Hello World in Python",
+              "type": "code",
+              "difficulty": "easy"
+            },
+            {
+              "id": "2",
+              "title": "Addition Calculator",
+              "type": "code",
+              "difficulty": "easy"
+            },
+            {
+              "id": "3",
+              "title": "Even Number Check",
+              "type": "code",
+              "difficulty": "easy"
+            }
+          ],
+          "subcourses": []
+        }
+      ]
+    },
+    {
+      "slug": "quiz-examples",
+      "path": "quiz-examples",
+      "title": "Quiz Examples",
+      "description": "Test questions for practice",
+      "challengeCount": 4,
+      "challenges": [
+        {
+          "id": "1",
+          "title": "TypeScript Basics",
+          "type": "quiz",
+          "difficulty": "easy"
+        },
+        {
+          "id": "2",
+          "title": "Framework Selection",
+          "type": "quiz",
+          "difficulty": "easy"
+        },
+        {
+          "id": "3",
+          "title": "Acronyms",
+          "type": "quiz",
+          "difficulty": "easy"
+        },
+        {
+          "id": "4",
+          "title": "Text Answers",
+          "type": "quiz",
+          "difficulty": "easy"
+        }
+      ],
+      "subcourses": []
+    },
+    {
+      "slug": "web-basics",
+      "path": "web-basics",
+      "title": "Web Basics",
+      "description": "Learn the basics of web development",
+      "challengeCount": 2,
+      "challenges": [
+        {
+          "id": "1",
+          "title": "HTML Page with Button",
+          "type": "code",
+          "difficulty": "easy"
+        },
+        {
+          "id": "2",
+          "title": "Simple Form",
+          "type": "code",
+          "difficulty": "easy"
+        }
+      ],
+      "subcourses": []
+    }
+  ]
+}

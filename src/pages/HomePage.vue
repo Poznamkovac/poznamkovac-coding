@@ -1,5 +1,6 @@
 <script lang="ts">
 import { defineComponent } from "vue";
+import { storeToRefs } from "pinia";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import CourseCard from "../components/CourseCard.vue";
 import { useI18nStore } from "../stores/i18n";
@@ -16,9 +17,11 @@ export default defineComponent({
 
   setup() {
     const i18nStore = useI18nStore();
+    const { language } = storeToRefs(i18nStore);
 
     return {
       i18nStore,
+      language,
     };
   },
 
@@ -27,6 +30,12 @@ export default defineComponent({
       courses: [] as Course[],
       isLoading: true,
     };
+  },
+
+  watch: {
+    language() {
+      this.loadCourses();
+    },
   },
 
   mounted() {
@@ -39,16 +48,28 @@ export default defineComponent({
     },
 
     async loadCourses() {
+      this.isLoading = true;
       try {
-        this.courses = [
-          { slug: "quiz-examples", title: "Quiz Examples", color: hashStringToColor("quiz-examples"), challengeCount: 4 },
-          { slug: "python", title: "Python", color: hashStringToColor("python"), challengeCount: 0 },
-          { slug: "web", title: "Web Development", color: hashStringToColor("web"), challengeCount: 0 },
-          { slug: "sqlite", title: "SQLite", color: hashStringToColor("sqlite"), challengeCount: 0 },
-          { slug: "uml", title: "UML Diagrams", color: hashStringToColor("uml"), challengeCount: 0 },
-        ];
+        // Load course index from build-time generated file
+        const response = await fetch('/index.json');
+        if (!response.ok) {
+          throw new Error('Failed to load course index');
+        }
+
+        const courseIndex = await response.json();
+        const lang = this.language === 'auto' ? 'sk' : this.language;
+        const coursesData = courseIndex[lang] || [];
+
+        // Transform to Course type with colors
+        this.courses = coursesData.map((course: any) => ({
+          slug: course.slug,
+          title: course.title,
+          color: hashStringToColor(course.slug),
+          challengeCount: course.challengeCount,
+        }));
       } catch (error) {
         console.error("Failed to load courses:", error);
+        this.courses = [];
       } finally {
         this.isLoading = false;
       }
