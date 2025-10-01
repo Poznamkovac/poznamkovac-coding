@@ -27,6 +27,6 @@ export default defineComponent({
 </script>
 
 <template>
-  <CoursePage v-if="!isChallenge" :key="pathMatch" />
-  <ChallengePage v-else :key="pathMatch" />
+  <CoursePage v-if="!isChallenge" :key="`course-${pathMatch}`" />
+  <ChallengePage v-else :key="`challenge-${pathMatch}`" />
 </template>

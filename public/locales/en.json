@@ -38,7 +38,8 @@
     "score": "Score",
     "testOutput": "Test output:",
     "deleteFileConfirm": "Are you sure you want to delete the file \"{filename}\"?",
-    "previewPlaceholder": "Click the \"Run Code\" button to see the result"
+    "previewPlaceholder": "Click the \"Run Code\" button to see the result",
+    "noTestFile": "No test file found in challenge"
   },
   "common": {
     "loading": "Loading...",

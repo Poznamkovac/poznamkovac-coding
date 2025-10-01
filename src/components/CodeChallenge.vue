@@ -295,14 +295,15 @@ export default defineComponent({
 
       try {
         const files: Record<string, string> = {};
-        for (const file of this.fileSystem.getAllFiles()) {
+        const allFiles = this.fileSystem.getAllFiles();
+        for (const file of allFiles) {
           files[file.filename] = file.content;
         }
 
-        // Find test file
-        const testFile = this.challengeData.files.find((f) => f.filename.startsWith("test.") || f.filename.endsWith("_test.py"));
+        // Find test file in the file system (not metadata, since tests are auto-discovered)
+        const testFile = allFiles.find((f) => this.isTestFile(f.filename));
         if (!testFile) {
-          this.executionError = "No test file found in challenge";
+          this.executionError = this.t("challenge.noTestFile");
           return;
         }
 
@@ -446,9 +447,10 @@ export default defineComponent({
       <div class="preview-panel" :style="{ width: `${100 - splitPosition}%` }">
         <div class="output-container">
           <!-- Placeholder when no output -->
-          <div v-if="showPlaceholder" class="preview-placeholder">
+          <div v-if="showPlaceholder" class="preview-placeholder" @click="runCode">
             <div class="placeholder-icon">▶</div>
             <p>{{ t("challenge.previewPlaceholder") }}</p>
+            <button class="placeholder-button">{{ t("challenge.runCode") }}</button>
           </div>
           <!-- Preview -->
           <div v-if="previewType === 'web'" class="preview-web">
@@ -713,11 +715,22 @@ export default defineComponent({
   color: #888;
   text-align: center;
   gap: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.preview-placeholder:hover {
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .placeholder-icon {
   font-size: 48px;
   opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.preview-placeholder:hover .placeholder-icon {
+  opacity: 0.8;
 }
 
 .preview-placeholder p {
@@ -725,6 +738,23 @@ export default defineComponent({
   max-width: 300px;
   line-height: 1.5;
   margin: 0;
+}
+
+.placeholder-button {
+  padding: 12px 24px;
+  background: #007acc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  pointer-events: none;
+}
+
+.placeholder-button:hover {
+  background: #005a9e;
 }
 
 .preview-web {

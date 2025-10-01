@@ -39,7 +39,8 @@
     "score": "Skóre",
     "testOutput": "Výstup testov:",
     "deleteFileConfirm": "Naozaj chcete odstrániť súbor \"{filename}\"?",
-    "previewPlaceholder": "Kliknite na tlačidlo \"Spustiť kód\" pre zobrazenie výsledku"
+    "previewPlaceholder": "Kliknite na tlačidlo \"Spustiť kód\" pre zobrazenie výsledku",
+    "noTestFile": "V úlohe nebol nájdený testovací súbor"
   },
   "common": {
     "loading": "Načítavam...",

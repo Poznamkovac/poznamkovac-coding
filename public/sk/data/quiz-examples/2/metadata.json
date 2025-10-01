@@ -1,7 +1,5 @@
 {
   "type": "quiz",
-  "title": "Výber viacerých správnych odpovedí",
-  "assignment": "Ktoré z nasledujúcich jazykov sú interpretované? (Vyber všetky správne odpovede)",
   "maxScore": 15,
   "answer": {
     "type": "checkbox",

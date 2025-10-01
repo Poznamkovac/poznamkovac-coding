@@ -35,13 +35,13 @@
       "challenges": [
         {
           "id": "1",
-          "title": "Základy TypeScript",
+          "title": "a",
           "type": "quiz",
           "difficulty": "medium"
         },
         {
           "id": "2",
-          "title": "Výber viacerých správnych odpovedí",
+          "title": "Challenge 2",
           "type": "quiz",
           "difficulty": "medium"
         },
