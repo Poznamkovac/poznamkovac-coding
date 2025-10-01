@@ -136,7 +136,7 @@ export default defineComponent({
       try {
         const coursePath = this.pathSegments.slice(0, -1).join("/");
         const lang = this.language;
-        const challengeJsonPath = `/${lang}/challenges/${coursePath}/${this.challengeId}/assignment.json`;
+        const challengeJsonPath = `/${lang}/data/${coursePath}/${this.challengeId}/assignment.json`;
 
         const response = await fetch(challengeJsonPath);
         if (!response.ok) {

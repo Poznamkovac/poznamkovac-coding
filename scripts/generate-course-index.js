@@ -78,7 +78,7 @@ function generateCourseIndex() {
   const languages = ['sk', 'en'];
 
   for (const lang of languages) {
-    const langDir = path.join(publicDir, lang, 'challenges');
+    const langDir = path.join(publicDir, lang, 'data');
 
     if (!fs.existsSync(langDir)) {
       console.warn(`Warning: ${langDir} does not exist`);

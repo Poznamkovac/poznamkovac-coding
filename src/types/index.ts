@@ -19,6 +19,7 @@ export interface ChallengeFile {
   content: string;
   readonly: boolean;
   hidden: boolean;
+  removable?: boolean;
   autoreload?: boolean;
 }
 
@@ -64,6 +65,7 @@ export interface CodeChallengeData {
     filename: string;
     readonly: boolean;
     hidden: boolean;
+    removable?: boolean;
     autoreload?: boolean;
   }>;
   imageUrl?: string;

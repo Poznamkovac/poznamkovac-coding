@@ -72,7 +72,7 @@ export default defineComponent({
       >
         <span class="tab-name">{{ file.filename }}</span>
         <button
-          v-if="!file.readonly"
+          v-if="!file.readonly && file.removable !== false"
           class="tab-remove"
           @click="removeFile(file.filename, $event)"
           title="Odstrániť súbor"

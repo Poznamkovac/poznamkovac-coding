@@ -45,6 +45,30 @@ export default defineComponent({
       const slug = segments[segments.length - 1] || "Course";
       return titleCase(slug);
     },
+
+    breadcrumbs(): Array<{ text: string; path: string }> {
+      const crumbs: Array<{ text: string; path: string }> = [
+        { text: "Courses", path: "/" },
+      ];
+
+      const segments = this.coursePath.split("/");
+      let currentPath = "";
+
+      for (let i = 0; i < segments.length; i++) {
+        currentPath += (currentPath ? "/" : "") + segments[i];
+        const lang = this.$route.params.lang as string;
+        const routePath = lang
+          ? `/${lang}/challenges/${currentPath}`
+          : `/challenges/${currentPath}`;
+
+        crumbs.push({
+          text: titleCase(segments[i]),
+          path: routePath,
+        });
+      }
+
+      return crumbs;
+    },
   },
 
   watch: {
@@ -122,6 +146,9 @@ export default defineComponent({
       return null;
     },
 
+    navigateTo(path: string) {
+      this.$router.push(path);
+    },
   },
 });
 </script>
@@ -129,8 +156,23 @@ export default defineComponent({
 <template>
   <DefaultLayout>
     <div class="container mx-auto px-4 py-8">
+      <!-- Breadcrumbs -->
+      <nav class="flex items-center gap-2 text-sm mb-6 flex-wrap">
+        <template v-for="(crumb, index) in breadcrumbs" :key="index">
+          <button
+            v-if="index < breadcrumbs.length - 1"
+            @click="navigateTo(crumb.path)"
+            class="text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            {{ crumb.text }}
+          </button>
+          <span v-else class="text-gray-400">{{ crumb.text }}</span>
+          <span v-if="index < breadcrumbs.length - 1" class="text-gray-600">/</span>
+        </template>
+      </nav>
+
       <h2 class="text-3xl font-bold text-white mb-8">{{ courseTitle }}</h2>
-      
+
       <div v-if="isLoading" class="text-center text-gray-400 py-12">
         Loading...
       </div>

@@ -57,7 +57,7 @@ export async function createVirtualFileSystem(
       if (!content) {
         try {
           const response = await fetch(
-            `/${language}/challenges/${coursePath}/${challengeId}/files/${fileConfig.filename}`
+            `/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`
           );
           if (response.ok) {
             content = await response.text();

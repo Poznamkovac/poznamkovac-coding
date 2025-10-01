@@ -9,6 +9,7 @@
       "filename": "index.html",
       "readonly": false,
       "hidden": false,
+      "removable": false,
       "autoreload": true
     },
     {
