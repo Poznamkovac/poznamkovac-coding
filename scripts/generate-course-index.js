@@ -19,7 +19,7 @@ function hasChallenges(dir) {
 }
 
 /**
- * Scan challenge directories and read assignment.json files
+ * Scan challenge directories and read metadata.json + assignment.md files
  * @param {string} dir - Directory containing challenges
  * @returns {Array} Array of challenge metadata
  */
@@ -30,20 +30,43 @@ function scanChallenges(dir) {
   for (const entry of entries) {
     if (entry.isDirectory() && /^\d+$/.test(entry.name)) {
       const challengeDir = path.join(dir, entry.name);
-      const assignmentPath = path.join(challengeDir, 'assignment.json');
+      const metadataPath = path.join(challengeDir, 'metadata.json');
+      const assignmentJsonPath = path.join(challengeDir, 'assignment.json'); // Legacy format
+      const assignmentMdPath = path.join(challengeDir, 'assignment.md');
 
-      if (fs.existsSync(assignmentPath)) {
+      // Try metadata.json first (new format), then fall back to assignment.json (legacy)
+      let challengeFile = null;
+      let metadata = null;
+
+      if (fs.existsSync(metadataPath)) {
+        challengeFile = metadataPath;
+      } else if (fs.existsSync(assignmentJsonPath)) {
+        challengeFile = assignmentJsonPath;
+      }
+
+      if (challengeFile) {
         try {
-          const assignment = JSON.parse(fs.readFileSync(assignmentPath, 'utf-8'));
+          metadata = JSON.parse(fs.readFileSync(challengeFile, 'utf-8'));
+
+          // Extract title from assignment.md (first h1 line) or fall back to metadata/assignment.json
+          let title = metadata.title || `Challenge ${entry.name}`;
+
+          if (fs.existsSync(assignmentMdPath)) {
+            const assignmentContent = fs.readFileSync(assignmentMdPath, 'utf-8');
+            const firstLine = assignmentContent.split('\n')[0];
+            if (firstLine?.startsWith('# ')) {
+              title = firstLine.substring(2).trim();
+            }
+          }
 
           challenges.push({
             id: entry.name,
-            title: assignment.title || `Challenge ${entry.name}`,
-            type: assignment.type || 'code',
-            difficulty: assignment.difficulty || 'medium',
+            title,
+            type: metadata.type || 'code',
+            difficulty: metadata.difficulty || 'medium',
           });
         } catch (error) {
-          console.warn(`Warning: Failed to parse ${assignmentPath}:`, error.message);
+          console.warn(`Warning: Failed to parse ${challengeFile}:`, error.message);
         }
       }
     }

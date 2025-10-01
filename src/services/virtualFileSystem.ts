@@ -3,6 +3,7 @@ import type { ChallengeFile } from "../types";
 
 export interface VirtualFile extends ChallengeFile {
   content: string;
+  originalContent?: string; // Track original content from server
 }
 
 export interface VirtualFileSystem {
@@ -31,6 +32,26 @@ export interface FileSystemEvent {
 }
 
 /**
+ * Helper to check if a filename is a test file
+ */
+function isTestFile(filename: string): boolean {
+  return filename.startsWith("test.") || filename.startsWith("test_");
+}
+
+/**
+ * Discover all files in the challenge directory
+ */
+async function discoverChallengeFiles(
+  coursePath: string,
+  challengeId: string,
+  language: string
+): Promise<string[]> {
+  // We can't list directory contents in browser, so we'll need to try fetching common files
+  // For now, we'll just return empty - files should be defined in metadata or discovered via fetch
+  return [];
+}
+
+/**
  * Creates a virtual file system for managing code challenge files
  */
 export async function createVirtualFileSystem(
@@ -42,25 +63,62 @@ export async function createVirtualFileSystem(
   const filesMap = new Map<string, VirtualFile>();
   let currentActiveFile: string | null = null;
 
+  // Try to discover test files by attempting to fetch them
+  const testFileExtensions = ['.py', '.js', '.ts'];
+  const testFilePatterns = ['test', 'test_main'];
+  const discoveredTestFiles: string[] = [];
+
+  for (const pattern of testFilePatterns) {
+    for (const ext of testFileExtensions) {
+      const testFilename = `${pattern}${ext}`;
+      try {
+        const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${testFilename}`);
+        if (response.ok) {
+          discoveredTestFiles.push(testFilename);
+        }
+      } catch {
+        // File doesn't exist, continue
+      }
+    }
+  }
+
+  // Combine initialFiles with discovered test files
+  const allFiles = [...initialFiles];
+  for (const testFile of discoveredTestFiles) {
+    if (!allFiles.some(f => f.filename === testFile)) {
+      allFiles.push({
+        filename: testFile,
+        readonly: true,
+        hidden: true,
+        autoreload: false,
+        removable: false,
+      });
+    }
+  }
+
   // Check if we have a saved filesystem structure
   const savedStructure = await storageService.getFileSystemStructure(coursePath, challengeId);
-  const filesToLoad = savedStructure || initialFiles.map(f => f.filename);
+  const filesToLoad = savedStructure || allFiles.map(f => f.filename);
 
   // Load file contents from storage or fetch from server
   await Promise.all(
     filesToLoad.map(async (filename) => {
-      // Find file config from initialFiles (for metadata like readonly, hidden, etc.)
-      const fileConfig = initialFiles.find(f => f.filename === filename);
+      // Find file config from allFiles (includes discovered test files)
+      const fileConfig = allFiles.find(f => f.filename === filename);
       const isUserAdded = !fileConfig; // File added by user
 
-      // Try to get from storage first
-      const storedContent = await storageService.getEditorCode(
-        coursePath,
-        challengeId,
-        filename
-      );
+      // For test files, always make them readonly and hidden
+      const isTest = isTestFile(filename);
 
-      let content = storedContent;
+      // Try to get from storage first (but not for test files)
+      let content: string | null = null;
+      if (!isTest) {
+        content = await storageService.getEditorCode(
+          coursePath,
+          challengeId,
+          filename
+        );
+      }
 
       // If not in storage, try to fetch from server
       if (!content && fileConfig) {
@@ -80,10 +138,11 @@ export async function createVirtualFileSystem(
       filesMap.set(filename, {
         filename,
         content: content || "",
-        readonly: fileConfig?.readonly ?? false,
-        hidden: fileConfig?.hidden ?? false,
+        originalContent: content || "", // Store original content from server
+        readonly: isTest ? true : (fileConfig?.readonly ?? false),
+        hidden: isTest ? true : (fileConfig?.hidden ?? false),
         autoreload: fileConfig?.autoreload ?? false,
-        removable: fileConfig?.removable ?? true,
+        removable: isTest ? false : (fileConfig?.removable ?? true),
       });
     })
   );
@@ -134,8 +193,14 @@ export async function createVirtualFileSystem(
       if (file && !file.readonly) {
         filesMap.set(filename, { ...file, content });
 
-        // Save to storage
-        storageService.setEditorCode(coursePath, challengeId, filename, content);
+        // Only save to storage if content has been modified from original
+        const hasBeenModified = content !== file.originalContent;
+        if (hasBeenModified) {
+          storageService.setEditorCode(coursePath, challengeId, filename, content);
+        } else {
+          // If content matches original, remove from storage (use server version)
+          storageService.deleteEditorCode(coursePath, challengeId, filename);
+        }
 
         dispatchEvent("file-change", filename, content, file.autoreload);
       }

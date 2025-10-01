@@ -3,6 +3,7 @@ import { defineComponent } from "vue";
 import { useI18nStore } from "../stores/i18n";
 import { storeToRefs } from "pinia";
 import type { Course } from "../types";
+import { Color } from "@kurkle/color";
 
 export default defineComponent({
   name: "CourseCard",
@@ -46,6 +47,23 @@ export default defineComponent({
         }
       }
     },
+
+    textColor(): string {
+      if (!this.course.color) return "#ffffff";
+
+      try {
+        const color = new Color(this.course.color);
+        // Calculate relative luminance using WCAG formula
+        const luminance = color.luminance();
+
+        // Use WCAG contrast ratio threshold (0.5 is a good middle point)
+        // Lighter colors (luminance > 0.5) get dark text, darker colors get white text
+        return luminance > 0.5 ? "#000000" : "#ffffff";
+      } catch {
+        // Fallback to white if color parsing fails
+        return "#ffffff";
+      }
+    },
   },
 
   methods: {
@@ -60,11 +78,11 @@ export default defineComponent({
 <template>
   <div
     class="rounded-lg p-6 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-lg"
-    :style="{ backgroundColor: course.color }"
+    :style="{ backgroundColor: course.color, color: textColor }"
     @click="handleClick"
   >
-    <h3 class="text-2xl font-bold text-white mb-2">{{ course.title }}</h3>
-    <p v-if="course.challengeCount !== undefined" class="text-white/80">
+    <h3 class="text-2xl font-bold mb-2">{{ course.title }}</h3>
+    <p v-if="course.challengeCount !== undefined" :style="{ opacity: 0.8 }">
       {{ challengeCountText }}
     </p>
   </div>

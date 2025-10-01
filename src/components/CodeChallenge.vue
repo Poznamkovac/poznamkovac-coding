@@ -77,6 +77,12 @@ export default defineComponent({
       return this.visibleFiles.some((f) => f.autoreload);
     },
 
+    hasTestFiles(): boolean {
+      if (!this.fileSystem) return false;
+      const allFiles = this.fileSystem.getAllFiles();
+      return allFiles.some((f) => this.isTestFile(f.filename));
+    },
+
     hasPreviewOrOutput(): boolean {
       return !!(this.previewType || this.executionOutput || this.executionError || this.testResult);
     },
@@ -110,6 +116,10 @@ export default defineComponent({
   methods: {
     t(key: string, params?: Record<string, string | number>): string {
       return this.i18nStore.t(key, params);
+    },
+
+    isTestFile(filename: string): boolean {
+      return filename.startsWith("test.") || filename.startsWith("test_");
     },
 
     async initializeFileSystem() {
@@ -291,7 +301,6 @@ export default defineComponent({
 
         // Find test file
         const testFile = this.challengeData.files.find((f) => f.filename.startsWith("test.") || f.filename.endsWith("_test.py"));
-
         if (!testFile) {
           this.executionError = "No test file found in challenge";
           return;
@@ -377,12 +386,15 @@ export default defineComponent({
   <div class="code-challenge">
     <div class="actions-bar">
       <button @click="runCode" :disabled="isRunning" class="btn btn-primary">
+        <span class="btn-icon">{{ isRunning ? "⏳" : "▶️" }}</span>
         {{ isRunning ? t("challenge.running") : t("challenge.runCode") }}
       </button>
-      <button @click="runTestSuite" :disabled="isTesting" class="btn btn-success">
+      <button v-if="hasTestFiles" @click="runTestSuite" :disabled="isTesting" class="btn btn-success">
+        <span class="btn-icon">{{ isTesting ? "⏳" : "✓" }}</span>
         {{ isTesting ? t("challenge.testing") : t("challenge.testSolution") }}
       </button>
       <button @click="resetFileSystem" class="btn btn-secondary" :title="t('challenge.resetConfirm')">
+        <span class="btn-icon">↻</span>
         {{ t("challenge.reset") }}
       </button>
       <label v-if="hasAutoReloadFiles" class="auto-reload-toggle">
@@ -504,6 +516,14 @@ export default defineComponent({
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-icon {
+  font-size: 16px;
+  line-height: 1;
 }
 
 .split-container {

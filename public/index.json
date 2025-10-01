@@ -5,48 +5,21 @@
       "path": "python",
       "title": "Python",
       "description": "",
-      "challengeCount": 4,
+      "challengeCount": 1,
       "challenges": [],
       "subcourses": [
-        {
-          "slug": "advanced",
-          "path": "python/advanced",
-          "title": "Python pre pokročilých",
-          "description": "Pokročilé techniky v Pythone",
-          "challengeCount": 0,
-          "challenges": [],
-          "subcourses": []
-        },
         {
           "slug": "beginner",
           "path": "python/beginner",
           "title": "Python Základy",
           "description": "Naučte sa základy programovania v Pythone",
-          "challengeCount": 4,
+          "challengeCount": 1,
           "challenges": [
             {
               "id": "1",
               "title": "Hello World v Pythone",
               "type": "code",
               "difficulty": "medium"
-            },
-            {
-              "id": "2",
-              "title": "Kalkulačka súčtu",
-              "type": "code",
-              "difficulty": "medium"
-            },
-            {
-              "id": "3",
-              "title": "Kontrola párnosti čísla",
-              "type": "code",
-              "difficulty": "medium"
-            },
-            {
-              "id": "4",
-              "title": "Vizualizácia dát s matplotlib",
-              "type": "code",
-              "difficulty": "easy"
             }
           ],
           "subcourses": []
@@ -92,17 +65,11 @@
       "path": "web-basics",
       "title": "Web Základy",
       "description": "Naučte sa základy tvorby webových stránok",
-      "challengeCount": 2,
+      "challengeCount": 1,
       "challenges": [
         {
           "id": "1",
           "title": "HTML Stránka s Tlačidlom",
-          "type": "code",
-          "difficulty": "medium"
-        },
-        {
-          "id": "2",
-          "title": "Jednoduchý formulár",
           "type": "code",
           "difficulty": "medium"
         }
@@ -110,106 +77,5 @@
       "subcourses": []
     }
   ],
-  "en": [
-    {
-      "slug": "python",
-      "path": "python",
-      "title": "Python",
-      "description": "",
-      "challengeCount": 4,
-      "challenges": [],
-      "subcourses": [
-        {
-          "slug": "beginner",
-          "path": "python/beginner",
-          "title": "Python Basics",
-          "description": "Learn the basics of Python programming",
-          "challengeCount": 4,
-          "challenges": [
-            {
-              "id": "1",
-              "title": "Hello World in Python",
-              "type": "code",
-              "difficulty": "medium"
-            },
-            {
-              "id": "2",
-              "title": "Addition Calculator",
-              "type": "code",
-              "difficulty": "medium"
-            },
-            {
-              "id": "3",
-              "title": "Even Number Check",
-              "type": "code",
-              "difficulty": "medium"
-            },
-            {
-              "id": "4",
-              "title": "Data Visualization with matplotlib",
-              "type": "code",
-              "difficulty": "easy"
-            }
-          ],
-          "subcourses": []
-        }
-      ]
-    },
-    {
-      "slug": "quiz-examples",
-      "path": "quiz-examples",
-      "title": "Quiz Examples",
-      "description": "Test questions for practice",
-      "challengeCount": 4,
-      "challenges": [
-        {
-          "id": "1",
-          "title": "TypeScript Basics",
-          "type": "quiz",
-          "difficulty": "medium"
-        },
-        {
-          "id": "2",
-          "title": "Multiple Correct Answers",
-          "type": "quiz",
-          "difficulty": "medium"
-        },
-        {
-          "id": "3",
-          "title": "Text Answer - JavaScript Basics",
-          "type": "quiz",
-          "difficulty": "medium"
-        },
-        {
-          "id": "4",
-          "title": "Programming Paradigms",
-          "type": "quiz",
-          "difficulty": "medium"
-        }
-      ],
-      "subcourses": []
-    },
-    {
-      "slug": "web-basics",
-      "path": "web-basics",
-      "title": "Web Basics",
-      "description": "Learn the basics of web development",
-      "challengeCount": 2,
-      "challenges": [
-        {
-          "id": "1",
-          "title": "HTML Page with Button",
-          "type": "code",
-          "difficulty": "medium"
-        },
-        {
-          "id": "2",
-          "title": "Simple Form",
-          "type": "code",
-          "difficulty": "medium"
-        }
-      ],
-      "subcourses": []
-    }
-  ]
+  "en": []
 }

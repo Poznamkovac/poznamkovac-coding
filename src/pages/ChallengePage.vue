@@ -9,6 +9,7 @@ import { useI18nStore } from "../stores/i18n";
 import { storeToRefs } from "pinia";
 import { storageService } from "../services/storage";
 import type { ChallengeData } from "../types";
+import { marked } from "marked";
 
 export default defineComponent({
   name: "ChallengePage",
@@ -136,14 +137,66 @@ export default defineComponent({
       try {
         const coursePath = this.pathSegments.slice(0, -1).join("/");
         const lang = this.language;
-        const challengeJsonPath = `/${lang}/data/${coursePath}/${this.challengeId}/assignment.json`;
+        const metadataPath = `/${lang}/data/${coursePath}/${this.challengeId}/metadata.json`;
+        const assignmentJsonPath = `/${lang}/data/${coursePath}/${this.challengeId}/assignment.json`; // Legacy
+        const assignmentMdPath = `/${lang}/data/${coursePath}/${this.challengeId}/assignment.md`;
 
-        const response = await fetch(challengeJsonPath);
-        if (!response.ok) {
-          throw new Error(`Failed to load challenge: ${response.statusText}`);
+        // Try metadata.json first (new format), fall back to assignment.json (legacy quiz format)
+        let metadata;
+        let metadataResponse = await fetch(metadataPath);
+
+        if (!metadataResponse.ok) {
+          // Try legacy assignment.json format
+          metadataResponse = await fetch(assignmentJsonPath);
+          if (!metadataResponse.ok) {
+            throw new Error("Challenge not found");
+          }
         }
 
-        this.challengeData = await response.json();
+        // Validate that we got JSON, not HTML (404 page)
+        const contentType = metadataResponse.headers.get("content-type");
+        if (!contentType?.includes("application/json")) {
+          throw new Error("Challenge not found");
+        }
+
+        try {
+          const metadataText = await metadataResponse.text();
+          metadata = JSON.parse(metadataText);
+        } catch (parseError) {
+          throw new Error("Challenge not found");
+        }
+
+        // For new format with assignment.md, load and parse markdown
+        let title = metadata.title || this.i18nStore.t("challenge.titleNotDefined");
+        let assignmentContent = metadata.assignment || "";
+
+        const assignmentMdResponse = await fetch(assignmentMdPath);
+        if (assignmentMdResponse.ok) {
+          const assignmentMarkdown = await assignmentMdResponse.text();
+
+          // Parse markdown
+          const lines = assignmentMarkdown.split('\n');
+
+          // Extract title (first h1) if present
+          if (lines[0]?.startsWith('# ')) {
+            title = lines[0].substring(2).trim();
+            // Remove the title line and parse the rest as description
+            const description = lines.slice(1).join('\n').trim();
+            assignmentContent = await marked.parse(description);
+          } else {
+            assignmentContent = await marked.parse(assignmentMarkdown);
+          }
+        } else if (!metadata.assignment) {
+          // No assignment.md and no assignment in JSON
+          throw new Error("Assignment content not found");
+        }
+
+        // Combine metadata with parsed assignment
+        this.challengeData = {
+          ...metadata,
+          title,
+          assignment: assignmentContent,
+        } as ChallengeData;
       } catch (error) {
         console.error("Failed to load challenge:", error);
         this.challengeData = null;
@@ -219,8 +272,8 @@ export default defineComponent({
         <h2 class="text-3xl font-bold text-white mb-6">{{ challengeData.title }}</h2>
 
         <div class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6">
-          <h3 class="text-xl font-semibold text-white mb-4">Zadanie</h3>
-          <div class="text-gray-300" v-html="challengeData.assignment"></div>
+          <h3 class="text-xl font-semibold text-white mb-4">{{ i18nStore.t("challenge.assignment") }}</h3>
+          <div class="markdown-content" v-html="challengeData.assignment"></div>
         </div>
 
         <!-- Quiz Challenge -->
@@ -306,8 +359,19 @@ export default defineComponent({
         </div>
       </div>
 
-      <div v-else class="text-center text-red-400 py-12">
-        Failed to load challenge.
+      <div v-else class="max-w-2xl mx-auto">
+        <div class="bg-[#1a1a1a] border border-red-900/50 rounded-lg p-8 text-center">
+          <div class="text-6xl mb-4">😕</div>
+          <h2 class="text-2xl font-bold text-white mb-3">{{ i18nStore.t("challenge.notFound") }}</h2>
+          <p class="text-gray-400 mb-6">{{ i18nStore.t("challenge.notFoundMessage") }}</p>
+          <button
+            @click="$router.push(i18nStore.getLocalizedPath(`/challenges/${coursePath}`))"
+            class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition inline-flex items-center gap-2"
+          >
+            <span>←</span>
+            <span>{{ i18nStore.t("challenge.backToCourse") }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </DefaultLayout>
