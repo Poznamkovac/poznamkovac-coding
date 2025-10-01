@@ -2,6 +2,10 @@
 import { defineComponent } from "vue";
 import * as monaco from "monaco-editor";
 
+// Shared editor instance to avoid recreating
+let sharedEditor: monaco.editor.IStandaloneCodeEditor | null = null;
+let currentContainer: HTMLElement | null = null;
+
 export default defineComponent({
   name: "CodeEditor",
 
@@ -24,8 +28,8 @@ export default defineComponent({
 
   data() {
     return {
-      editor: null as monaco.editor.IStandaloneCodeEditor | null,
       updateTimer: null as number | null,
+      isInitialized: false,
     };
   },
 
@@ -50,8 +54,15 @@ export default defineComponent({
 
   watch: {
     content(newContent) {
-      if (this.editor && this.editor.getValue() !== newContent) {
-        this.editor.setValue(newContent);
+      if (sharedEditor) {
+        const currentValue = sharedEditor.getValue();
+        if (currentValue !== newContent) {
+          const position = sharedEditor.getPosition();
+          sharedEditor.setValue(newContent);
+          if (position) {
+            sharedEditor.setPosition(position);
+          }
+        }
       }
     },
 
@@ -60,33 +71,68 @@ export default defineComponent({
     },
 
     readonly(newValue) {
-      if (this.editor) {
-        this.editor.updateOptions({ readOnly: newValue });
+      if (sharedEditor) {
+        sharedEditor.updateOptions({ readOnly: newValue });
       }
     },
   },
 
-  mounted() {
-    this.initEditor();
+  async mounted() {
+    await this.$nextTick();
+    requestAnimationFrame(() => {
+      this.initOrReuseEditor();
+    });
   },
 
   beforeUnmount() {
     if (this.updateTimer) {
       window.clearTimeout(this.updateTimer);
     }
-    if (this.editor) {
-      this.editor.dispose();
+    // Don't dispose the shared editor, just remove listeners
+    if (sharedEditor) {
+      const model = sharedEditor.getModel();
+      if (model) {
+        model.onDidChangeContent(() => {}); // Remove listener
+      }
     }
   },
 
   methods: {
-    initEditor() {
+    initOrReuseEditor() {
       const container = this.$refs.editorContainer as HTMLElement;
       if (!container) return;
 
-      this.editor = monaco.editor.create(container, {
-        value: this.content,
-        language: this.language,
+      // If editor exists and is in a different container, move it
+      if (sharedEditor && currentContainer !== container) {
+        // Detach from old container
+        if (currentContainer && sharedEditor) {
+          currentContainer.innerHTML = '';
+        }
+
+        // Recreate in new container
+        const currentModel = sharedEditor.getModel();
+        const currentValue = currentModel?.getValue() || '';
+        sharedEditor.dispose();
+        sharedEditor = null;
+
+        this.createEditor(container, currentValue);
+      } else if (!sharedEditor) {
+        // Create new editor
+        this.createEditor(container, this.content);
+      } else {
+        // Reuse existing editor - just update content and language
+        this.updateEditorContent();
+      }
+
+      currentContainer = container;
+      this.isInitialized = true;
+    },
+
+    createEditor(container: HTMLElement, initialContent: string) {
+      const model = monaco.editor.createModel(initialContent, this.language);
+
+      sharedEditor = monaco.editor.create(container, {
+        model: model,
         theme: "vs-dark",
         readOnly: this.readonly,
         automaticLayout: true,
@@ -95,11 +141,40 @@ export default defineComponent({
         scrollBeyondLastLine: false,
         wordWrap: "on",
         tabSize: 2,
+        lineNumbers: "on",
+        autoClosingBrackets: "always",
+        autoClosingQuotes: "always",
+        formatOnPaste: true,
+        formatOnType: true,
       });
 
-      this.editor.onDidChangeModelContent(() => {
+      model.onDidChangeContent(() => {
         this.handleContentChange();
       });
+    },
+
+    updateEditorContent() {
+      if (!sharedEditor) return;
+
+      const model = sharedEditor.getModel();
+      if (model) {
+        const currentValue = model.getValue();
+        if (currentValue !== this.content) {
+          model.setValue(this.content);
+        }
+        monaco.editor.setModelLanguage(model, this.language);
+      }
+
+      sharedEditor.updateOptions({ readOnly: this.readonly });
+    },
+
+    updateLanguage() {
+      if (sharedEditor) {
+        const model = sharedEditor.getModel();
+        if (model) {
+          monaco.editor.setModelLanguage(model, this.language);
+        }
+      }
     },
 
     handleContentChange() {
@@ -108,20 +183,14 @@ export default defineComponent({
       }
 
       this.updateTimer = window.setTimeout(() => {
-        if (this.editor) {
-          const newContent = this.editor.getValue();
-          this.$emit("update:content", newContent);
+        if (sharedEditor) {
+          const model = sharedEditor.getModel();
+          if (model) {
+            const newContent = model.getValue();
+            this.$emit("update:content", newContent);
+          }
         }
       }, 300);
-    },
-
-    updateLanguage() {
-      if (this.editor) {
-        const model = this.editor.getModel();
-        if (model) {
-          monaco.editor.setModelLanguage(model, this.language);
-        }
-      }
     },
   },
 });

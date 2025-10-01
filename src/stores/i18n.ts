@@ -34,7 +34,7 @@ export const useI18nStore = defineStore("i18n", () => {
     isLoading.value = true;
     try {
       const lang = effectiveLanguage.value;
-      const response = await fetch(`/data/${lang}.json`);
+      const response = await fetch(`/locales/${lang}.json`);
       const data = await response.json();
       translations.value = data;
     } catch (error) {
