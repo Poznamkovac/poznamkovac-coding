@@ -1,107 +1,28 @@
 {
-  "header": {
-    "home": "Home",
-    "language": "Language",
-    "auto": "Auto"
+  "app": {
+    "title": "Poznámkovač Coding Challenges"
+  },
+  "home": {
+    "courses": "Courses"
+  },
+  "course": {
+    "subcourses": "Subcourses",
+    "challenges": "Challenges",
+    "noContent": "No content found in this course.",
+    "challengeCount": "{count} challenges",
+    "challengeCountSingular": "{count} challenge"
+  },
+  "challenge": {
+    "assignment": "Assignment",
+    "loading": "Loading challenge...",
+    "failed": "Failed to load challenge.",
+    "maxScore": "Max score",
+    "currentScore": "Current",
+    "notAvailableInLanguage": "This challenge is not available in this language.",
+    "goBack": "Go back to {path}"
   },
   "common": {
     "loading": "Loading...",
-    "error": "Error loading data",
-    "noCategories": "There are no categories to display.",
-    "backToHome": "Back to home page"
-  },
-  "editor": {
-    "loading": "Loading code editor...",
-    "loadingCode": "Loading code...",
-    "noFileSelected": "No file selected",
-    "readOnly": "(read-only)"
-  },
-  "challenge": {
-    "veryClever": "you're very clever :D",
-    "score": "Score"
-  },
-  "category": {
-    "loadingChallengeStatus": "Loading challenge status...",
-    "loadingChallenges": "Loading challenges...",
-    "noChallenges": "Oops, there are no challenges to display.",
-    "backToPrevious": "Back to previous page",
-    "notFound": "Oops, the category you're looking for doesn't exist."
-  },
-  "pagination": {
-    "previous": "Previous",
-    "next": "Next",
-    "page": "Page"
-  },
-  "preview": {
-    "title": "Preview",
-    "reload": "Reload",
-    "runYourCode": "Run Your Code",
-    "autoReloadDisabled": "Auto-reload is disabled for this type of file. Click the \"Reload\" button above or the \"Run Tests\" button below when you're ready to see your changes.",
-    "templateNotFunction": "Template did not return a function",
-    "errorEvaluatingTemplate": "Error evaluating template:",
-    "failedToLoadTemplate": "Failed to load preview template:",
-    "loading": "Loading...",
-    "loadingTimeout": "Preview may not have loaded correctly",
-    "noContent": "No content found"
-  },
-  "sqlite": {
-    "queryExecutedNoResults": "Query executed successfully (no results returned)",
-    "executionTime": "Execution time",
-    "rows": "rows",
-    "row": "row",
-    "columns": "columns",
-    "column": "column",
-    "null": "NULL",
-    "errorInitSql": "Error executing init.sql",
-    "executing": "Executing",
-    "errorExecutingStatement": "Error executing statement",
-    "failedStatement": "Failed statement",
-    "errorExecutingSql": "Error executing SQL",
-    "errorMainFileNotFound": "Error: Main file not found",
-    "failedToInitialize": "Failed to initialize SQL environment"
-  },
-  "tests": {
-    "previewWindowNotAvailable": "Preview window not available",
-    "previewReadyTimeout": "Timeout waiting for preview to be ready",
-    "previewLoadTimeout": "Python environment failed to initialize in time",
-    "executionError": "Test execution error",
-    "error": "Error",
-    "errorOccurred": "An error occurred during testing",
-    "assignmentMetadataNotAvailable": "Assignment metadata not available",
-    "noSolutionFiles": "No solution files defined for this challenge",
-    "noSolutionsAvailable": "No solutions available.",
-    "errorLoadingSolutions": "Error loading solutions",
-    "pass": "ok",
-    "fail": "fail",
-    "copyToClipboard": "Copy to clipboard",
-    "noTestFileFound": "No test.js file found",
-    "previewReadyError": "Error waiting for preview to be ready",
-    "previewError": "Preview Error",
-    "previewLoadError": "Preview did not load correctly",
-    "previewIframeNotFound": "Preview iframe not found",
-    "errorRunningTests": "Error running tests"
-  },
-  "embed": {
-    "customAssignment": "Custom Assignment",
-    "customAssignmentFromUrl": "Custom assignment loaded from URL",
-    "errorInitializingFs": "Error initializing file system:",
-    "errorProcessingCustomData": "Error processing custom data:",
-    "errorLoadingCustomAssignment": "Error Loading Custom Assignment",
-    "noValidAssignmentData": "No valid assignment data was provided. Make sure the URL contains a valid base64-encoded JSON object in the \"data\" parameter.",
-    "createCustomAssignment": "Create a custom assignment"
-  },
-  "categories": {
-    "web": {
-      "title": "Web (HTML/CSS/JS)"
-    },
-    "python": {
-      "title": "Python"
-    },
-    "python-data": {
-      "title": "Data Science (Python)"
-    },
-    "uml": {
-      "title": "UML (Mermaid)"
-    }
+    "notFound": "Not Found"
   }
 }
