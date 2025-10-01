@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import type { ChallengeData } from "../types";
@@ -20,7 +20,13 @@ onMounted(async () => {
   await loadChallenge();
 });
 
+// Watch for route changes and reload challenge
+watch(() => route.params.pathMatch, async () => {
+  await loadChallenge();
+});
+
 async function loadChallenge() {
+  isLoading.value = true;
   try {
     challengeData.value = {
       title: `Challenge ${challengeId.value} - Placeholder`,

@@ -12,10 +12,13 @@ const pathMatch = computed(() => {
   return Array.isArray(match) ? match.join("/") : match || "";
 });
 
-const { isChallenge } = computed(() => parseUrlPath(pathMatch.value)).value;
+const isChallenge = computed(() => {
+  const parsed = parseUrlPath(pathMatch.value);
+  return parsed.isChallenge;
+});
 </script>
 
 <template>
-  <CoursePage v-if="!isChallenge" />
-  <ChallengePage v-else />
+  <CoursePage v-if="!isChallenge" :key="pathMatch" />
+  <ChallengePage v-else :key="pathMatch" />
 </template>

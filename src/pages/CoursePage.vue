@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import ChallengeCard from "../components/ChallengeCard.vue";
@@ -25,7 +25,13 @@ onMounted(async () => {
   await loadCourseData();
 });
 
+// Watch for route changes and reload data
+watch(() => route.params.pathMatch, async () => {
+  await loadCourseData();
+});
+
 async function loadCourseData() {
+  isLoading.value = true;
   try {
     subcourses.value = [];
     challenges.value = [

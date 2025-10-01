@@ -5,6 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="https://poznamkovac.eu/resources/assets/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Poznámkovač Webúlohy</title>
+    <script>
+      // Handle GitHub Pages SPA redirect from 404.html
+      (function() {
+        const redirect = sessionStorage.getItem('redirect');
+        if (redirect) {
+          sessionStorage.removeItem('redirect');
+          history.replaceState(null, '', redirect);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>
