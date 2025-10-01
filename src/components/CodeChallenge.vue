@@ -7,6 +7,7 @@ import { codeRunnerRegistry } from "../services/codeRunners";
 import { runTests, type TestResult } from "../services/testRunner";
 import { storageService } from "../services/storage";
 import type { CodeChallengeData } from "../types";
+import { useI18nStore } from "../stores/i18n";
 
 export default defineComponent({
   name: "CodeChallenge",
@@ -35,6 +36,13 @@ export default defineComponent({
     },
   },
 
+  setup() {
+    const i18nStore = useI18nStore();
+    return {
+      i18nStore,
+    };
+  },
+
   data() {
     return {
       fileSystem: null as VirtualFileSystem | null,
@@ -50,6 +58,8 @@ export default defineComponent({
       previewType: null as "web" | "image" | "text" | null,
       testResult: null as TestResult | null,
       autoReloadEnabled: false,
+      splitPosition: 50,
+      isResizing: false,
     };
   },
 
@@ -64,6 +74,14 @@ export default defineComponent({
     hasAutoReloadFiles(): boolean {
       return this.visibleFiles.some((f) => f.autoreload);
     },
+
+    hasPreviewOrOutput(): boolean {
+      return !!(this.previewType || this.executionOutput || this.executionError || this.testResult);
+    },
+
+    showPlaceholder(): boolean {
+      return !this.hasPreviewOrOutput && !this.autoReloadEnabled;
+    },
   },
 
   async mounted() {
@@ -73,9 +91,25 @@ export default defineComponent({
 
   beforeUnmount() {
     window.removeEventListener("vfs-event", this.handleFileSystemEvent as EventListener);
+    // Clean up resize listeners in case component unmounts during resize
+    document.removeEventListener("mousemove", this.handleMouseMove);
+    document.removeEventListener("mouseup", this.handleMouseUp);
+    window.removeEventListener("blur", this.handleMouseUp);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+
+    // Remove overlay if it exists
+    const overlay = document.getElementById('resize-overlay');
+    if (overlay) {
+      overlay.remove();
+    }
   },
 
   methods: {
+    t(key: string, params?: Record<string, string | number>): string {
+      return this.i18nStore.t(key, params);
+    },
+
     async initializeFileSystem() {
       try {
         this.fileSystem = await createVirtualFileSystem(
@@ -95,7 +129,8 @@ export default defineComponent({
     },
 
     async resetFileSystem() {
-      if (confirm("Naozaj chcete resetovať všetky súbory na pôvodný stav? Všetky zmeny budú stratené.")) {
+      const message = this.t("challenge.resetConfirm");
+      if (confirm(message)) {
         try {
           if (this.fileSystem) {
             await this.fileSystem.reset();
@@ -158,7 +193,8 @@ export default defineComponent({
     },
 
     handleFileRemove(filename: string) {
-      if (confirm(`Naozaj chcete odstrániť súbor "${filename}"?`)) {
+      const message = this.t("challenge.deleteFileConfirm", { filename });
+      if (confirm(message)) {
         this.fileSystem?.removeFile(filename);
         this.updateVisibleFiles();
       }
@@ -233,21 +269,14 @@ export default defineComponent({
         }
 
         // Find test file
-        const testFile = this.challengeData.files.find((f) =>
-          f.filename.startsWith("test.") || f.filename.endsWith("_test.py")
-        );
+        const testFile = this.challengeData.files.find((f) => f.filename.startsWith("test.") || f.filename.endsWith("_test.py"));
 
         if (!testFile) {
           this.executionError = "No test file found in challenge";
           return;
         }
 
-        this.testResult = await runTests(
-          this.runnerLanguage,
-          files,
-          testFile.filename,
-          this.challengeData.maxScore
-        );
+        this.testResult = await runTests(this.runnerLanguage, files, testFile.filename, this.challengeData.maxScore);
 
         if (this.testResult.output) {
           this.executionOutput = this.testResult.output;
@@ -272,97 +301,143 @@ export default defineComponent({
         this.isTesting = false;
       }
     },
+
+    startResize(e: MouseEvent) {
+      e.preventDefault();
+      this.isResizing = true;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+
+      // Create overlay to prevent iframe from capturing events
+      const overlay = document.createElement('div');
+      overlay.id = 'resize-overlay';
+      overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; cursor: col-resize;';
+      document.body.appendChild(overlay);
+
+      document.addEventListener("mousemove", this.handleMouseMove);
+      document.addEventListener("mouseup", this.handleMouseUp);
+      window.addEventListener("blur", this.handleMouseUp);
+    },
+
+    handleMouseMove(e: MouseEvent) {
+      if (!this.isResizing) return;
+      e.preventDefault();
+
+      const container = document.querySelector(".split-container") as HTMLElement;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const newPosition = ((e.clientX - rect.left) / rect.width) * 100;
+      this.splitPosition = Math.max(20, Math.min(80, newPosition));
+    },
+
+    handleMouseUp() {
+      if (!this.isResizing) return;
+
+      this.isResizing = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+
+      // Remove overlay
+      const overlay = document.getElementById('resize-overlay');
+      if (overlay) {
+        overlay.remove();
+      }
+
+      document.removeEventListener("mousemove", this.handleMouseMove);
+      document.removeEventListener("mouseup", this.handleMouseUp);
+      window.removeEventListener("blur", this.handleMouseUp);
+    },
   },
 });
 </script>
 
 <template>
   <div class="code-challenge">
-    <div class="ide-container">
-      <FileTabs
-        :files="visibleFiles"
-        :active-file="activeFile"
-        @file-select="handleFileSelect"
-        @file-add="handleFileAdd"
-        @file-remove="handleFileRemove"
-      />
-
-      <CodeEditor
-        v-if="activeFile"
-        :content="activeFileContent"
-        :filename="activeFile"
-        :readonly="activeFileReadonly"
-        :challenge-key="`${coursePath}/${challengeId}`"
-        @update:content="handleContentUpdate"
-      />
-    </div>
-
     <div class="actions-bar">
-      <button
-        @click="runCode"
-        :disabled="isRunning"
-        class="btn btn-primary"
-      >
-        {{ isRunning ? "Spúšťa sa..." : "Spustiť kód" }}
+      <button @click="runCode" :disabled="isRunning" class="btn btn-primary">
+        {{ isRunning ? t("challenge.running") : t("challenge.runCode") }}
       </button>
-      <button
-        @click="runTestSuite"
-        :disabled="isTesting"
-        class="btn btn-success"
-      >
-        {{ isTesting ? "Testuje sa..." : "Otestovať riešenie" }}
+      <button @click="runTestSuite" :disabled="isTesting" class="btn btn-success">
+        {{ isTesting ? t("challenge.testing") : t("challenge.testSolution") }}
       </button>
-      <button
-        @click="resetFileSystem"
-        class="btn btn-secondary"
-        title="Resetovať všetky súbory na pôvodný stav"
-      >
-        Resetovať
+      <button @click="resetFileSystem" class="btn btn-secondary" :title="t('challenge.resetConfirm')">
+        {{ t("challenge.reset") }}
       </button>
       <label v-if="hasAutoReloadFiles" class="auto-reload-toggle">
         <input type="checkbox" v-model="autoReloadEnabled" />
-        <span>Auto-reload</span>
+        <span>{{ t("challenge.autoReload") }}</span>
       </label>
     </div>
 
-    <!-- Preview/Output Area -->
-    <div v-if="previewType || executionOutput || executionError || testResult" class="output-container">
-      <!-- Preview -->
-      <div v-if="previewType === 'web'" class="preview-web">
-        <iframe :srcdoc="previewContent" sandbox="allow-scripts"></iframe>
-      </div>
-      <div v-else-if="previewType === 'image'" class="preview-image">
-        <img :src="previewContent" alt="Output" />
-      </div>
-      <pre v-else-if="previewType === 'text'" class="preview-text">{{ previewContent }}</pre>
+    <!-- Desktop: Split View, Mobile: Stacked -->
+    <div class="split-container has-preview">
+      <div class="editor-panel" :style="{ width: `${splitPosition}%` }">
+        <div class="ide-container">
+          <FileTabs
+            :files="visibleFiles"
+            :active-file="activeFile"
+            @file-select="handleFileSelect"
+            @file-add="handleFileAdd"
+            @file-remove="handleFileRemove"
+          />
 
-      <!-- Execution Output -->
-      <div v-if="executionOutput && !testResult" class="output">
-        <h4>Výstup:</h4>
-        <pre>{{ executionOutput }}</pre>
+          <CodeEditor
+            v-if="activeFile"
+            :content="activeFileContent"
+            :filename="activeFile"
+            :readonly="activeFileReadonly"
+            :challenge-key="`${coursePath}/${challengeId}`"
+            @update:content="handleContentUpdate"
+          />
+        </div>
       </div>
 
-      <!-- Execution Error -->
-      <div v-if="executionError" class="error">
-        <h4>Chyba:</h4>
-        <pre>{{ executionError }}</pre>
-      </div>
+      <div class="resize-handle" @mousedown="startResize"></div>
 
-      <!-- Test Results -->
-      <div v-if="testResult" class="test-results" :class="{ passed: testResult.passed, failed: !testResult.passed }">
-        <div class="test-header">
-          <span class="test-icon">{{ testResult.passed ? "✓" : "✗" }}</span>
-          <h4>{{ testResult.passed ? "Testy prešli!" : "Testy zlyhali" }}</h4>
-        </div>
-        <div class="test-score">
-          Skóre: {{ testResult.score }} / {{ testResult.maxScore }}
-        </div>
-        <div v-if="testResult.feedback" class="test-feedback">
-          {{ testResult.feedback }}
-        </div>
-        <div v-if="testResult.output" class="test-output">
-          <h5>Výstup testov:</h5>
-          <pre>{{ testResult.output }}</pre>
+      <div class="preview-panel" :style="{ width: `${100 - splitPosition}%` }">
+        <div class="output-container">
+          <!-- Placeholder when no output -->
+          <div v-if="showPlaceholder" class="preview-placeholder">
+            <div class="placeholder-icon">▶</div>
+            <p>{{ t("challenge.previewPlaceholder") }}</p>
+          </div>
+          <!-- Preview -->
+          <div v-if="previewType === 'web'" class="preview-web">
+            <iframe :srcdoc="previewContent" sandbox="allow-scripts"></iframe>
+          </div>
+          <div v-else-if="previewType === 'image'" class="preview-image">
+            <img :src="previewContent" alt="Output" />
+          </div>
+          <pre v-else-if="previewType === 'text'" class="preview-text">{{ previewContent }}</pre>
+
+          <!-- Execution Output -->
+          <div v-if="executionOutput && !testResult" class="output">
+            <h4>{{ t("challenge.output") }}</h4>
+            <pre>{{ executionOutput }}</pre>
+          </div>
+
+          <!-- Execution Error -->
+          <div v-if="executionError" class="error">
+            <h4>{{ t("challenge.error") }}</h4>
+            <pre>{{ executionError }}</pre>
+          </div>
+
+          <!-- Test Results -->
+          <div v-if="testResult" class="test-results" :class="{ passed: testResult.passed, failed: !testResult.passed }">
+            <div class="test-header">
+              <span class="test-icon">{{ testResult.passed ? "✓" : "✗" }}</span>
+              <h4>{{ testResult.passed ? t("challenge.testsPassed") : t("challenge.testsFailed") }}</h4>
+            </div>
+            <div class="test-score">{{ t("challenge.score") }}: {{ testResult.score }} / {{ testResult.maxScore }}</div>
+            <div v-if="testResult.feedback" class="test-feedback">
+              {{ testResult.feedback }}
+            </div>
+            <div v-if="testResult.output" class="test-output">
+              <h5>{{ t("challenge.testOutput") }}</h5>
+              <pre>{{ testResult.output }}</pre>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -377,31 +452,84 @@ export default defineComponent({
   height: 100%;
 }
 
-.ide-container {
-  display: flex;
-  flex-direction: column;
-  height: 500px;
-  border: 1px solid #2d2d2d;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #1e1e1e;
-}
-
 .actions-bar {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
 }
 
 .btn {
-  px: 16px;
-  py: 8px;
+  padding: 10px 20px;
   border: none;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.split-container {
+  display: flex;
+  gap: 0;
+  flex: 1;
+  min-height: 500px;
+  position: relative;
+}
+
+.split-container.has-preview {
+  flex-direction: row;
+}
+
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 300px;
+  transition: width 0.05s ease-out;
+}
+
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 300px;
+  overflow: auto;
+  transition: width 0.05s ease-out;
+}
+
+.resize-handle {
+  width: 8px;
+  background: #2d2d2d;
+  cursor: col-resize;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.resize-handle:hover {
+  background: #3d3d3d;
+}
+
+.resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px;
+  height: 40px;
+  background: #555;
+  border-radius: 2px;
+}
+
+.ide-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #2d2d2d;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1e1e1e;
 }
 
 .btn:disabled {
@@ -449,11 +577,43 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 16px;
+  height: 100%;
+  overflow: auto;
+}
+
+.preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #888;
+  text-align: center;
+  gap: 16px;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.preview-placeholder p {
+  font-size: 16px;
+  max-width: 300px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.preview-web {
+  flex: 1;
+  min-height: 400px;
 }
 
 .preview-web iframe {
   width: 100%;
-  height: 400px;
+  height: 100%;
+  min-height: 400px;
   border: 1px solid #2d2d2d;
   border-radius: 8px;
   background: white;
@@ -552,5 +712,30 @@ export default defineComponent({
 .test-output h5 {
   color: white;
   margin-bottom: 8px;
+}
+
+/* Mobile responsive - stack editor and preview vertically */
+@media (max-width: 768px) {
+  .split-container {
+    flex-direction: column !important;
+  }
+
+  .editor-panel,
+  .preview-panel {
+    width: 100% !important;
+    min-width: unset;
+  }
+
+  .resize-handle {
+    display: none;
+  }
+
+  .ide-container {
+    min-height: 400px;
+  }
+
+  .preview-panel {
+    margin-top: 16px;
+  }
 }
 </style>

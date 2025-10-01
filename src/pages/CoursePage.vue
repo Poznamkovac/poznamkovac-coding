@@ -107,7 +107,7 @@ export default defineComponent({
           // Load subcourses if any
           if (course.subcourses && course.subcourses.length > 0) {
             this.subcourses = course.subcourses.map((sub: any) => ({
-              slug: sub.slug,
+              slug: sub.path, // Use full path instead of just slug
               title: sub.title,
               color: hashStringToColor(sub.slug),
               challengeCount: sub.challengeCount,

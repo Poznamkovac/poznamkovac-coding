@@ -1,24 +1,4 @@
 {
   "title": "Python Základy",
-  "description": "Naučte sa základy programovania v Pythone",
-  "challenges": [
-    {
-      "id": "1",
-      "title": "Hello World v Pythone",
-      "type": "code",
-      "difficulty": "easy"
-    },
-    {
-      "id": "2",
-      "title": "Kalkulačka súčtu",
-      "type": "code",
-      "difficulty": "easy"
-    },
-    {
-      "id": "3",
-      "title": "Kontrola párnosti čísla",
-      "type": "code",
-      "difficulty": "easy"
-    }
-  ]
+  "description": "Naučte sa základy programovania v Pythone"
 }

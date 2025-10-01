@@ -19,7 +19,22 @@
     "maxScore": "Max score",
     "currentScore": "Current",
     "notAvailableInLanguage": "This challenge is not available in this language.",
-    "goBack": "Go back to {path}"
+    "goBack": "Go back to {path}",
+    "runCode": "Run Code",
+    "running": "Running...",
+    "testSolution": "Test Solution",
+    "testing": "Testing...",
+    "reset": "Reset",
+    "resetConfirm": "Are you sure you want to reset all files to their original state? All changes will be lost.",
+    "autoReload": "Auto-reload",
+    "output": "Output:",
+    "error": "Error:",
+    "testsPassed": "Tests passed!",
+    "testsFailed": "Tests failed",
+    "score": "Score",
+    "testOutput": "Test output:",
+    "deleteFileConfirm": "Are you sure you want to delete the file \"{filename}\"?",
+    "previewPlaceholder": "Click the \"Run Code\" button to see the result"
   },
   "common": {
     "loading": "Loading...",

@@ -9,6 +9,52 @@ const publicDir = path.join(__dirname, '../public');
 const outputFile = path.join(publicDir, 'index.json');
 
 /**
+ * Check if a directory contains challenge folders (numeric names)
+ * @param {string} dir - Directory to check
+ * @returns {boolean}
+ */
+function hasChallenges(dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  return entries.some(entry => entry.isDirectory() && /^\d+$/.test(entry.name));
+}
+
+/**
+ * Scan challenge directories and read assignment.json files
+ * @param {string} dir - Directory containing challenges
+ * @returns {Array} Array of challenge metadata
+ */
+function scanChallenges(dir) {
+  const challenges = [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (entry.isDirectory() && /^\d+$/.test(entry.name)) {
+      const challengeDir = path.join(dir, entry.name);
+      const assignmentPath = path.join(challengeDir, 'assignment.json');
+
+      if (fs.existsSync(assignmentPath)) {
+        try {
+          const assignment = JSON.parse(fs.readFileSync(assignmentPath, 'utf-8'));
+
+          challenges.push({
+            id: entry.name,
+            title: assignment.title || `Challenge ${entry.name}`,
+            type: assignment.type || 'code',
+            difficulty: assignment.difficulty || 'medium',
+          });
+        } catch (error) {
+          console.warn(`Warning: Failed to parse ${assignmentPath}:`, error.message);
+        }
+      }
+    }
+  }
+
+  // Sort by numeric ID
+  challenges.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+  return challenges;
+}
+
+/**
  * Recursively scan a directory for courses and challenges
  * @param {string} dir - Directory to scan
  * @param {string} relativePath - Path relative to challenges root
@@ -17,22 +63,32 @@ const outputFile = path.join(publicDir, 'index.json');
 function scanDirectory(dir, relativePath = '') {
   const courseJsonPath = path.join(dir, 'course.json');
 
-  // Check if this directory has a course.json
-  if (fs.existsSync(courseJsonPath)) {
-    const courseData = JSON.parse(fs.readFileSync(courseJsonPath, 'utf-8'));
+  // Check if this directory contains challenges
+  if (hasChallenges(dir)) {
+    // This is a course with challenges
+    let courseData = {};
+    if (fs.existsSync(courseJsonPath)) {
+      try {
+        courseData = JSON.parse(fs.readFileSync(courseJsonPath, 'utf-8'));
+      } catch (error) {
+        console.warn(`Warning: Failed to parse ${courseJsonPath}:`, error.message);
+      }
+    }
+
+    const challenges = scanChallenges(dir);
 
     return {
       slug: path.basename(dir),
       path: relativePath,
-      title: courseData.title || path.basename(dir),
+      title: courseData.title || path.basename(dir).split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
       description: courseData.description || '',
-      challengeCount: (courseData.challenges || []).length,
-      challenges: courseData.challenges || [],
+      challengeCount: challenges.length,
+      challenges,
       subcourses: [],
     };
   }
 
-  // Otherwise, scan subdirectories
+  // Otherwise, scan subdirectories for subcourses
   const subcourses = [];
   const entries = fs.readdirSync(dir, { withFileTypes: true });
 
@@ -54,11 +110,20 @@ function scanDirectory(dir, relativePath = '') {
       return sum + course.challengeCount + (course.subcourses?.reduce((s, c) => s + c.challengeCount, 0) || 0);
     }, 0);
 
+    let courseData = {};
+    if (fs.existsSync(courseJsonPath)) {
+      try {
+        courseData = JSON.parse(fs.readFileSync(courseJsonPath, 'utf-8'));
+      } catch (error) {
+        console.warn(`Warning: Failed to parse ${courseJsonPath}:`, error.message);
+      }
+    }
+
     return {
       slug: path.basename(dir),
       path: relativePath,
-      title: path.basename(dir).split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-      description: '',
+      title: courseData.title || path.basename(dir).split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+      description: courseData.description || '',
       challengeCount: totalChallenges,
       challenges: [],
       subcourses,

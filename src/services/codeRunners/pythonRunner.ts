@@ -17,28 +17,6 @@ export class PythonRunner extends BaseCodeRunner {
           indexURL: "https://cdn.jsdelivr.net/pyodide/v0.28.3/full/",
         });
 
-        // Setup matplotlib for image capture
-        await this.pyodide.loadPackage(["matplotlib"]);
-
-        // Configure matplotlib to use inline backend
-        await this.pyodide.runPythonAsync(`
-import matplotlib
-import matplotlib.pyplot as plt
-import io
-import base64
-
-matplotlib.use('Agg')
-
-def __capture_plot__():
-    """Capture the current plot as base64 image data"""
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight')
-    buf.seek(0)
-    img_str = base64.b64encode(buf.read()).decode('utf-8')
-    plt.close('all')
-    return img_str
-        `);
-
         this.initialized = true;
       } catch (error) {
         console.error("Failed to initialize Pyodide:", error);
@@ -67,14 +45,18 @@ def __capture_plot__():
       }
 
       // Check for requirements.txt and install packages
+      const requirements: string[] = [];
       if (files["requirements.txt"]) {
-        const requirements = files["requirements.txt"]
+        const reqLines = files["requirements.txt"]
           .split("\n")
           .map((line) => line.trim())
           .filter((line) => line && !line.startsWith("#"));
 
+        requirements.push(...reqLines);
+
         if (requirements.length > 0) {
-          await this.pyodide.loadPackagesFromImports(files["requirements.txt"]);
+          // Load packages specified in requirements.txt
+          await this.pyodide.loadPackage(requirements);
         }
       }
 
@@ -103,16 +85,40 @@ def __capture_plot__():
         };
       }
 
+      // Setup plot capture if matplotlib is loaded
+      const hasMatplotlib = requirements.includes("matplotlib");
+      if (hasMatplotlib) {
+        await this.pyodide.runPythonAsync(`
+import matplotlib
+import matplotlib.pyplot as plt
+import io
+import base64
+
+# Use Agg backend for image generation
+matplotlib.use('Agg')
+
+def __capture_plot__():
+    """Capture the current plot as base64 image data"""
+    if len(plt.get_fignums()) > 0:
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+        buf.seek(0)
+        img_str = base64.b64encode(buf.read()).decode('utf-8')
+        plt.close('all')
+        return img_str
+    return None
+        `);
+      }
+
       await this.pyodide.runPythonAsync(mainContent);
 
       // Check if there's a plot to capture
-      const hasPlot = await this.pyodide.runPythonAsync(`
-len(plt.get_fignums()) > 0
-      `);
-
       let imageData: string | undefined;
-      if (hasPlot) {
-        imageData = await this.pyodide.runPythonAsync("__capture_plot__()");
+      if (hasMatplotlib) {
+        const plotData = await this.pyodide.runPythonAsync("__capture_plot__()");
+        if (plotData && plotData !== "None") {
+          imageData = `data:image/png;base64,${plotData}`;
+        }
       }
 
       return {
@@ -144,8 +150,16 @@ for m in modules_to_remove:
         del sys.modules[m]
       `);
 
-      // Clear matplotlib figures
-      this.pyodide.runPython("plt.close('all')");
+      // Clear matplotlib figures if matplotlib is loaded
+      try {
+        this.pyodide.runPython(`
+if 'matplotlib.pyplot' in sys.modules:
+    import matplotlib.pyplot as plt
+    plt.close('all')
+        `);
+      } catch (e) {
+        // Matplotlib not loaded, skip
+      }
 
       // Clear files from filesystem
       const files = this.pyodide.FS.readdir("/home/pyodide");

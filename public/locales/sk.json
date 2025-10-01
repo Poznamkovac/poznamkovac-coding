@@ -20,7 +20,22 @@
     "maxScore": "Maximálne body",
     "currentScore": "Aktuálne",
     "notAvailableInLanguage": "Táto úloha nie je dostupná v tomto jazyku.",
-    "goBack": "Späť na {path}"
+    "goBack": "Späť na {path}",
+    "runCode": "Spustiť kód",
+    "running": "Spúšťa sa...",
+    "testSolution": "Otestovať riešenie",
+    "testing": "Testuje sa...",
+    "reset": "Resetovať",
+    "resetConfirm": "Naozaj chcete resetovať všetky súbory na pôvodný stav? Všetky zmeny budú stratené.",
+    "autoReload": "Auto-reload",
+    "output": "Výstup:",
+    "error": "Chyba:",
+    "testsPassed": "Testy prešli!",
+    "testsFailed": "Testy zlyhali",
+    "score": "Skóre",
+    "testOutput": "Výstup testov:",
+    "deleteFileConfirm": "Naozaj chcete odstrániť súbor \"{filename}\"?",
+    "previewPlaceholder": "Kliknite na tlačidlo \"Spustiť kód\" pre zobrazenie výsledku"
   },
   "common": {
     "loading": "Načítavam...",

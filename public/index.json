@@ -13,15 +13,8 @@
           "path": "python/advanced",
           "title": "Python pre pokročilých",
           "description": "Pokročilé techniky v Pythone",
-          "challengeCount": 1,
-          "challenges": [
-            {
-              "id": "1",
-              "title": "Dekorátory a generátory",
-              "type": "code",
-              "difficulty": "hard"
-            }
-          ],
+          "challengeCount": 0,
+          "challenges": [],
           "subcourses": []
         },
         {
@@ -29,23 +22,29 @@
           "path": "python/beginner",
           "title": "Python Základy",
           "description": "Naučte sa základy programovania v Pythone",
-          "challengeCount": 3,
+          "challengeCount": 4,
           "challenges": [
             {
               "id": "1",
               "title": "Hello World v Pythone",
               "type": "code",
-              "difficulty": "easy"
+              "difficulty": "medium"
             },
             {
               "id": "2",
               "title": "Kalkulačka súčtu",
               "type": "code",
-              "difficulty": "easy"
+              "difficulty": "medium"
             },
             {
               "id": "3",
               "title": "Kontrola párnosti čísla",
+              "type": "code",
+              "difficulty": "medium"
+            },
+            {
+              "id": "4",
+              "title": "Vizualizácia dát s matplotlib",
               "type": "code",
               "difficulty": "easy"
             }
@@ -65,25 +64,25 @@
           "id": "1",
           "title": "Základy TypeScript",
           "type": "quiz",
-          "difficulty": "easy"
+          "difficulty": "medium"
         },
         {
           "id": "2",
-          "title": "Výber frameworku",
+          "title": "Výber viacerých správnych odpovedí",
           "type": "quiz",
-          "difficulty": "easy"
+          "difficulty": "medium"
         },
         {
           "id": "3",
-          "title": "Skratky pojmov",
+          "title": "Textová odpoveď - Základy JavaScriptu",
           "type": "quiz",
-          "difficulty": "easy"
+          "difficulty": "medium"
         },
         {
           "id": "4",
-          "title": "Textové odpovede",
+          "title": "Programovacie paradigmy",
           "type": "quiz",
-          "difficulty": "easy"
+          "difficulty": "medium"
         }
       ],
       "subcourses": []
@@ -99,13 +98,13 @@
           "id": "1",
           "title": "HTML Stránka s Tlačidlom",
           "type": "code",
-          "difficulty": "easy"
+          "difficulty": "medium"
         },
         {
           "id": "2",
           "title": "Jednoduchý formulár",
           "type": "code",
-          "difficulty": "easy"
+          "difficulty": "medium"
         }
       ],
       "subcourses": []
@@ -117,7 +116,7 @@
       "path": "python",
       "title": "Python",
       "description": "",
-      "challengeCount": 3,
+      "challengeCount": 4,
       "challenges": [],
       "subcourses": [
         {
@@ -125,23 +124,29 @@
           "path": "python/beginner",
           "title": "Python Basics",
           "description": "Learn the basics of Python programming",
-          "challengeCount": 3,
+          "challengeCount": 4,
           "challenges": [
             {
               "id": "1",
               "title": "Hello World in Python",
               "type": "code",
-              "difficulty": "easy"
+              "difficulty": "medium"
             },
             {
               "id": "2",
               "title": "Addition Calculator",
               "type": "code",
-              "difficulty": "easy"
+              "difficulty": "medium"
             },
             {
               "id": "3",
               "title": "Even Number Check",
+              "type": "code",
+              "difficulty": "medium"
+            },
+            {
+              "id": "4",
+              "title": "Data Visualization with matplotlib",
               "type": "code",
               "difficulty": "easy"
             }
@@ -161,25 +166,25 @@
           "id": "1",
           "title": "TypeScript Basics",
           "type": "quiz",
-          "difficulty": "easy"
+          "difficulty": "medium"
         },
         {
           "id": "2",
-          "title": "Framework Selection",
+          "title": "Multiple Correct Answers",
           "type": "quiz",
-          "difficulty": "easy"
+          "difficulty": "medium"
         },
         {
           "id": "3",
-          "title": "Acronyms",
+          "title": "Text Answer - JavaScript Basics",
           "type": "quiz",
-          "difficulty": "easy"
+          "difficulty": "medium"
         },
         {
           "id": "4",
-          "title": "Text Answers",
+          "title": "Programming Paradigms",
           "type": "quiz",
-          "difficulty": "easy"
+          "difficulty": "medium"
         }
       ],
       "subcourses": []
@@ -195,13 +200,13 @@
           "id": "1",
           "title": "HTML Page with Button",
           "type": "code",
-          "difficulty": "easy"
+          "difficulty": "medium"
         },
         {
           "id": "2",
           "title": "Simple Form",
           "type": "code",
-          "difficulty": "easy"
+          "difficulty": "medium"
         }
       ],
       "subcourses": []

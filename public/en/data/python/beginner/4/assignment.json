@@ -1,0 +1,23 @@
+{
+  "type": "code",
+  "title": "Data Visualization with matplotlib",
+  "assignment": "Create a plot using matplotlib library that displays a simple graph of functions. Use numpy to generate data and matplotlib to render the plot.",
+  "difficulty": "easy",
+  "maxScore": 10,
+  "mainFile": "plot.py",
+  "files": [
+    {
+      "filename": "plot.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": true,
+      "removable": false
+    },
+    {
+      "filename": "requirements.txt",
+      "readonly": true,
+      "hidden": true,
+      "removable": false
+    }
+  ]
+}
