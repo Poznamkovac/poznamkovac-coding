@@ -60,6 +60,8 @@ export default defineComponent({
       autoReloadEnabled: false,
       splitPosition: 50,
       isResizing: false,
+      editorHasFocus: false,
+      pendingAutoReload: false,
     };
   },
 
@@ -80,7 +82,7 @@ export default defineComponent({
     },
 
     showPlaceholder(): boolean {
-      return !this.hasPreviewOrOutput && !this.autoReloadEnabled;
+      return !this.hasPreviewOrOutput;
     },
   },
 
@@ -157,10 +159,29 @@ export default defineComponent({
         this.updateActiveFile();
       } else if (type === "file-change") {
         if (autoreload && this.autoReloadEnabled) {
-          this.runCode();
+          // Don't reload immediately while editor has focus
+          // Instead, mark that we need to reload when focus is lost
+          if (this.editorHasFocus) {
+            this.pendingAutoReload = true;
+          } else {
+            this.runCode();
+          }
         }
       } else if (type === "file-added" || type === "file-removed") {
         this.updateVisibleFiles();
+      }
+    },
+
+    handleEditorFocus() {
+      this.editorHasFocus = true;
+    },
+
+    handleEditorBlur() {
+      this.editorHasFocus = false;
+      // If there's a pending autoreload, execute it now that focus is lost
+      if (this.pendingAutoReload && this.autoReloadEnabled) {
+        this.pendingAutoReload = false;
+        this.runCode();
       }
     },
 
@@ -382,14 +403,29 @@ export default defineComponent({
             @file-remove="handleFileRemove"
           />
 
-          <CodeEditor
-            v-if="activeFile"
-            :content="activeFileContent"
-            :filename="activeFile"
-            :readonly="activeFileReadonly"
-            :challenge-key="`${coursePath}/${challengeId}`"
-            @update:content="handleContentUpdate"
-          />
+          <div class="editor-wrapper">
+            <CodeEditor
+              v-if="activeFile"
+              :content="activeFileContent"
+              :filename="activeFile"
+              :readonly="activeFileReadonly"
+              :challenge-key="`${coursePath}/${challengeId}`"
+              @update:content="handleContentUpdate"
+              @focus="handleEditorFocus"
+              @blur="handleEditorBlur"
+            />
+            <!-- Busy indicator overlay -->
+            <div v-if="isRunning || isTesting" class="editor-busy-overlay">
+              <div class="busy-indicator">
+                <div class="busy-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <p>{{ isRunning ? t("challenge.running") : t("challenge.testing") }}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -530,6 +566,72 @@ export default defineComponent({
   border-radius: 8px;
   overflow: hidden;
   background: #1e1e1e;
+}
+
+.editor-wrapper {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-busy-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: all;
+}
+
+.busy-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.busy-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.busy-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #0066cc;
+  animation: busy-bounce 1.4s infinite ease-in-out both;
+}
+
+.busy-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.busy-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes busy-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.busy-indicator p {
+  color: #fff;
+  font-size: 14px;
+  margin: 0;
 }
 
 .btn:disabled {
@@ -737,5 +839,107 @@ export default defineComponent({
   .preview-panel {
     margin-top: 16px;
   }
+}
+</style>
+
+<style>
+/* Global styles for matplotlib plots rendered by Pyodide */
+/* These need to be global (not scoped) to affect matplotlib's DOM elements */
+
+/* Container for matplotlib figure */
+body > div[style*="display: inline-block"] {
+  display: block !important;
+  margin: 16px !important;
+  padding: 0 !important;
+  max-width: calc(100% - 32px) !important;
+  overflow-x: hidden !important;
+}
+
+/* Matplotlib title bar */
+.ui-dialog-titlebar {
+  background: #2d2d2d !important;
+  color: #fff !important;
+  padding: 8px !important;
+  border-radius: 4px 4px 0 0 !important;
+}
+
+.ui-dialog-title {
+  color: #fff !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+/* Matplotlib canvas container - make it responsive */
+body > div[style*="display: inline-block"] > div[style*="resize: both"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 400px !important;
+  max-height: 600px !important;
+  resize: vertical !important;
+  border: 1px solid #3d3d3d !important;
+  background: #1e1e1e !important;
+}
+
+/* Matplotlib canvas */
+.mpl-canvas {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+}
+
+/* Matplotlib toolbar */
+.mpl-toolbar {
+  background: #2d2d2d !important;
+  padding: 8px !important;
+  border-top: 1px solid #3d3d3d !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.mpl-button-group {
+  display: flex !important;
+  gap: 4px !important;
+}
+
+.mpl-widget {
+  background: #3d3d3d !important;
+  border: 1px solid #4d4d4d !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  cursor: pointer !important;
+  color: #fff !important;
+}
+
+.mpl-widget:hover:not(:disabled) {
+  background: #4d4d4d !important;
+}
+
+.mpl-widget:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+.mpl-widget.active {
+  background: #0066cc !important;
+  border-color: #0052a3 !important;
+}
+
+.mpl-message {
+  color: #ccc !important;
+  font-size: 12px !important;
+  margin-left: auto !important;
+}
+
+/* Dropdown for export formats */
+.mpl-toolbar select {
+  background: #3d3d3d !important;
+  border: 1px solid #4d4d4d !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  color: #fff !important;
+  cursor: pointer !important;
 }
 </style>

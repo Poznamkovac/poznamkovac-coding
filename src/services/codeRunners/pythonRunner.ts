@@ -39,6 +39,15 @@ export class PythonRunner extends BaseCodeRunner {
       // Clear previous modules to ensure clean state
       await this.cleanup();
 
+      // Remove old matplotlib plots from DOM
+      const oldPlots = document.querySelectorAll('body > div[style*="display: inline-block"]');
+      oldPlots.forEach(plot => {
+        // Check if this is actually a matplotlib plot by looking for canvas or toolbar
+        if (plot.querySelector('.mpl-canvas, .mpl-toolbar')) {
+          plot.remove();
+        }
+      });
+
       // Write all files to Pyodide filesystem
       for (const [filename, content] of Object.entries(files)) {
         this.pyodide.FS.writeFile(filename, content);
@@ -85,47 +94,29 @@ export class PythonRunner extends BaseCodeRunner {
         };
       }
 
-      // Setup plot capture if matplotlib is loaded
+      // Suppress warnings if matplotlib is loaded
       const hasMatplotlib = requirements.includes("matplotlib");
       if (hasMatplotlib) {
         await this.pyodide.runPythonAsync(`
+import warnings
+warnings.filterwarnings('ignore')
+
+# Use the webagg backend for interactive plots
 import matplotlib
-import matplotlib.pyplot as plt
-import io
-import base64
-
-# Use Agg backend for image generation
-matplotlib.use('Agg')
-
-def __capture_plot__():
-    """Capture the current plot as base64 image data"""
-    if len(plt.get_fignums()) > 0:
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches='tight', dpi=100)
-        buf.seek(0)
-        img_str = base64.b64encode(buf.read()).decode('utf-8')
-        plt.close('all')
-        return img_str
-    return None
+matplotlib.use('webagg')
         `);
       }
 
       await this.pyodide.runPythonAsync(mainContent);
 
-      // Check if there's a plot to capture
+      // No need to capture image data - webagg renders to DOM automatically
       let imageData: string | undefined;
-      if (hasMatplotlib) {
-        const plotData = await this.pyodide.runPythonAsync("__capture_plot__()");
-        if (plotData && plotData !== "None") {
-          imageData = `data:image/png;base64,${plotData}`;
-        }
-      }
 
       return {
         success: !stderr,
         output: stdout.trim(),
         error: stderr.trim() || undefined,
-        imageData: imageData ? `data:image/png;base64,${imageData}` : undefined,
+        imageData,
       };
     } catch (error: any) {
       return {
@@ -139,20 +130,10 @@ def __capture_plot__():
     if (!this.pyodide) return;
 
     try {
-      // Clear imported modules except builtins
-      this.pyodide.runPython(`
-import sys
-modules_to_remove = [m for m in sys.modules.keys()
-                     if not m.startswith('_')
-                     and m not in ['sys', 'builtins', 'io', 'base64']]
-for m in modules_to_remove:
-    if m in sys.modules:
-        del sys.modules[m]
-      `);
-
-      // Clear matplotlib figures if matplotlib is loaded
+      // Clear matplotlib figures if loaded
       try {
         this.pyodide.runPython(`
+import sys
 if 'matplotlib.pyplot' in sys.modules:
     import matplotlib.pyplot as plt
     plt.close('all')

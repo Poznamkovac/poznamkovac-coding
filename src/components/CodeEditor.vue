@@ -29,7 +29,7 @@ export default defineComponent({
     },
   },
 
-  emits: ["update:content"],
+  emits: ["update:content", "focus", "blur"],
 
   data() {
     return {
@@ -165,6 +165,15 @@ export default defineComponent({
 
       model.onDidChangeContent(() => {
         this.handleContentChange();
+      });
+
+      // Emit focus and blur events
+      sharedEditor.onDidFocusEditorText(() => {
+        this.$emit("focus");
+      });
+
+      sharedEditor.onDidBlurEditorText(() => {
+        this.$emit("blur");
       });
     },
 

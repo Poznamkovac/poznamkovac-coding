@@ -216,13 +216,34 @@ export async function createVirtualFileSystem(
       // Clear current files
       filesMap.clear();
 
-      // Reload initial files from server
+      // Re-fetch assignment.json to get the latest file list
+      let freshFileList = initialFiles;
+      try {
+        const cacheBuster = `?t=${Date.now()}`;
+        const assignmentResponse = await fetch(
+          `/${language}/data/${coursePath}/${challengeId}/assignment.json${cacheBuster}`,
+          { cache: 'no-store' }
+        );
+        if (assignmentResponse.ok) {
+          const assignmentData = await assignmentResponse.json();
+          if (assignmentData.files) {
+            freshFileList = assignmentData.files;
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch fresh assignment.json, using original:', error);
+      }
+
+      // Reload files from server with cache busting
       await Promise.all(
-        initialFiles.map(async (fileConfig) => {
+        freshFileList.map(async (fileConfig) => {
           let content = "";
           try {
+            // Add cache-busting parameter to force fresh fetch
+            const cacheBuster = `?t=${Date.now()}`;
             const response = await fetch(
-              `/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`
+              `/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}${cacheBuster}`,
+              { cache: 'no-store' }
             );
             if (response.ok) {
               content = await response.text();

@@ -1,5 +1,3 @@
-import matplotlib
-matplotlib.use('module://matplotlib_pyodide.html5_canvas_backend')
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -9,12 +7,12 @@ y1 = np.sin(x)
 y2 = np.cos(x)
 
 # Vytvorte graf
-plt.figure(figsize=(10, 6))
-plt.plot(x, y1, label='sin(x)', color='blue')
-plt.plot(x, y2, label='cos(x)', color='red')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('Sínusová a kosínusová funkcia')
-plt.legend()
-plt.grid(True)
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(x, y1, label='sin(x)', color='blue')
+ax.plot(x, y2, label='cos(x)', color='red')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+ax.set_title('Sínusová a kosínusová funkcia')
+ax.legend()
+ax.grid(True)
 plt.show()
