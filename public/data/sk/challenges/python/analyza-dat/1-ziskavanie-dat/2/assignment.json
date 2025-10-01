@@ -1,0 +1,53 @@
+{
+  "title": "Načítanie dát z CSV - Predaj kávy",
+  "assignment": [
+    "<h3>☕ Analýza predaja kávy</h3>",
+    "<p>Majiteľ kaviarne sleduje, koľko šálok kávy predá každý deň. Dáta má uložené v CSV súbore (Comma-Separated Values - hodnoty oddelené čiarkou).</p>",
+    "<h4>📁 Formát CSV:</h4>",
+    "<p>CSV súbor je ako jednoduchý textový súbor s tabuľkovými dátami. Každý riadok je záznam, stĺpce sú oddelené čiarkou:</p>",
+    "<pre>den,salky,trzba\nPondelok,45,180\nUtorok,52,208\n...</pre>",
+    "<h4>🎯 Vaša úloha:</h4>",
+    "<ol>",
+    "<li>Vytvorte CSV súbor <code>kava.csv</code> s nasledujúcim obsahom (použite správny formát s hlavičkou):</li>",
+    "</ol>",
+    "<table border='1' style='border-collapse: collapse; margin: 10px 0;'>",
+    "<tr><th>deň</th><th>šálky</th><th>tržba</th></tr>",
+    "<tr><td>Pondelok</td><td>45</td><td>180</td></tr>",
+    "<tr><td>Utorok</td><td>52</td><td>208</td></tr>",
+    "<tr><td>Streda</td><td>48</td><td>192</td></tr>",
+    "<tr><td>Štvrtok</td><td>61</td><td>244</td></tr>",
+    "<tr><td>Piatok</td><td>73</td><td>292</td></tr>",
+    "</table>",
+    "<ol start='2'>",
+    "<li>Načítajte CSV pomocou <code>pd.read_csv('kava.csv')</code></li>",
+    "<li>Vypíšte DataFrame</li>",
+    "<li>Vypíšte celkový počet predaných šálok pomocou <code>df['šálky'].sum()</code></li>",
+    "<li>Vypíšte celkovú tržbu</li>",
+    "</ol>",
+    "<h4>💡 Prečo CSV?</h4>",
+    "<p>CSV je najrozšírenejší formát pre výmenu dát - používajú ho Excel, databázy, vedecké prístroje... Pandas vie načítať CSV jedným riadkom!</p>"
+  ],
+  "maxScore": 10,
+  "showPreview": true,
+  "mainFile": "test.py",
+  "files": [
+    {
+      "filename": "test.py",
+      "readonly": true,
+      "hidden": true,
+      "autoreload": false
+    },
+    {
+      "filename": "main.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    },
+    {
+      "filename": "requirements.txt",
+      "readonly": true,
+      "hidden": true,
+      "autoreload": false
+    }
+  ]
+}

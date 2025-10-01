@@ -4,6 +4,13 @@ import { VirtualFileSystem } from "../types/challenge";
 import { FILE_CHANGE_EVENT, FileChangeEvent } from "../services/virtualFileSystemService";
 import { useI18n } from "../hooks/useI18n";
 
+// Type definitions for iframe window with execution functions
+interface IframeWindowWithExecutors extends Window {
+  reExecutePython?: () => Promise<void>;
+  reExecuteSQL?: () => void;
+  files?: Record<string, string>;
+}
+
 interface ChallengePreviewProps {
   fileSystem: VirtualFileSystem;
   mainFile: string;
@@ -283,54 +290,134 @@ const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         }),
       );
 
-      const handleLoad = () => {
-        iframe.removeEventListener("load", handleLoad);
-        resolve();
-      };
-
-      // Add event listener for load
-      iframe.addEventListener("load", handleLoad);
-
-      // Force immediate reload by directly updating content
-      setIsLoading(true);
-
-      // Get the latest content
+      const iframeWindow = iframe.contentWindow as IframeWindowWithExecutors | null;
       const fs = fileSystemRef.current;
 
-      // Always load content when explicitly requested through manual action
-      if (previewTemplateRef.current) {
-        // Use the custom preview template if available
-        const generatedHTML = previewTemplateRef.current(mainFile, fs, t);
-        iframe.srcdoc = generatedHTML;
+      // Try to use fast re-execution if available (for Python/SQLite/etc)
+      const useFastReload =
+        (typeof iframeWindow?.reExecutePython === 'function') ||
+        (typeof iframeWindow?.reExecuteSQL === 'function');
+
+      if (useFastReload) {
+        // Fast path: re-execute without full iframe reload
+        setIsLoading(true);
+
+        // Update file contents in the iframe's files object
+        try {
+          if (iframeWindow?.files) {
+            // Update the files object with new content
+            const allFiles = fs.getAllFiles();
+            allFiles.forEach((file) => {
+              if (file.content !== undefined && iframeWindow.files) {
+                iframeWindow.files[file.filename] = file.content;
+              }
+            });
+          }
+        } catch (error) {
+          console.warn('Failed to update iframe files:', error);
+        }
+
+        // Call the appropriate re-execution function
+        if (typeof iframeWindow.reExecutePython === 'function') {
+          iframeWindow.reExecutePython().then(() => {
+            setIsLoading(false);
+            setNeedsManualReload(false);
+            setShouldRefreshPreview(false);
+
+            // Update content references
+            const currentFileContents: Record<string, string> = {};
+            fs.getAllFiles().forEach((file) => {
+              if (file.content) {
+                currentFileContents[file.filename] = file.content;
+              }
+            });
+            fileContentRef.current = { ...currentFileContents };
+
+            resolve();
+          }).catch((error: Error) => {
+            console.error('Fast reload failed:', error);
+            // Fallback to full reload
+            performFullReload(iframe, resolve);
+          });
+        } else if (typeof iframeWindow.reExecuteSQL === 'function') {
+          try {
+            iframeWindow.reExecuteSQL();
+            setIsLoading(false);
+            setNeedsManualReload(false);
+            setShouldRefreshPreview(false);
+
+            // Update content references
+            const currentFileContents: Record<string, string> = {};
+            fs.getAllFiles().forEach((file) => {
+              if (file.content) {
+                currentFileContents[file.filename] = file.content;
+              }
+            });
+            fileContentRef.current = { ...currentFileContents };
+
+            resolve();
+          } catch (error) {
+            console.error('Fast reload failed:', error);
+            // Fallback to full reload
+            performFullReload(iframe, resolve);
+          }
+        }
       } else {
-        const htmlFile = Array.from(fs.files.values()).find(
-          (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
-        );
-
-        if (htmlFile?.content) {
-          const processedHTML = processHTML(htmlFile.content);
-          iframe.srcdoc = processedHTML;
-        }
+        // Fallback to full reload for HTML/web challenges
+        performFullReload(iframe, resolve);
       }
-
-      setNeedsManualReload(false);
-      setShouldRefreshPreview(false);
-
-      // Update content references for future change detection
-      const currentFileContents: Record<string, string> = {};
-      fs.getAllFiles().forEach((file) => {
-        if (file.content) {
-          currentFileContents[file.filename] = file.content;
-        }
-      });
-      fileContentRef.current = { ...currentFileContents };
-
-      // Fallback - resolve after 5 seconds if load event doesn't fire
-      setTimeout(() => {
-        iframe.removeEventListener("load", handleLoad);
-        resolve();
-      }, 5000);
     });
+  }, [mainFile, processHTML, t]);
+
+  // Helper function to perform full iframe reload
+  const performFullReload = useCallback((iframe: HTMLIFrameElement, resolve: () => void) => {
+    const handleLoad = () => {
+      iframe.removeEventListener("load", handleLoad);
+      resolve();
+    };
+
+    // Add event listener for load
+    iframe.addEventListener("load", handleLoad);
+
+    // Force immediate reload by directly updating content
+    setIsLoading(true);
+
+    // Get the latest content
+    const fs = fileSystemRef.current;
+
+    // Always load content when explicitly requested through manual action
+    if (previewTemplateRef.current) {
+      // Use the custom preview template if available
+      const generatedHTML = previewTemplateRef.current(mainFile, fs, t);
+      iframe.srcdoc = generatedHTML;
+    } else {
+      const htmlFile = Array.from(fs.files.values()).find(
+        (file) => file.filename === mainFile || file.filename.toLowerCase() === "index.html",
+      );
+
+      if (htmlFile?.content) {
+        const processedHTML = processHTML(htmlFile.content);
+        iframe.srcdoc = processedHTML;
+      }
+    }
+
+    setNeedsManualReload(false);
+    setShouldRefreshPreview(false);
+
+    // Update content references for future change detection
+    const currentFileContents: Record<string, string> = {};
+    fs.getAllFiles().forEach((file) => {
+      if (file.content) {
+        currentFileContents[file.filename] = file.content;
+      }
+    });
+    fileContentRef.current = { ...currentFileContents };
+
+    // Fallback - resolve after 5 seconds if load event doesn't fire
+    setTimeout(() => {
+      iframe.removeEventListener("load", handleLoad);
+      resolve();
+    }, 5000);
   }, [mainFile, processHTML, t]);
 
   // Update fileSystemRef when fileSystem changes

@@ -152,13 +152,15 @@ function previewTemplate(mainFile, fileSystem, t) {
       
       // Flag to indicate when SQL execution is ready
       window.sqlReady = false;
-      
+      window.sqlInstance = null;
+      window.dbInstance = null;
+
       // Set up outputs for stdout and stderr
       const stdout = document.getElementById('stdout');
       const stderr = document.getElementById('stderr');
       const loader = document.getElementById('loader');
       const consoleOutput = document.getElementById('console');
-      
+
       // Performance measurement functions
       let tictime;
       function tic() { tictime = performance.now(); }
@@ -166,26 +168,26 @@ function previewTemplate(mainFile, fileSystem, t) {
         const dt = performance.now() - tictime;
         return dt;
       }
-      
+
       // Function to add output to the console
       function addStdout(text) {
         const line = document.createElement('div');
         line.innerHTML = text;
         stdout.appendChild(line);
-        
+
         // Show console if there's content
         if (stdout.children.length > 0) {
           consoleOutput.classList.add('has-content');
         }
       }
-      
+
       // Function to add error output to the console
       function addStderr(text) {
         const line = document.createElement('div');
         line.className = 'error-message';
         line.textContent = text;
         stderr.appendChild(line);
-        
+
         // Show console if there's content
         if (stderr.children.length > 0) {
           consoleOutput.classList.add('has-content');
@@ -194,6 +196,40 @@ function previewTemplate(mainFile, fileSystem, t) {
 
       // Variable to track the query execution count
       let queryCounter = 0;
+
+      // Function to clean the SQL environment for re-execution
+      function cleanSqlEnvironment() {
+        if (!window.dbInstance || !window.sqlInstance) return false;
+
+        try {
+          // Clear stdout/stderr
+          stdout.innerHTML = '';
+          stderr.innerHTML = '';
+          consoleOutput.classList.remove('has-content');
+
+          // Reset query counter
+          queryCounter = 0;
+
+          // Close and recreate database to clear all data
+          window.dbInstance.close();
+          window.dbInstance = new window.sqlInstance.Database();
+
+          // Re-execute init.sql if it exists
+          if (files["init.sql"]) {
+            try {
+              window.dbInstance.run(files["init.sql"]);
+            } catch (error) {
+              addStderr('${t("sqlite.errorInitSql")}: ' + error.message);
+              return false;
+            }
+          }
+
+          return true;
+        } catch (error) {
+          console.warn('Error cleaning SQL environment:', error);
+          return false;
+        }
+      }
 
       // Function to format SQL results as HTML table
       function formatResults(columns, values, executionTime) {
@@ -243,77 +279,113 @@ function previewTemplate(mainFile, fileSystem, t) {
         return html;
       }
       
+      // Function to execute SQL code (reusable)
+      function executeSqlCode() {
+        const db = window.dbInstance;
+
+        if (!db) {
+          addStderr('Chyba: SQL prostredie nie je inicializované');
+          return;
+        }
+
+        // Execute the main SQL file
+        if (files[mainFilePath]) {
+          try {
+            // Split SQL statements by semicolon
+            const statements = files[mainFilePath].split(';').filter(stmt => stmt.trim());
+
+            for (const statement of statements) {
+              if (!statement.trim()) continue;
+
+              const statementDisplay = statement.trim();
+              const truncatedStatement = statementDisplay.length > 70 ?
+                statementDisplay.substring(0, 70) + '...' :
+                statementDisplay;
+
+              try {
+                tic(); // Start timing statement execution
+                const result = db.exec(statement);
+                const executionTime = toc(); // Get execution time
+
+                addStdout('<div class="query-info">' + '${t("sqlite.executing")}' + ': ' + truncatedStatement + '</div>');
+
+                if (result.length > 0) {
+                  // If the statement returned results, display them
+                  result.forEach(({ columns, values }) => {
+                    addStdout(formatResults(columns, values, executionTime));
+                  });
+                } else {
+                  // For statements that don't return results (like INSERT, UPDATE, etc.)
+                  addStdout('<div class="result-set query-' + queryCounter + '-output">' +
+                           '<div class="query-info">' + '${t("sqlite.queryExecutedNoResults")}' + '</div>' +
+                           '<div class="execution-time">' + '${t("sqlite.executionTime")}' + ': ' + executionTime.toFixed(2) + 'ms</div>' +
+                           '</div>');
+
+                  // Still increment the query counter for non-result queries
+                  queryCounter++;
+                }
+              } catch (error) {
+                addStderr('${t("sqlite.errorExecutingStatement")}: ' + error.message);
+                addStdout('<div class="query-info">' + '${t("sqlite.failedStatement")}' + ': ' + truncatedStatement + '</div>');
+              }
+            }
+          } catch (error) {
+            addStderr('${t("sqlite.errorExecutingSql")}: ' + error.message);
+          }
+        } else {
+          addStderr('${t("sqlite.errorMainFileNotFound")}: ' + mainFilePath);
+        }
+      }
+
+      // Expose the re-execution function globally
+      window.reExecuteSQL = function() {
+        window.sqlReady = false;
+        const cleaned = cleanSqlEnvironment();
+        if (cleaned) {
+          executeSqlCode();
+        } else {
+          // Fallback to full reload if cleanup failed
+          window.location.reload();
+          return;
+        }
+        window.sqlReady = true;
+        notifyReady();
+      };
+
       // Main function to initialize SQL.js and run SQL code
       async function main() {
         tic();
         try {
-          // Initialize SQL.js with proper WASM file location configuration
+          // Check if SQL.js is already initialized
+          if (window.sqlInstance && window.dbInstance) {
+            // Just re-execute code, don't reinitialize
+            window.reExecuteSQL();
+            return;
+          }
+
+          // Initialize SQL.js with proper WASM file location configuration (only once)
           const sqlPromise = initSqlJs({
             locateFile: filename => \`https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.13.0/\${filename}\`
           });
-          
+
           const SQL = await sqlPromise;
-          const db = new SQL.Database();
-          
+          window.sqlInstance = SQL;
+          window.dbInstance = new SQL.Database();
+
           // Execute init.sql if it exists
           if (files["init.sql"]) {
             try {
-              db.run(files["init.sql"]);
+              window.dbInstance.run(files["init.sql"]);
             } catch (error) {
               addStderr('${t("sqlite.errorInitSql")}: ' + error.message);
             }
           }
-          
+
           // Hide loader once SQL.js is loaded
           loader.style.display = 'none';
-          
-          // Execute the main SQL file
-          if (files[mainFilePath]) {
-            try {
-              // Split SQL statements by semicolon
-              const statements = files[mainFilePath].split(';').filter(stmt => stmt.trim());
-              
-              for (const statement of statements) {
-                if (!statement.trim()) continue;
-                
-                const statementDisplay = statement.trim();
-                const truncatedStatement = statementDisplay.length > 70 ? 
-                  statementDisplay.substring(0, 70) + '...' : 
-                  statementDisplay;
-                
-                try {
-                  tic(); // Start timing statement execution
-                  const result = db.exec(statement);
-                  const executionTime = toc(); // Get execution time
-                  
-                  addStdout('<div class="query-info">' + '${t("sqlite.executing")}' + ': ' + truncatedStatement + '</div>');
-                  
-                  if (result.length > 0) {
-                    // If the statement returned results, display them
-                    result.forEach(({ columns, values }) => {
-                      addStdout(formatResults(columns, values, executionTime));
-                    });
-                  } else {
-                    // For statements that don't return results (like INSERT, UPDATE, etc.)
-                    addStdout('<div class="result-set query-' + queryCounter + '-output">' +
-                             '<div class="query-info">' + '${t("sqlite.queryExecutedNoResults")}' + '</div>' +
-                             '<div class="execution-time">' + '${t("sqlite.executionTime")}' + ': ' + executionTime.toFixed(2) + 'ms</div>' +
-                             '</div>');
-                    
-                    // Still increment the query counter for non-result queries
-                    queryCounter++;
-                  }
-                } catch (error) {
-                  addStderr('${t("sqlite.errorExecutingStatement")}: ' + error.message);
-                  addStdout('<div class="query-info">' + '${t("sqlite.failedStatement")}' + ': ' + truncatedStatement + '</div>');
-                }
-              }
-            } catch (error) {
-              addStderr('${t("sqlite.errorExecutingSql")}: ' + error.message);
-            }
-          } else {
-            addStderr('${t("sqlite.errorMainFileNotFound")}: ' + mainFilePath);
-          }
+
+          // Execute SQL code for the first time
+          executeSqlCode();
         } catch (error) {
           loader.style.display = 'none';
           addStderr('${t("sqlite.failedToInitialize")}: ' + error.message);

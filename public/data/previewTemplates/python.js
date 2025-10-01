@@ -99,6 +99,12 @@ function previewTemplate(mainFile, fileSystem, t) {
       #stderr {
         color: #ff5555;
       }
+      .stderr-warning {
+        color: #ff9800 !important;
+      }
+      .stderr-error {
+        color: #ff5555 !important;
+      }
       .spinner {
         width: 40px;
         height: 40px;
@@ -153,8 +159,28 @@ function previewTemplate(mainFile, fileSystem, t) {
         const outputElement = document.getElementById(stream);
         const line = document.createElement('span');
         line.textContent = text;
+
+        // Detect if this is a warning vs error in stderr
+        if (stream === 'stderr') {
+          const isWarning = text.includes('Warning:') ||
+                           text.includes('UserWarning:') ||
+                           text.includes('DeprecationWarning:') ||
+                           text.includes('FutureWarning:');
+
+          // Don't show NumPy reload warning at all (additional safeguard)
+          if (text.includes('NumPy module was reloaded')) {
+            return; // Skip this warning entirely
+          }
+
+          if (isWarning) {
+            line.className = 'stderr-warning';
+          } else {
+            line.className = 'stderr-error';
+          }
+        }
+
         outputElement.appendChild(line);
-        
+
         // Show console if there's content
         const console = document.getElementById('console');
         if (outputElement.children.length > 0) {
@@ -164,37 +190,172 @@ function previewTemplate(mainFile, fileSystem, t) {
       
       // Flag to indicate when Pyodide is ready
       window.pyodideReady = false;
-      
+      window.pyodideInstance = null;
+      window.micropipInstance = null;
+
+      // Function to clean the Python environment for re-execution
+      async function cleanPythonEnvironment() {
+        if (!window.pyodideInstance) return;
+
+        const pyodide = window.pyodideInstance;
+
+        try {
+          // Clear stdout/stderr
+          stdout.innerHTML = '';
+          stderr.innerHTML = '';
+          const consoleEl = document.getElementById('console');
+          consoleEl.classList.remove('has-content');
+
+          // Clear matplotlib plots
+          const plots = document.querySelectorAll('[id^="matplotlib_"]');
+          plots.forEach(plot => plot.remove());
+
+          // Reset Python environment - clear modules and variables
+          await pyodide.runPython(\`
+import sys
+import gc
+import warnings
+
+# Suppress the NumPy reimport warning that occurs during cleanup
+warnings.filterwarnings('ignore', message='.*NumPy module was reloaded.*')
+
+# Get list of user modules to delete (keep standard library and critical packages)
+# We need to be more aggressive with cleanup, including numpy and matplotlib
+user_modules = [mod for mod in list(sys.modules.keys())
+                if not mod.startswith('_')
+                and mod not in sys.builtin_module_names
+                and not mod.startswith('js')
+                and not mod.startswith('pyodide')
+                and mod not in ['io', 'builtins', 'sys', 'gc', 'warnings']]
+
+# Delete user modules (including numpy, matplotlib, etc.)
+for mod in user_modules:
+    if mod in sys.modules:
+        try:
+            del sys.modules[mod]
+        except:
+            pass
+
+# Clear main namespace, keep only built-ins and our custom classes
+main_vars = list(globals().keys())
+for var in main_vars:
+    if not var.startswith('_') and var not in ['CaptureIO', 'sys', 'io', 'gc', 'warnings', 'addOutput']:
+        try:
+            del globals()[var]
+        except:
+            pass
+
+# Force garbage collection
+gc.collect()
+
+# Reset IO streams
+sys.stdout = CaptureIO('stdout')
+sys.stderr = CaptureIO('stderr')
+          \`);
+        } catch (error) {
+          console.warn('Error cleaning Python environment:', error);
+          // If cleanup fails, we'll do a full reload
+          return false;
+        }
+
+        return true;
+      }
+
+      // Function to execute Python code (reusable)
+      async function executePythonCode() {
+        const pyodide = window.pyodideInstance;
+
+        if (!pyodide) {
+          addOutput('Chyba: Python prostredie nie je inicializované', 'stderr');
+          return;
+        }
+
+        // Write updated files to filesystem
+        await Promise.all(
+          Object.entries(files).map(async ([filename, content]) => {
+            const pyodideFilename = filename.replace(/\\\\/g, '/');
+            try {
+              // Check if file exists and delete it first
+              try {
+                pyodide.FS.unlink(pyodideFilename);
+              } catch (e) {
+                // File doesn't exist, that's fine
+              }
+              pyodide.FS.writeFile(pyodideFilename, content);
+            } catch (error) {
+              console.warn(\`Failed to write file \${filename}:\`, error);
+            }
+          })
+        );
+
+        // Execute the main Python file
+        if (files[mainFilePath]) {
+          try {
+            // Run the main script
+            await pyodide.runPython(files[mainFilePath]);
+
+            // Handle matplotlib plots
+            const plots = document.querySelectorAll('[id^="matplotlib_"]');
+            plots.forEach(plot => {
+              plot.classList.add('matplotlib-figure');
+              plot.style.display = 'block';
+            });
+          } catch (error) {
+            // Handle Python execution errors
+            addOutput(\`\${error.message}\`, 'stderr');
+            console.error(error);
+          }
+        } else {
+          addOutput(\`Chyba: hlavný súbor "\${mainFilePath}" sa nenašiel\`, 'stderr');
+        }
+      }
+
+      // Expose the re-execution function globally
+      window.reExecutePython = async function() {
+        window.pyodideReady = false;
+        const cleaned = await cleanPythonEnvironment();
+        if (cleaned) {
+          await executePythonCode();
+        } else {
+          // Fallback to full reload if cleanup failed
+          window.location.reload();
+          return;
+        }
+        window.pyodideReady = true;
+        notifyReady();
+      };
+
       // Main function to initialize Pyodide and run Python code
       async function main() {
         try {
-          // Initialize Pyodide and load packages in parallel
-          const [pyodide] = await Promise.all([
-            loadPyodide(),
-            // Pre-load micropip in parallel with Pyodide initialization
-            new Promise((resolve) => {
-              const script = document.createElement('script');
-              script.src = 'https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js';
-              script.onload = resolve;
-              document.head.appendChild(script);
-            })
-          ]);
-          
-          window.pyodide = pyodide;
-          
-          // Load micropip and set up requirements in parallel
+          // Check if Pyodide is already initialized
+          if (window.pyodideInstance) {
+            // Just re-execute code, don't reinitialize
+            await window.reExecutePython();
+            return;
+          }
+
+          // Initialize Pyodide (only once)
+          const pyodide = await loadPyodide();
+          window.pyodideInstance = pyodide;
+
+          // Load micropip and set up IO capture
           const [micropip] = await Promise.all([
             pyodide.loadPackage("micropip").then(() => pyodide.pyimport("micropip")),
             // Set up stdout/stderr capture in parallel
             pyodide.runPython(\`
               import sys
               import io
-              
+              import warnings
+
+              # Suppress NumPy reimport warnings globally
+              warnings.filterwarnings('ignore', message='.*NumPy module was reloaded.*')
+
               class CaptureIO(io.StringIO):
                   def __init__(self, stream_name):
                       super().__init__()
                       self.stream_name = stream_name
-                  
+
                   def write(self, text):
                       super().write(text)
                       if "Matplotlib is building the font cache" in text:
@@ -203,15 +364,17 @@ function previewTemplate(mainFile, fileSystem, t) {
                       # Send output to JS with stream information
                       from js import addOutput
                       addOutput(text, self.stream_name)
-              
+
               sys.stdout = CaptureIO('stdout')
               sys.stderr = CaptureIO('stderr')
-              
+
               # Set up import paths for modules
               import sys
               ${importPathsSetup}
             \`)
           ]);
+
+          window.micropipInstance = micropip;
 
           // Check for and install requirements.txt if it exists
           if (files["requirements.txt"]) {
@@ -228,36 +391,9 @@ function previewTemplate(mainFile, fileSystem, t) {
 
           // Hide loader once Pyodide is loaded
           loader.style.display = 'none';
-          
-          // Create a Python virtual filesystem and load all files in parallel
-          await Promise.all(
-            Object.entries(files).map(([filename, content]) => {
-              const pyodideFilename = filename.replace(/\\\\/g, '/');
-              return pyodide.FS.writeFile(pyodideFilename, content);
-            })
-          );
-          
-          // Execute the main Python file
-          if (files[mainFilePath]) {
-            try {
-              // Run the main script
-              await pyodide.runPython(files[mainFilePath]);
-              
-              // Handle matplotlib plots
-              const plots = document.querySelectorAll('[id^="matplotlib_"]');
-              plots.forEach(plot => {
-                plot.classList.add('matplotlib-figure');
-                // Ensure plot is visible
-                plot.style.display = 'block';
-              });
-            } catch (error) {
-              // Handle Python execution errors
-              addOutput(\`\${error.message}\`, 'stderr');
-              console.error(error);
-            }
-          } else {
-            addOutput(\`Chyba: hlavný súbor "\${mainFilePath}" sa nenašiel\`, 'stderr');
-          }
+
+          // Execute Python code for the first time
+          await executePythonCode();
         } catch (error) {
           // Handle Pyodide loading errors
           loader.style.display = 'none';
