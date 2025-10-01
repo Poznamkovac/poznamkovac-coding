@@ -1,12 +1,12 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const publicDir = path.join(__dirname, '../public');
-const outputFile = path.join(publicDir, 'index.json');
+const publicDir = path.join(__dirname, "../public");
+const outputFile = path.join(publicDir, "index.json");
 
 /**
  * Check if a directory contains challenge folders (numeric names)
@@ -15,7 +15,7 @@ const outputFile = path.join(publicDir, 'index.json');
  */
 function hasChallenges(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
-  return entries.some(entry => entry.isDirectory() && /^\d+$/.test(entry.name));
+  return entries.some((entry) => entry.isDirectory() && /^\d+$/.test(entry.name));
 }
 
 /**
@@ -30,8 +30,8 @@ function scanChallenges(dir) {
   for (const entry of entries) {
     if (entry.isDirectory() && /^\d+$/.test(entry.name)) {
       const challengeDir = path.join(dir, entry.name);
-      const metadataPath = path.join(challengeDir, 'metadata.json');
-      const assignmentMdPath = path.join(challengeDir, 'assignment.md');
+      const metadataPath = path.join(challengeDir, "metadata.json");
+      const assignmentMdPath = path.join(challengeDir, "assignment.md");
 
       // Require both metadata.json and assignment.md
       if (!fs.existsSync(metadataPath) || !fs.existsSync(assignmentMdPath)) {
@@ -40,22 +40,22 @@ function scanChallenges(dir) {
       }
 
       try {
-        const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+        const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf-8"));
 
         // Extract title from assignment.md (first h1 line)
-        const assignmentContent = fs.readFileSync(assignmentMdPath, 'utf-8');
-        const firstLine = assignmentContent.split('\n')[0];
+        const assignmentContent = fs.readFileSync(assignmentMdPath, "utf-8");
+        const firstLine = assignmentContent.split("\n")[0];
         let title = `Challenge ${entry.name}`;
 
-        if (firstLine?.startsWith('# ')) {
+        if (firstLine?.startsWith("# ")) {
           title = firstLine.substring(2).trim();
         }
 
         challenges.push({
           id: entry.name,
           title,
-          type: metadata.type || 'code',
-          difficulty: metadata.difficulty || 'medium',
+          type: metadata.type || "code",
+          difficulty: metadata.difficulty || "medium",
           maxScore: metadata.maxScore || 10,
         });
       } catch (error) {
@@ -75,8 +75,8 @@ function scanChallenges(dir) {
  * @param {string} relativePath - Path relative to challenges root
  * @returns {Object|null} Course structure or null
  */
-function scanDirectory(dir, relativePath = '') {
-  const courseJsonPath = path.join(dir, 'course.json');
+function scanDirectory(dir, relativePath = "") {
+  const courseJsonPath = path.join(dir, "course.json");
 
   // Check if this directory contains challenges
   if (hasChallenges(dir)) {
@@ -84,7 +84,7 @@ function scanDirectory(dir, relativePath = '') {
     let courseData = {};
     if (fs.existsSync(courseJsonPath)) {
       try {
-        courseData = JSON.parse(fs.readFileSync(courseJsonPath, 'utf-8'));
+        courseData = JSON.parse(fs.readFileSync(courseJsonPath, "utf-8"));
       } catch (error) {
         console.warn(`Warning: Failed to parse ${courseJsonPath}:`, error.message);
       }
@@ -95,8 +95,14 @@ function scanDirectory(dir, relativePath = '') {
     return {
       slug: path.basename(dir),
       path: relativePath,
-      title: courseData.title || path.basename(dir).split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-      description: courseData.description || '',
+      title:
+        courseData.title ||
+        path
+          .basename(dir)
+          .split("-")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" "),
+      description: courseData.description || "",
       challengeCount: challenges.length,
       challenges,
       subcourses: [],
@@ -128,7 +134,7 @@ function scanDirectory(dir, relativePath = '') {
     let courseData = {};
     if (fs.existsSync(courseJsonPath)) {
       try {
-        courseData = JSON.parse(fs.readFileSync(courseJsonPath, 'utf-8'));
+        courseData = JSON.parse(fs.readFileSync(courseJsonPath, "utf-8"));
       } catch (error) {
         console.warn(`Warning: Failed to parse ${courseJsonPath}:`, error.message);
       }
@@ -137,8 +143,14 @@ function scanDirectory(dir, relativePath = '') {
     return {
       slug: path.basename(dir),
       path: relativePath,
-      title: courseData.title || path.basename(dir).split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-      description: courseData.description || '',
+      title:
+        courseData.title ||
+        path
+          .basename(dir)
+          .split("-")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" "),
+      description: courseData.description || "",
       challengeCount: totalChallenges,
       challenges: [],
       subcourses,
@@ -155,10 +167,10 @@ function generateCourseIndex() {
   const index = {};
 
   // Scan each language directory
-  const languages = ['sk', 'en'];
+  const languages = ["sk", "en"];
 
   for (const lang of languages) {
-    const langDir = path.join(publicDir, lang, 'data');
+    const langDir = path.join(publicDir, lang, "data");
 
     if (!fs.existsSync(langDir)) {
       console.warn(`Warning: ${langDir} does not exist`);

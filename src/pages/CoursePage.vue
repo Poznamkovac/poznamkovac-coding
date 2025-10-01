@@ -49,9 +49,7 @@ export default defineComponent({
     },
 
     breadcrumbs(): Array<{ text: string; path: string }> {
-      const crumbs: Array<{ text: string; path: string }> = [
-        { text: "Courses", path: "/" },
-      ];
+      const crumbs: Array<{ text: string; path: string }> = [{ text: "Courses", path: "/" }];
 
       const segments = this.coursePath.split("/");
       let currentPath = "";
@@ -59,9 +57,7 @@ export default defineComponent({
       for (let i = 0; i < segments.length; i++) {
         currentPath += (currentPath ? "/" : "") + segments[i];
         const lang = this.$route.params.lang as string;
-        const routePath = lang
-          ? `/${lang}/challenges/${currentPath}`
-          : `/challenges/${currentPath}`;
+        const routePath = lang ? `/${lang}/challenges/${currentPath}` : `/challenges/${currentPath}`;
 
         crumbs.push({
           text: titleCase(segments[i]),
@@ -93,13 +89,13 @@ export default defineComponent({
         this.challenges = [];
 
         // Load from index.json for better performance
-        const response = await fetch('/index.json');
+        const response = await fetch("/index.json");
         if (!response.ok) {
-          throw new Error('Failed to load course index');
+          throw new Error("Failed to load course index");
         }
 
         const courseIndex = await response.json();
-        const lang = this.language === 'auto' ? 'sk' : this.language;
+        const lang = this.language === "auto" ? "sk" : this.language;
         const courses = courseIndex[lang] || [];
 
         // Find the course by path
@@ -121,11 +117,7 @@ export default defineComponent({
             this.challenges = await Promise.all(
               course.challenges.map(async (challenge: any) => {
                 const challengeId = challenge.id;
-                const score = await storageService.getChallengeScore(
-                  this.coursePath,
-                  challengeId,
-                  this.language as "sk" | "en"
-                );
+                const score = await storageService.getChallengeScore(this.coursePath, challengeId, this.language as "sk" | "en");
 
                 return {
                   id: parseInt(challengeId, 10),
@@ -133,7 +125,7 @@ export default defineComponent({
                   maxScore: challenge.maxScore || 10,
                   currentScore: score || 0,
                 };
-              })
+              }),
             );
           }
         }
@@ -201,12 +193,7 @@ export default defineComponent({
         <div v-if="challenges.length > 0">
           <h3 class="text-xl font-semibold text-white mb-4">{{ i18nStore.t("course.challenges") }}</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <ChallengeCard
-              v-for="challenge in challenges"
-              :key="challenge.id"
-              :challenge="challenge"
-              :course-path="coursePath"
-            />
+            <ChallengeCard v-for="challenge in challenges" :key="challenge.id" :challenge="challenge" :course-path="coursePath" />
           </div>
         </div>
 

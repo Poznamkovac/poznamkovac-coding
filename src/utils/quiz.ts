@@ -14,10 +14,7 @@ export function normalizeString(str: string, caseSensitive: boolean, diacriticSe
   return result;
 }
 
-export function validateQuizAnswer(
-  userAnswer: string | string[],
-  config: QuizAnswerConfig
-): { correct: boolean; score: number } {
+export function validateQuizAnswer(userAnswer: string | string[], config: QuizAnswerConfig): { correct: boolean; score: number } {
   if (config.type === "radio") {
     const selectedOption = config.options?.find((opt) => opt.id === userAnswer);
     const correct = selectedOption?.correct ?? false;
@@ -34,8 +31,7 @@ export function validateQuizAnswer(
     const sortedCorrect = [...correctOptionIds].sort();
 
     const correct =
-      sortedUserAnswer.length === sortedCorrect.length &&
-      sortedUserAnswer.every((id, index) => id === sortedCorrect[index]);
+      sortedUserAnswer.length === sortedCorrect.length && sortedUserAnswer.every((id, index) => id === sortedCorrect[index]);
 
     return { correct, score: correct ? 1 : 0 };
   }
@@ -45,16 +41,12 @@ export function validateQuizAnswer(
       return { correct: false, score: 0 };
     }
 
-    const normalizedUser = normalizeString(
-      userAnswer,
-      config.caseSensitive ?? true,
-      config.diacriticSensitive ?? true
-    );
+    const normalizedUser = normalizeString(userAnswer, config.caseSensitive ?? true, config.diacriticSensitive ?? true);
 
     const normalizedCorrect = normalizeString(
       config.correctAnswer,
       config.caseSensitive ?? true,
-      config.diacriticSensitive ?? true
+      config.diacriticSensitive ?? true,
     );
 
     const correct = normalizedUser === normalizedCorrect;

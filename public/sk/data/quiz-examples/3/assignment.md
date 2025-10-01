@@ -3,5 +3,5 @@
 Aký je výstup nasledujúceho kódu v JavaScripte?
 
 ```javascript
-console.log(typeof null)
+console.log(typeof null);
 ```

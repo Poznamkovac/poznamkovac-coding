@@ -104,11 +104,11 @@ export default defineComponent({
     document.removeEventListener("mousemove", this.handleMouseMove);
     document.removeEventListener("mouseup", this.handleMouseUp);
     window.removeEventListener("blur", this.handleMouseUp);
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
 
     // Remove overlay if it exists
-    const overlay = document.getElementById('resize-overlay');
+    const overlay = document.getElementById("resize-overlay");
     if (overlay) {
       overlay.remove();
     }
@@ -125,7 +125,7 @@ export default defineComponent({
           this.coursePath,
           this.challengeId,
           this.challengeData.files,
-          this.language
+          this.language,
         );
 
         this.updateVisibleFiles();
@@ -228,6 +228,21 @@ export default defineComponent({
       }
     },
 
+    handleFileRename(oldFilename: string, newFilename: string) {
+      if (this.fileSystem) {
+        this.fileSystem.renameFile(oldFilename, newFilename);
+        this.updateVisibleFiles();
+        // If the renamed file was active, update the active file
+        if (this.activeFile === oldFilename) {
+          this.activeFile = newFilename;
+          const file = this.fileSystem.getFileContent(newFilename);
+          if (file !== undefined) {
+            this.activeFileContent = file;
+          }
+        }
+      }
+    },
+
     handleContentUpdate(newContent: string) {
       if (this.activeFile && this.fileSystem) {
         this.fileSystem.updateFileContent(this.activeFile, newContent);
@@ -319,7 +334,7 @@ export default defineComponent({
             this.coursePath,
             this.challengeId,
             this.testResult.score,
-            this.language as "sk" | "en"
+            this.language as "sk" | "en",
           );
           console.log(`Code challenge score saved: ${this.testResult.score}/${this.testResult.maxScore} points`);
         }
@@ -333,13 +348,13 @@ export default defineComponent({
     startResize(e: MouseEvent) {
       e.preventDefault();
       this.isResizing = true;
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
 
       // Create overlay to prevent iframe from capturing events
-      const overlay = document.createElement('div');
-      overlay.id = 'resize-overlay';
-      overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; cursor: col-resize;';
+      const overlay = document.createElement("div");
+      overlay.id = "resize-overlay";
+      overlay.style.cssText = "position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; cursor: col-resize;";
       document.body.appendChild(overlay);
 
       document.addEventListener("mousemove", this.handleMouseMove);
@@ -363,11 +378,11 @@ export default defineComponent({
       if (!this.isResizing) return;
 
       this.isResizing = false;
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
 
       // Remove overlay
-      const overlay = document.getElementById('resize-overlay');
+      const overlay = document.getElementById("resize-overlay");
       if (overlay) {
         overlay.remove();
       }
@@ -411,6 +426,7 @@ export default defineComponent({
             @file-select="handleFileSelect"
             @file-add="handleFileAdd"
             @file-remove="handleFileRemove"
+            @file-rename="handleFileRename"
           />
 
           <div class="editor-wrapper">
@@ -632,7 +648,9 @@ export default defineComponent({
 }
 
 @keyframes busy-bounce {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0.8);
     opacity: 0.5;
   }

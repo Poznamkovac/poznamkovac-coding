@@ -59,68 +59,40 @@ class StorageService {
     }
   }
 
-  async getChallengeScore(
-    coursePath: string,
-    challengeId: string,
-    language: "sk" | "en"
-  ): Promise<number> {
+  async getChallengeScore(coursePath: string, challengeId: string, language: "sk" | "en"): Promise<number> {
     const key = `challenge_${language}_${coursePath}_${challengeId}_score`;
     const score = await this.getValue(key);
     return typeof score === "number" ? score : typeof score === "string" ? parseInt(score, 10) : 0;
   }
 
-  async setChallengeScore(
-    coursePath: string,
-    challengeId: string,
-    score: number,
-    language: "sk" | "en"
-  ): Promise<void> {
+  async setChallengeScore(coursePath: string, challengeId: string, score: number, language: "sk" | "en"): Promise<void> {
     const key = `challenge_${language}_${coursePath}_${challengeId}_score`;
     await this.setValue(key, score);
   }
 
-  async getEditorCode(
-    coursePath: string,
-    challengeId: string,
-    filename: string
-  ): Promise<string | null> {
+  async getEditorCode(coursePath: string, challengeId: string, filename: string): Promise<string | null> {
     const key = `challenge_${coursePath}_${challengeId}_${filename}`;
     const code = await this.getValue(key);
     return typeof code === "string" ? code : null;
   }
 
-  async setEditorCode(
-    coursePath: string,
-    challengeId: string,
-    filename: string,
-    code: string
-  ): Promise<void> {
+  async setEditorCode(coursePath: string, challengeId: string, filename: string, code: string): Promise<void> {
     const key = `challenge_${coursePath}_${challengeId}_${filename}`;
     await this.setValue(key, code);
   }
 
-  async deleteEditorCode(
-    coursePath: string,
-    challengeId: string,
-    filename: string
-  ): Promise<void> {
+  async deleteEditorCode(coursePath: string, challengeId: string, filename: string): Promise<void> {
     const key = `challenge_${coursePath}_${challengeId}_${filename}`;
     await this.deleteValue(key);
   }
 
-  async getAllChallengeFiles(
-    coursePath: string,
-    challengeId: string,
-    language: "sk" | "en"
-  ): Promise<Record<string, string>> {
+  async getAllChallengeFiles(coursePath: string, challengeId: string, language: "sk" | "en"): Promise<Record<string, string>> {
     try {
       const db = await this.dbPromise;
       const allKeys = await db.getAllKeys(STORE_NAME);
       const prefix = `challenge_${language}_${coursePath}_${challengeId}_`;
 
-      const fileKeys = allKeys.filter(
-        (key) => key.startsWith(prefix) && key !== `${prefix}score`
-      );
+      const fileKeys = allKeys.filter((key) => key.startsWith(prefix) && key !== `${prefix}score`);
 
       const result: Record<string, string> = {};
 
@@ -139,28 +111,18 @@ class StorageService {
     }
   }
 
-  async getFileSystemStructure(
-    coursePath: string,
-    challengeId: string
-  ): Promise<string[] | null> {
+  async getFileSystemStructure(coursePath: string, challengeId: string): Promise<string[] | null> {
     const key = `fs_structure_${coursePath}_${challengeId}`;
     const structure = await this.getValue(key);
     return typeof structure === "string" ? JSON.parse(structure) : null;
   }
 
-  async setFileSystemStructure(
-    coursePath: string,
-    challengeId: string,
-    filenames: string[]
-  ): Promise<void> {
+  async setFileSystemStructure(coursePath: string, challengeId: string, filenames: string[]): Promise<void> {
     const key = `fs_structure_${coursePath}_${challengeId}`;
     await this.setValue(key, JSON.stringify(filenames));
   }
 
-  async clearChallengeData(
-    coursePath: string,
-    challengeId: string
-  ): Promise<void> {
+  async clearChallengeData(coursePath: string, challengeId: string): Promise<void> {
     try {
       const db = await this.dbPromise;
       const allKeys = await db.getAllKeys(STORE_NAME);
@@ -168,9 +130,7 @@ class StorageService {
       const fsKey = `fs_structure_${coursePath}_${challengeId}`;
 
       // Delete all challenge files and structure
-      const keysToDelete = allKeys.filter(
-        (key) => key.startsWith(prefix) || key === fsKey
-      );
+      const keysToDelete = allKeys.filter((key) => key.startsWith(prefix) || key === fsKey);
 
       for (const key of keysToDelete) {
         await db.delete(STORE_NAME, key);

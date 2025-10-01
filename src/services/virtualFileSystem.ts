@@ -32,7 +32,6 @@ export interface FileSystemEvent {
   autoreload?: boolean;
 }
 
-
 /**
  * Creates a virtual file system for managing code challenge files
  */
@@ -40,14 +39,14 @@ export async function createVirtualFileSystem(
   coursePath: string,
   challengeId: string,
   initialFiles: Array<{ filename: string; readonly: boolean; hidden: boolean; autoreload?: boolean; removable?: boolean }>,
-  language: string
+  language: string,
 ): Promise<VirtualFileSystem> {
   const filesMap = new Map<string, VirtualFile>();
   let currentActiveFile: string | null = null;
 
   // Try to discover test files by attempting to fetch them
-  const testFileExtensions = ['.py', '.js', '.ts'];
-  const testFilePatterns = ['test', 'test_main'];
+  const testFileExtensions = [".py", ".js", ".ts"];
+  const testFilePatterns = ["test", "test_main"];
   const discoveredTestFiles: string[] = [];
 
   for (const pattern of testFilePatterns) {
@@ -67,7 +66,7 @@ export async function createVirtualFileSystem(
   // Combine initialFiles with discovered test files
   const allFiles = [...initialFiles];
   for (const testFile of discoveredTestFiles) {
-    if (!allFiles.some(f => f.filename === testFile)) {
+    if (!allFiles.some((f) => f.filename === testFile)) {
       allFiles.push({
         filename: testFile,
         readonly: true,
@@ -80,13 +79,13 @@ export async function createVirtualFileSystem(
 
   // Check if we have a saved filesystem structure
   const savedStructure = await storageService.getFileSystemStructure(coursePath, challengeId);
-  const filesToLoad = savedStructure || allFiles.map(f => f.filename);
+  const filesToLoad = savedStructure || allFiles.map((f) => f.filename);
 
   // Load file contents from storage or fetch from server
   await Promise.all(
     filesToLoad.map(async (filename) => {
       // Find file config from allFiles (includes discovered test files)
-      const fileConfig = allFiles.find(f => f.filename === filename);
+      const fileConfig = allFiles.find((f) => f.filename === filename);
 
       // For test files, always make them readonly and hidden
       const isTest = isTestFile(filename);
@@ -100,19 +99,13 @@ export async function createVirtualFileSystem(
       // Try to get from storage first (but not for test files)
       let content: string | null = null;
       if (!isTest) {
-        content = await storageService.getEditorCode(
-          coursePath,
-          challengeId,
-          filename
-        );
+        content = await storageService.getEditorCode(coursePath, challengeId, filename);
       }
 
       // If not in storage, try to fetch from server
       if (!content && fileConfig) {
         try {
-          const response = await fetch(
-            `/${language}/data/${coursePath}/${challengeId}/${filename}`
-          );
+          const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${filename}`);
           if (response.ok) {
             content = await response.text();
           }
@@ -134,7 +127,7 @@ export async function createVirtualFileSystem(
           removable: isTest ? false : (fileConfig?.removable ?? true),
         });
       }
-    })
+    }),
   );
 
   // Set initial active file (first visible, non-hidden file)
@@ -160,7 +153,7 @@ export async function createVirtualFileSystem(
           content,
           autoreload,
         },
-      })
+      }),
     );
   };
 
@@ -276,9 +269,7 @@ export async function createVirtualFileSystem(
         allFiles.map(async (fileConfig) => {
           let content = "";
           try {
-            const response = await fetch(
-              `/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`
-            );
+            const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`);
             if (response.ok) {
               content = await response.text();
             }
@@ -291,7 +282,7 @@ export async function createVirtualFileSystem(
             content,
             originalContent: content, // Set original content for proper tracking
           });
-        })
+        }),
       );
 
       // Reset active file

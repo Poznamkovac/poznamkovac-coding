@@ -66,9 +66,7 @@ export default defineComponent({
     },
 
     breadcrumbs(): Array<{ text: string; path: string }> {
-      const crumbs: Array<{ text: string; path: string }> = [
-        { text: this.i18nStore.t("home.courses"), path: "/" },
-      ];
+      const crumbs: Array<{ text: string; path: string }> = [{ text: this.i18nStore.t("home.courses"), path: "/" }];
 
       const segments = this.pathSegments;
       let currentPath = "";
@@ -78,9 +76,7 @@ export default defineComponent({
         const lang = this.$route.params.lang as string;
         crumbs.push({
           text: titleCase(segments[i]),
-          path: lang
-            ? `/${lang}/challenges${currentPath}`
-            : `/challenges${currentPath}`,
+          path: lang ? `/${lang}/challenges${currentPath}` : `/challenges${currentPath}`,
         });
       }
 
@@ -167,16 +163,16 @@ export default defineComponent({
         }
 
         const assignmentMarkdown = await assignmentMdResponse.text();
-        const lines = assignmentMarkdown.split('\n');
+        const lines = assignmentMarkdown.split("\n");
 
         // Extract title (first h1)
         let title = this.i18nStore.t("challenge.titleNotDefined");
         let assignmentContent = "";
 
-        if (lines[0]?.startsWith('# ')) {
+        if (lines[0]?.startsWith("# ")) {
           title = lines[0].substring(2).trim();
           // Remove the title line and parse the rest as description
-          const description = lines.slice(1).join('\n').trim();
+          const description = lines.slice(1).join("\n").trim();
           assignmentContent = await marked.parse(description);
         } else {
           assignmentContent = await marked.parse(assignmentMarkdown);
@@ -211,7 +207,7 @@ export default defineComponent({
           this.coursePath,
           this.challengeId,
           this.challengeData.maxScore,
-          lang as "sk" | "en"
+          lang as "sk" | "en",
         );
         console.log(`Score saved: ${this.challengeData.maxScore} points`);
       }
@@ -240,9 +236,7 @@ export default defineComponent({
 <template>
   <DefaultLayout>
     <div class="container mx-auto px-4 py-8">
-      <div v-if="isLoading" class="text-center text-gray-400 py-12">
-        Loading challenge...
-      </div>
+      <div v-if="isLoading" class="text-center text-gray-400 py-12">Loading challenge...</div>
 
       <div v-else-if="challengeData">
         <!-- Breadcrumbs -->
@@ -271,15 +265,14 @@ export default defineComponent({
         <div v-if="isQuizChallenge && challengeData.type === 'quiz'" class="space-y-6">
           <div class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6">
             <h3 class="text-xl font-semibold text-white mb-4">Vaša odpoveď</h3>
-            <QuizAnswer
-              v-model="userAnswer"
-              :config="challengeData.answer"
-              :disabled="false"
-            />
+            <QuizAnswer v-model="userAnswer" :config="challengeData.answer" :disabled="false" />
           </div>
 
           <!-- Feedback after checking answer -->
-          <div v-if="hasCheckedOnce && !isCorrect && !showCorrectAnswer" class="bg-[#1a1a1a] border border-red-600 rounded-lg p-6">
+          <div
+            v-if="hasCheckedOnce && !isCorrect && !showCorrectAnswer"
+            class="bg-[#1a1a1a] border border-red-600 rounded-lg p-6"
+          >
             <div class="flex items-center gap-3 mb-2">
               <span class="text-2xl">✗</span>
               <h3 class="text-xl font-semibold text-red-400">Nesprávne</h3>

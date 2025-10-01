@@ -51,13 +51,13 @@ export default defineComponent({
       this.isLoading = true;
       try {
         // Load course index from build-time generated file
-        const response = await fetch('/index.json');
+        const response = await fetch("/index.json");
         if (!response.ok) {
-          throw new Error('Failed to load course index');
+          throw new Error("Failed to load course index");
         }
 
         const courseIndex = await response.json();
-        const lang = this.language === 'auto' ? 'sk' : this.language;
+        const lang = this.language === "auto" ? "sk" : this.language;
         const coursesData = courseIndex[lang] || [];
 
         // Transform to Course type with colors
@@ -82,10 +82,8 @@ export default defineComponent({
   <DefaultLayout>
     <div class="container mx-auto px-4 py-8">
       <h2 class="text-3xl font-bold text-white mb-8">{{ t("home.courses") || "Courses" }}</h2>
-      
-      <div v-if="isLoading" class="text-center text-gray-400 py-12">
-        Loading courses...
-      </div>
+
+      <div v-if="isLoading" class="text-center text-gray-400 py-12">Loading courses...</div>
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <CourseCard v-for="course in courses" :key="course.slug" :course="course" />

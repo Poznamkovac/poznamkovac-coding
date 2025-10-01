@@ -63,10 +63,7 @@ export class WebRunner extends BaseCodeRunner {
     // - http:// or https://
     // - //
     // - /
-    return !path.startsWith("http://") &&
-           !path.startsWith("https://") &&
-           !path.startsWith("//") &&
-           !path.startsWith("/");
+    return !path.startsWith("http://") && !path.startsWith("https://") && !path.startsWith("//") && !path.startsWith("/");
   }
 
   async execute(files: Record<string, string>, mainFile: string): Promise<ExecutionResult> {

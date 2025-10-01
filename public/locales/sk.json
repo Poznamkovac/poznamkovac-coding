@@ -31,7 +31,7 @@
     "testing": "Testuje sa...",
     "reset": "Resetovať",
     "resetConfirm": "Naozaj chcete resetovať všetky súbory na pôvodný stav? Všetky zmeny budú stratené.",
-    "autoReload": "Auto-reload",
+    "autoReload": "Automatická obnova",
     "output": "Výstup:",
     "error": "Chyba:",
     "testsPassed": "Testy prešli!",

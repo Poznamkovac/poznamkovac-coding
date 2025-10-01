@@ -7,11 +7,11 @@
     <title>Poznámkovač Webúlohy</title>
     <script>
       // Handle GitHub Pages SPA redirect from 404.html
-      (function() {
-        const redirect = sessionStorage.getItem('redirect');
+      (function () {
+        const redirect = sessionStorage.getItem("redirect");
         if (redirect) {
-          sessionStorage.removeItem('redirect');
-          history.replaceState(null, '', redirect);
+          sessionStorage.removeItem("redirect");
+          history.replaceState(null, "", redirect);
         }
       })();
     </script>

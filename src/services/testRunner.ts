@@ -13,7 +13,7 @@ export async function runTests(
   language: string,
   files: Record<string, string>,
   testFile: string,
-  maxScore: number
+  maxScore: number,
 ): Promise<TestResult> {
   try {
     const runner = await codeRunnerRegistry.getOrInitializeRunner(language);
@@ -60,7 +60,7 @@ export async function runTests(
         trimmed.startsWith("✗") ||
         trimmed.startsWith("FAIL") ||
         trimmed.includes("AssertionError") ||
-        trimmed.includes("assert") && trimmed.includes("False")
+        (trimmed.includes("assert") && trimmed.includes("False"))
       ) {
         passed = false;
         score = 0;

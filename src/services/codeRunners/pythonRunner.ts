@@ -41,9 +41,9 @@ export class PythonRunner extends BaseCodeRunner {
 
       // Remove old matplotlib plots from DOM
       const oldPlots = document.querySelectorAll('body > div[style*="display: inline-block"]');
-      oldPlots.forEach(plot => {
+      oldPlots.forEach((plot) => {
         // Check if this is actually a matplotlib plot by looking for canvas or toolbar
-        if (plot.querySelector('.mpl-canvas, .mpl-toolbar')) {
+        if (plot.querySelector(".mpl-canvas, .mpl-toolbar")) {
           plot.remove();
         }
       });

@@ -61,7 +61,7 @@ export default defineComponent({
         <button
           :class="[
             'px-3 py-1 rounded text-sm transition',
-            language === 'sk' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            language === 'sk' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600',
           ]"
           @click="handleLanguageChange('sk')"
         >
@@ -70,7 +70,7 @@ export default defineComponent({
         <button
           :class="[
             'px-3 py-1 rounded text-sm transition',
-            language === 'en' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            language === 'en' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600',
           ]"
           @click="handleLanguageChange('en')"
         >

@@ -29,6 +29,7 @@ challenges/
 ## Challenge Structure
 
 Each challenge folder (numbered) must contain:
+
 - `assignment.json` - Challenge metadata and configuration
 - `files/` - Initial code files
 - `solution/` (optional) - Solution files

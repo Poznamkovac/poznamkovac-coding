@@ -37,9 +37,11 @@ export default defineComponent({
     },
 
     isTranslationMissing(): boolean {
-      return this.pathSegments.length > 0 &&
-             (this.pathSegments[0] === "sk" || this.pathSegments[0] === "en") &&
-             this.pathSegments[0] !== this.effectiveLanguage;
+      return (
+        this.pathSegments.length > 0 &&
+        (this.pathSegments[0] === "sk" || this.pathSegments[0] === "en") &&
+        this.pathSegments[0] !== this.effectiveLanguage
+      );
     },
   },
 
@@ -64,23 +66,19 @@ export default defineComponent({
     <div class="container mx-auto px-4 py-16 text-center">
       <div class="max-w-2xl mx-auto">
         <h1 class="text-6xl font-bold text-white mb-4">404</h1>
-        
+
         <div v-if="isTranslationMissing" class="mb-8">
           <p class="text-xl text-gray-300 mb-4">
             {{ t("challenge.notAvailableInLanguage") }}
           </p>
-          <p class="text-gray-400">
-            This content is not available in {{ effectiveLanguage === "sk" ? "Slovak" : "English" }}.
-          </p>
+          <p class="text-gray-400">This content is not available in {{ effectiveLanguage === "sk" ? "Slovak" : "English" }}.</p>
         </div>
-        
+
         <div v-else class="mb-8">
           <p class="text-xl text-gray-300 mb-4">
             {{ t("common.notFound") }}
           </p>
-          <p class="text-gray-400">
-            The page you're looking for doesn't exist.
-          </p>
+          <p class="text-gray-400">The page you're looking for doesn't exist.</p>
         </div>
 
         <div class="flex gap-4 justify-center">
@@ -91,10 +89,7 @@ export default defineComponent({
           >
             {{ t("challenge.goBack", { path: parentPath }) }}
           </button>
-          <button
-            @click="goHome"
-            class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition"
-          >
+          <button @click="goHome" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">
             {{ t("home.courses") }}
           </button>
         </div>

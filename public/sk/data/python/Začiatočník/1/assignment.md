@@ -10,7 +10,7 @@ print("Hello, World!")
 
 ## Tabuľka s hodnotením
 
-| Kritérium | Body |
-|-----------|------|
-| Správny výstup | 10 |
-| Nesprávny formát | 0 |
+| Kritérium        | Body |
+| ---------------- | ---- |
+| Správny výstup   | 10   |
+| Nesprávny formát | 0    |

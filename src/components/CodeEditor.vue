@@ -120,12 +120,12 @@ export default defineComponent({
       else if (sharedEditor && currentContainer !== container) {
         // Detach from old container
         if (currentContainer && sharedEditor) {
-          currentContainer.innerHTML = '';
+          currentContainer.innerHTML = "";
         }
 
         // Recreate in new container
         const currentModel = sharedEditor.getModel();
-        const currentValue = currentModel?.getValue() || '';
+        const currentValue = currentModel?.getValue() || "";
         sharedEditor.dispose();
         sharedEditor = null;
 
