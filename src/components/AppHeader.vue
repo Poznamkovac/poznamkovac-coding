@@ -1,42 +1,52 @@
-<script setup lang="ts">
-import { useI18n } from "../composables/useI18n";
+<script lang="ts">
+import { defineComponent } from "vue";
 import { useI18nStore } from "../stores/i18n";
-import { useRouter, useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
 
-const { t, language, setLanguage } = useI18n();
-const i18nStore = useI18nStore();
-const router = useRouter();
-const route = useRoute();
+export default defineComponent({
+  name: "AppHeader",
 
-const handleLanguageChange = (lang: "sk" | "en") => {
-  const currentPath = route.path;
+  setup() {
+    const i18nStore = useI18nStore();
+    const { language } = storeToRefs(i18nStore);
 
-  // Extract language from current path
-  const pathLang = i18nStore.extractLanguageFromPath(currentPath);
+    return {
+      i18nStore,
+      language,
+    };
+  },
 
-  setLanguage(lang);
+  methods: {
+    t(key: string, params?: Record<string, string | number>): string {
+      return this.i18nStore.t(key, params);
+    },
 
-  // If we're on a challenges page, try to navigate to the same page in the new language
-  if (currentPath.includes("/challenges/")) {
-    let newPath = currentPath;
+    handleLanguageChange(lang: "sk" | "en") {
+      const currentPath = this.$route.path;
+      const pathLang = this.i18nStore.extractLanguageFromPath(currentPath);
 
-    // Remove old language prefix if exists
-    if (pathLang) {
-      newPath = currentPath.replace(new RegExp(`^/${pathLang}/`), "/");
-    }
+      this.i18nStore.setLanguage(lang);
 
-    // Add new language prefix
-    if (newPath.startsWith("/challenges/")) {
-      newPath = `/${lang}${newPath}`;
-    }
+      if (currentPath.includes("/challenges/")) {
+        let newPath = currentPath;
 
-    router.push(newPath);
-  }
-};
+        if (pathLang) {
+          newPath = currentPath.replace(new RegExp(`^/${pathLang}/`), "/");
+        }
 
-const goHome = () => {
-  router.push("/");
-};
+        if (newPath.startsWith("/challenges/")) {
+          newPath = `/${lang}${newPath}`;
+        }
+
+        this.$router.push(newPath);
+      }
+    },
+
+    goHome() {
+      this.$router.push("/");
+    },
+  },
+});
 </script>
 
 <template>

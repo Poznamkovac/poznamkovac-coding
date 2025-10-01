@@ -1,40 +1,62 @@
-<script setup lang="ts">
-import { computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
+<script lang="ts">
+import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
-import { useI18n } from "../composables/useI18n";
+import { useI18nStore } from "../stores/i18n";
+import { storeToRefs } from "pinia";
 
-const route = useRoute();
-const router = useRouter();
-const { t, effectiveLanguage } = useI18n();
+export default defineComponent({
+  name: "NotFoundPage",
 
-const pathSegments = computed(() => {
-  const path = route.path.replace(/^\/+|\/+$/g, "");
-  return path.split("/").filter(Boolean);
+  components: {
+    DefaultLayout,
+  },
+
+  setup() {
+    const i18nStore = useI18nStore();
+    const { language: effectiveLanguage } = storeToRefs(i18nStore);
+
+    return {
+      i18nStore,
+      effectiveLanguage,
+    };
+  },
+
+  computed: {
+    pathSegments(): string[] {
+      const path = this.$route.path.replace(/^\/+|\/+$/g, "");
+      return path.split("/").filter(Boolean);
+    },
+
+    parentPath(): string {
+      if (this.pathSegments.length <= 1) {
+        return "/";
+      }
+      const segments = [...this.pathSegments];
+      segments.pop();
+      return "/" + segments.join("/");
+    },
+
+    isTranslationMissing(): boolean {
+      return this.pathSegments.length > 0 &&
+             (this.pathSegments[0] === "sk" || this.pathSegments[0] === "en") &&
+             this.pathSegments[0] !== this.effectiveLanguage;
+    },
+  },
+
+  methods: {
+    t(key: string, params?: Record<string, string | number>): string {
+      return this.i18nStore.t(key, params);
+    },
+
+    goBack() {
+      this.$router.push(this.parentPath);
+    },
+
+    goHome() {
+      this.$router.push("/");
+    },
+  },
 });
-
-const parentPath = computed(() => {
-  if (pathSegments.value.length <= 1) {
-    return "/";
-  }
-  const segments = [...pathSegments.value];
-  segments.pop();
-  return "/" + segments.join("/");
-});
-
-const isTranslationMissing = computed(() => {
-  return pathSegments.value.length > 0 && 
-         (pathSegments.value[0] === "sk" || pathSegments.value[0] === "en") &&
-         pathSegments.value[0] !== effectiveLanguage.value;
-});
-
-const goBack = () => {
-  router.push(parentPath.value);
-};
-
-const goHome = () => {
-  router.push("/");
-};
 </script>
 
 <template>

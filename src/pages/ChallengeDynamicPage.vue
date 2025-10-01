@@ -1,20 +1,28 @@
-<script setup lang="ts">
-import { computed } from "vue";
-import { useRoute } from "vue-router";
+<script lang="ts">
+import { defineComponent } from "vue";
 import { parseUrlPath } from "../utils";
 import CoursePage from "./CoursePage.vue";
 import ChallengePage from "./ChallengePage.vue";
 
-const route = useRoute();
+export default defineComponent({
+  name: "ChallengeDynamicPage",
 
-const pathMatch = computed(() => {
-  const match = route.params.pathMatch;
-  return Array.isArray(match) ? match.join("/") : match || "";
-});
+  components: {
+    CoursePage,
+    ChallengePage,
+  },
 
-const isChallenge = computed(() => {
-  const parsed = parseUrlPath(pathMatch.value);
-  return parsed.isChallenge;
+  computed: {
+    pathMatch(): string {
+      const match = this.$route.params.pathMatch;
+      return Array.isArray(match) ? match.join("/") : match || "";
+    },
+
+    isChallenge(): boolean {
+      const parsed = parseUrlPath(this.pathMatch);
+      return parsed.isChallenge;
+    },
+  },
 });
 </script>
 

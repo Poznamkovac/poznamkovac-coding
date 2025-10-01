@@ -1,30 +1,50 @@
-<script setup lang="ts">
-import { computed } from "vue";
-import { useRouter } from "vue-router";
+<script lang="ts">
+import { defineComponent } from "vue";
 import { useI18nStore } from "../stores/i18n";
 import type { Challenge } from "../types";
 
-const props = defineProps<{
-  challenge: Challenge;
-  coursePath: string;
-}>();
+export default defineComponent({
+  name: "ChallengeCard",
 
-const router = useRouter();
-const i18nStore = useI18nStore();
+  props: {
+    challenge: {
+      type: Object as () => Challenge,
+      required: true,
+    },
+    coursePath: {
+      type: String,
+      required: true,
+    },
+  },
 
-const handleClick = () => {
-  const path = i18nStore.getLocalizedPath(`/challenges/${props.coursePath}/${props.challenge.id}`);
-  router.push(path);
-};
+  setup() {
+    const i18nStore = useI18nStore();
 
-const scorePercentage = computed(() => {
-  if (props.challenge.currentScore !== undefined && props.challenge.maxScore > 0) {
-    return Math.round((props.challenge.currentScore / props.challenge.maxScore) * 100);
-  }
-  return 0;
+    return {
+      i18nStore,
+    };
+  },
+
+  computed: {
+    scorePercentage(): number {
+      if (this.challenge.currentScore !== undefined && this.challenge.maxScore > 0) {
+        return Math.round((this.challenge.currentScore / this.challenge.maxScore) * 100);
+      }
+      return 0;
+    },
+
+    isCompleted(): boolean {
+      return this.scorePercentage === 100;
+    },
+  },
+
+  methods: {
+    handleClick() {
+      const path = this.i18nStore.getLocalizedPath(`/challenges/${this.coursePath}/${this.challenge.id}`);
+      this.$router.push(path);
+    },
+  },
 });
-
-const isCompleted = computed(() => scorePercentage.value === 100);
 </script>
 
 <template>

@@ -1,5 +1,14 @@
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from "vue";
 import AppHeader from "../components/AppHeader.vue";
+
+export default defineComponent({
+  name: "DefaultLayout",
+
+  components: {
+    AppHeader,
+  },
+});
 </script>
 
 <template>

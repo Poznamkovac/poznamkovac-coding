@@ -1,33 +1,59 @@
-<script setup lang="ts">
-import { ref, onMounted } from "vue";
+<script lang="ts">
+import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import CourseCard from "../components/CourseCard.vue";
-import { useI18n } from "../composables/useI18n";
+import { useI18nStore } from "../stores/i18n";
 import { hashStringToColor } from "../utils";
 import type { Course } from "../types";
 
-const { t } = useI18n();
-const courses = ref<Course[]>([]);
-const isLoading = ref(true);
+export default defineComponent({
+  name: "HomePage",
 
-onMounted(async () => {
-  await loadCourses();
+  components: {
+    DefaultLayout,
+    CourseCard,
+  },
+
+  setup() {
+    const i18nStore = useI18nStore();
+
+    return {
+      i18nStore,
+    };
+  },
+
+  data() {
+    return {
+      courses: [] as Course[],
+      isLoading: true,
+    };
+  },
+
+  mounted() {
+    this.loadCourses();
+  },
+
+  methods: {
+    t(key: string): string {
+      return this.i18nStore.t(key);
+    },
+
+    async loadCourses() {
+      try {
+        this.courses = [
+          { slug: "python", title: "Python", color: hashStringToColor("python"), challengeCount: 0 },
+          { slug: "web", title: "Web Development", color: hashStringToColor("web"), challengeCount: 0 },
+          { slug: "sqlite", title: "SQLite", color: hashStringToColor("sqlite"), challengeCount: 0 },
+          { slug: "uml", title: "UML Diagrams", color: hashStringToColor("uml"), challengeCount: 0 },
+        ];
+      } catch (error) {
+        console.error("Failed to load courses:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+  },
 });
-
-async function loadCourses() {
-  try {
-    courses.value = [
-      { slug: "python", title: "Python", color: hashStringToColor("python"), challengeCount: 0 },
-      { slug: "web", title: "Web Development", color: hashStringToColor("web"), challengeCount: 0 },
-      { slug: "sqlite", title: "SQLite", color: hashStringToColor("sqlite"), challengeCount: 0 },
-      { slug: "uml", title: "UML Diagrams", color: hashStringToColor("uml"), challengeCount: 0 },
-    ];
-  } catch (error) {
-    console.error("Failed to load courses:", error);
-  } finally {
-    isLoading.value = false;
-  }
-}
 </script>
 
 <template>

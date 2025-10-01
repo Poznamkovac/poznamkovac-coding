@@ -1,49 +1,68 @@
-<script setup lang="ts">
-import { ref, onMounted, computed, watch } from "vue";
-import { useRoute } from "vue-router";
+<script lang="ts">
+import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import type { ChallengeData } from "../types";
 
-const route = useRoute();
-const isLoading = ref(true);
-const challengeData = ref<ChallengeData | null>(null);
+export default defineComponent({
+  name: "ChallengePage",
 
-const pathSegments = computed(() => {
-  const match = route.params.pathMatch;
-  const path = Array.isArray(match) ? match.join("/") : match || "";
-  return path.split("/");
-});
+  components: {
+    DefaultLayout,
+  },
 
-const challengeId = computed(() => pathSegments.value[pathSegments.value.length - 1]);
-
-onMounted(async () => {
-  await loadChallenge();
-});
-
-// Watch for route changes and reload challenge
-watch(() => route.params.pathMatch, async () => {
-  await loadChallenge();
-});
-
-async function loadChallenge() {
-  isLoading.value = true;
-  try {
-    challengeData.value = {
-      title: `Challenge ${challengeId.value} - Placeholder`,
-      assignment: "This is a placeholder assignment. The actual challenge content will be loaded from the challenges folder.",
-      maxScore: 100,
-      showPreview: true,
-      mainFile: "main.py",
-      files: [
-        { filename: "main.py", readonly: false, hidden: false },
-      ],
+  data() {
+    return {
+      isLoading: true,
+      challengeData: null as ChallengeData | null,
     };
-  } catch (error) {
-    console.error("Failed to load challenge:", error);
-  } finally {
-    isLoading.value = false;
-  }
-}
+  },
+
+  computed: {
+    pathSegments(): string[] {
+      const match = this.$route.params.pathMatch;
+      const path = Array.isArray(match) ? match.join("/") : match || "";
+      return path.split("/");
+    },
+
+    challengeId(): string {
+      return this.pathSegments[this.pathSegments.length - 1];
+    },
+  },
+
+  watch: {
+    "$route.params.pathMatch": {
+      handler() {
+        this.loadChallenge();
+      },
+    },
+  },
+
+  mounted() {
+    this.loadChallenge();
+  },
+
+  methods: {
+    async loadChallenge() {
+      this.isLoading = true;
+      try {
+        this.challengeData = {
+          title: `Challenge ${this.challengeId} - Placeholder`,
+          assignment: "This is a placeholder assignment. The actual challenge content will be loaded from the challenges folder.",
+          maxScore: 100,
+          showPreview: true,
+          mainFile: "main.py",
+          files: [
+            { filename: "main.py", readonly: false, hidden: false },
+          ],
+        };
+      } catch (error) {
+        console.error("Failed to load challenge:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+  },
+});
 </script>
 
 <template>

@@ -1,43 +1,59 @@
-<script setup lang="ts">
-import { computed } from "vue";
-import { useRouter } from "vue-router";
-import { useI18n } from "../composables/useI18n";
+<script lang="ts">
+import { defineComponent } from "vue";
 import { useI18nStore } from "../stores/i18n";
+import { storeToRefs } from "pinia";
 import type { Course } from "../types";
 
-const props = defineProps<{
-  course: Course;
-}>();
+export default defineComponent({
+  name: "CourseCard",
 
-const router = useRouter();
-const { t, effectiveLanguage } = useI18n();
-const i18nStore = useI18nStore();
+  props: {
+    course: {
+      type: Object as () => Course,
+      required: true,
+    },
+  },
 
-const handleClick = () => {
-  const path = i18nStore.getLocalizedPath(`/challenges/${props.course.slug}`);
-  router.push(path);
-};
+  setup() {
+    const i18nStore = useI18nStore();
+    const { language: effectiveLanguage } = storeToRefs(i18nStore);
 
-const challengeCountText = computed(() => {
-  if (props.course.challengeCount === undefined) return "";
+    return {
+      i18nStore,
+      effectiveLanguage,
+    };
+  },
 
-  const count = props.course.challengeCount;
+  computed: {
+    challengeCountText(): string {
+      if (this.course.challengeCount === undefined) return "";
 
-  if (effectiveLanguage.value === "sk") {
-    if (count === 1) {
-      return t("course.challengeCountSingular", { count });
-    } else if (count >= 2 && count <= 4) {
-      return t("course.challengeCountFew", { count });
-    } else {
-      return t("course.challengeCount", { count });
-    }
-  } else {
-    if (count === 1) {
-      return t("course.challengeCountSingular", { count });
-    } else {
-      return t("course.challengeCount", { count });
-    }
-  }
+      const count = this.course.challengeCount;
+
+      if (this.effectiveLanguage === "sk") {
+        if (count === 1) {
+          return this.i18nStore.t("course.challengeCountSingular", { count });
+        } else if (count >= 2 && count <= 4) {
+          return this.i18nStore.t("course.challengeCountFew", { count });
+        } else {
+          return this.i18nStore.t("course.challengeCount", { count });
+        }
+      } else {
+        if (count === 1) {
+          return this.i18nStore.t("course.challengeCountSingular", { count });
+        } else {
+          return this.i18nStore.t("course.challengeCount", { count });
+        }
+      }
+    },
+  },
+
+  methods: {
+    handleClick() {
+      const path = this.i18nStore.getLocalizedPath(`/challenges/${this.course.slug}`);
+      this.$router.push(path);
+    },
+  },
 });
 </script>
 

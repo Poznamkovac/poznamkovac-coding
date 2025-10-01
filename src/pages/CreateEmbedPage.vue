@@ -1,5 +1,14 @@
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
+
+export default defineComponent({
+  name: "CreateEmbedPage",
+
+  components: {
+    DefaultLayout,
+  },
+});
 </script>
 
 <template>

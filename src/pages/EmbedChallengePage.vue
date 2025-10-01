@@ -1,5 +1,14 @@
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from "vue";
 import EmbedLayout from "../layouts/EmbedLayout.vue";
+
+export default defineComponent({
+  name: "EmbedChallengePage",
+
+  components: {
+    EmbedLayout,
+  },
+});
 </script>
 
 <template>

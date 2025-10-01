@@ -1,50 +1,69 @@
-<script setup lang="ts">
-import { ref, onMounted, computed, watch } from "vue";
-import { useRoute } from "vue-router";
+<script lang="ts">
+import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import ChallengeCard from "../components/ChallengeCard.vue";
 import CourseCard from "../components/CourseCard.vue";
 import type { Course, Challenge } from "../types";
 
-const route = useRoute();
-const isLoading = ref(true);
-const subcourses = ref<Course[]>([]);
-const challenges = ref<Challenge[]>([]);
+export default defineComponent({
+  name: "CoursePage",
 
-const coursePath = computed(() => {
-  const match = route.params.pathMatch;
-  return Array.isArray(match) ? match.join("/") : match || "";
+  components: {
+    DefaultLayout,
+    ChallengeCard,
+    CourseCard,
+  },
+
+  data() {
+    return {
+      isLoading: true,
+      subcourses: [] as Course[],
+      challenges: [] as Challenge[],
+    };
+  },
+
+  computed: {
+    coursePath(): string {
+      const match = this.$route.params.pathMatch;
+      return Array.isArray(match) ? match.join("/") : match || "";
+    },
+
+    courseTitle(): string {
+      const segments = this.coursePath.split("/");
+      return segments[segments.length - 1] || "Course";
+    },
+  },
+
+  watch: {
+    "$route.params.pathMatch": {
+      handler() {
+        this.loadCourseData();
+      },
+    },
+  },
+
+  mounted() {
+    this.loadCourseData();
+  },
+
+  methods: {
+    async loadCourseData() {
+      this.isLoading = true;
+      try {
+        this.subcourses = [];
+        this.challenges = [
+          { id: 1, title: "Challenge 1 - Placeholder", maxScore: 100, currentScore: 0 },
+          { id: 2, title: "Challenge 2 - Placeholder", maxScore: 100, currentScore: 50 },
+          { id: 3, title: "Challenge 3 - Placeholder", maxScore: 100, currentScore: 100 },
+        ];
+      } catch (error) {
+        console.error("Failed to load course data:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+  },
 });
-
-const courseTitle = computed(() => {
-  const segments = coursePath.value.split("/");
-  return segments[segments.length - 1] || "Course";
-});
-
-onMounted(async () => {
-  await loadCourseData();
-});
-
-// Watch for route changes and reload data
-watch(() => route.params.pathMatch, async () => {
-  await loadCourseData();
-});
-
-async function loadCourseData() {
-  isLoading.value = true;
-  try {
-    subcourses.value = [];
-    challenges.value = [
-      { id: 1, title: "Challenge 1 - Placeholder", maxScore: 100, currentScore: 0 },
-      { id: 2, title: "Challenge 2 - Placeholder", maxScore: 100, currentScore: 50 },
-      { id: 3, title: "Challenge 3 - Placeholder", maxScore: 100, currentScore: 100 },
-    ];
-  } catch (error) {
-    console.error("Failed to load course data:", error);
-  } finally {
-    isLoading.value = false;
-  }
-}
 </script>
 
 <template>
