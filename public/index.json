@@ -1,0 +1,87 @@
+{
+  "sk": [
+    {
+      "slug": "python",
+      "path": "python",
+      "title": "Python",
+      "description": "",
+      "challengeCount": 1,
+      "challenges": [],
+      "subcourses": [
+        {
+          "slug": "Začiatočník",
+          "path": "python/Začiatočník",
+          "title": "Python Základy",
+          "description": "Naučte sa základy programovania v Pythone",
+          "challengeCount": 1,
+          "challenges": [
+            {
+              "id": "1",
+              "title": "Hello World v Pythone",
+              "type": "code",
+              "difficulty": "medium",
+              "maxScore": 10
+            }
+          ],
+          "subcourses": []
+        }
+      ]
+    },
+    {
+      "slug": "quiz-examples",
+      "path": "quiz-examples",
+      "title": "Kvízové príklady",
+      "description": "Testové otázky na precvičenie",
+      "challengeCount": 4,
+      "challenges": [
+        {
+          "id": "1",
+          "title": "a",
+          "type": "quiz",
+          "difficulty": "medium",
+          "maxScore": 10
+        },
+        {
+          "id": "2",
+          "title": "Interpretované jazyky",
+          "type": "quiz",
+          "difficulty": "medium",
+          "maxScore": 15
+        },
+        {
+          "id": "3",
+          "title": "Textová odpoveď - Základy JavaScriptu",
+          "type": "quiz",
+          "difficulty": "medium",
+          "maxScore": 5
+        },
+        {
+          "id": "4",
+          "title": "Programovacie paradigmy",
+          "type": "quiz",
+          "difficulty": "medium",
+          "maxScore": 8
+        }
+      ],
+      "subcourses": []
+    },
+    {
+      "slug": "web-basics",
+      "path": "web-basics",
+      "title": "Web Základy",
+      "description": "Naučte sa základy tvorby webových stránok",
+      "challengeCount": 1,
+      "challenges": [
+        {
+          "id": "1",
+          "title": "HTML Stránka s Tlačidlom",
+          "type": "code",
+          "difficulty": "medium",
+          "maxScore": 10
+        }
+      ],
+      "subcourses": []
+    }
+  ],
+  "en": []
+}

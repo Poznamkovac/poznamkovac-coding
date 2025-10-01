@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "Poznámkovač Coding Challenges"
+  },
+  "home": {
+    "courses": "Courses"
+  },
+  "course": {
+    "subcourses": "Subcourses",
+    "challenges": "Challenges",
+    "noContent": "No content found in this course.",
+    "challengeCount": "{count} challenges",
+    "challengeCountSingular": "{count} challenge"
+  },
+  "challenge": {
+    "assignment": "Assignment",
+    "loading": "Loading challenge...",
+    "failed": "Failed to load challenge.",
+    "notFound": "Challenge not found",
+    "notFoundMessage": "This challenge doesn't exist or has been removed. Try going back to the course and selecting a different challenge.",
+    "backToCourse": "Back to course",
+    "titleNotDefined": "Title not defined",
+    "maxScore": "Max score",
+    "currentScore": "Current",
+    "notAvailableInLanguage": "This challenge is not available in this language.",
+    "goBack": "Go back to {path}",
+    "runCode": "Run Code",
+    "running": "Running...",
+    "testSolution": "Test Solution",
+    "testing": "Testing...",
+    "reset": "Reset",
+    "resetConfirm": "Are you sure you want to reset all files to their original state? All changes will be lost.",
+    "autoReload": "Auto-reload",
+    "output": "Output:",
+    "error": "Error:",
+    "testsPassed": "Tests passed!",
+    "testsFailed": "Tests failed",
+    "score": "Score",
+    "testOutput": "Test output:",
+    "deleteFileConfirm": "Are you sure you want to delete the file \"{filename}\"?",
+    "previewPlaceholder": "Click the \"Run Code\" button to see the result",
+    "noTestFile": "No test file found in challenge"
+  },
+  "common": {
+    "loading": "Loading...",
+    "notFound": "Not Found"
+  }
+}

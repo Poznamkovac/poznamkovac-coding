@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  @apply leading-normal font-normal;
+
+  color-scheme: dark;
+  @apply text-white/[0.87];
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply m-0 bg-[#0a0a0a];
+}
+
+code {
+  @apply font-mono bg-[#1a1a1a] text-gray-300 px-2 py-1 rounded border border-gray-700;
+}
+
+/* Markdown content styles */
+@layer components {
+  /* Headings in markdown */
+  .markdown-content h1 {
+    @apply text-3xl font-bold text-white mb-4 mt-6;
+  }
+
+  .markdown-content h2 {
+    @apply text-2xl font-semibold text-white mb-3 mt-5;
+  }
+
+  .markdown-content h3 {
+    @apply text-xl font-semibold text-white mb-2 mt-4;
+  }
+
+  .markdown-content h4 {
+    @apply text-lg font-semibold text-white mb-2 mt-3;
+  }
+
+  /* Paragraphs */
+  .markdown-content p {
+    @apply mb-4 text-gray-300;
+  }
+
+  /* Links */
+  .markdown-content a {
+    @apply text-blue-400 hover:text-blue-300 underline transition-colors;
+  }
+
+  /* Lists */
+  .markdown-content ul {
+    @apply list-disc list-inside mb-4 text-gray-300;
+  }
+
+  .markdown-content ol {
+    @apply list-decimal list-inside mb-4 text-gray-300;
+  }
+
+  .markdown-content li {
+    @apply mb-1;
+  }
+
+  /* Code blocks */
+  .markdown-content pre {
+    @apply bg-[#1a1a1a] border border-gray-700 rounded p-4 mb-4 overflow-x-auto;
+  }
+
+  .markdown-content pre code {
+    @apply bg-transparent border-0 p-0;
+  }
+
+  /* Inline code */
+  .markdown-content code {
+    @apply font-mono bg-[#1a1a1a] text-gray-300 px-2 py-1 rounded border border-gray-700;
+  }
+
+  /* Blockquotes */
+  .markdown-content blockquote {
+    @apply border-l-4 border-gray-600 pl-4 italic text-gray-400 mb-4;
+  }
+
+  /* Tables */
+  .markdown-content table {
+    @apply w-full border-collapse mb-4 text-left;
+  }
+
+  .markdown-content thead {
+    @apply bg-[#1a1a1a] border-b-2 border-gray-700;
+  }
+
+  .markdown-content th {
+    @apply px-4 py-2 font-semibold text-white;
+  }
+
+  .markdown-content td {
+    @apply px-4 py-2 border-b border-gray-800 text-gray-300;
+  }
+
+  .markdown-content tbody tr:hover {
+    @apply bg-[#1a1a1a]/50;
+  }
+
+  /* Horizontal rule */
+  .markdown-content hr {
+    @apply border-0 border-t border-gray-700 my-6;
+  }
+
+  /* Images */
+  .markdown-content img {
+    @apply max-w-full h-auto rounded border border-gray-700 mb-4;
+  }
+
+  /* Strong/Bold */
+  .markdown-content strong {
+    @apply font-bold text-white;
+  }
+
+  /* Emphasis/Italic */
+  .markdown-content em {
+    @apply italic;
+  }
+}

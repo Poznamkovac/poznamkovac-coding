@@ -1,0 +1,16 @@
+{
+  "type": "quiz",
+  "maxScore": 15,
+  "answer": {
+    "type": "checkbox",
+    "options": [
+      { "id": "a", "text": "Python", "correct": true },
+      { "id": "b", "text": "C++", "correct": false },
+      { "id": "c", "text": "JavaScript", "correct": true },
+      { "id": "d", "text": "Java", "correct": false },
+      { "id": "e", "text": "Ruby", "correct": true }
+    ],
+    "correctFeedback": "Správne! Python, JavaScript a Ruby sú interpretované jazyky.",
+    "incorrectFeedback": "Interpretované jazyky vykonávajú kód priamo, bez kompilácie do strojového kódu."
+  }
+}
