@@ -2,9 +2,10 @@
 import { defineComponent } from "vue";
 import * as monaco from "monaco-editor";
 
-// Shared editor instance to avoid recreating
+// Shared editor instance to avoid recreating within same challenge
 let sharedEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let currentContainer: HTMLElement | null = null;
+let currentChallengeKey: string | null = null;
 
 export default defineComponent({
   name: "CodeEditor",
@@ -21,6 +22,10 @@ export default defineComponent({
     readonly: {
       type: Boolean,
       default: false,
+    },
+    challengeKey: {
+      type: String,
+      required: true,
     },
   },
 
@@ -102,8 +107,17 @@ export default defineComponent({
       const container = this.$refs.editorContainer as HTMLElement;
       if (!container) return;
 
+      // Check if we've navigated to a different challenge
+      if (sharedEditor && currentChallengeKey !== this.challengeKey) {
+        // Different challenge - dispose old editor and create new one
+        sharedEditor.dispose();
+        sharedEditor = null;
+        currentContainer = null;
+        currentChallengeKey = this.challengeKey;
+        this.createEditor(container, this.content);
+      }
       // If editor exists and is in a different container, move it
-      if (sharedEditor && currentContainer !== container) {
+      else if (sharedEditor && currentContainer !== container) {
         // Detach from old container
         if (currentContainer && sharedEditor) {
           currentContainer.innerHTML = '';
@@ -117,10 +131,11 @@ export default defineComponent({
 
         this.createEditor(container, currentValue);
       } else if (!sharedEditor) {
-        // Create new editor
+        // Create new editor for the first time
+        currentChallengeKey = this.challengeKey;
         this.createEditor(container, this.content);
       } else {
-        // Reuse existing editor - just update content and language
+        // Same challenge, same container - just update content and language
         this.updateEditorContent();
       }
 

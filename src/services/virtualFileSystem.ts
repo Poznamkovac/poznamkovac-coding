@@ -16,6 +16,7 @@ export interface VirtualFileSystem {
   getFileContent: (filename: string) => string | undefined;
   getVisibleFiles: () => VirtualFile[];
   getAllFiles: () => VirtualFile[];
+  reset: () => Promise<void>;
 }
 
 export type FileSystemEventType = "file-change" | "active-file-change" | "file-added" | "file-removed";
@@ -35,42 +36,54 @@ export interface FileSystemEvent {
 export async function createVirtualFileSystem(
   coursePath: string,
   challengeId: string,
-  initialFiles: Array<{ filename: string; readonly: boolean; hidden: boolean; autoreload?: boolean }>,
+  initialFiles: Array<{ filename: string; readonly: boolean; hidden: boolean; autoreload?: boolean; removable?: boolean }>,
   language: string
 ): Promise<VirtualFileSystem> {
   const filesMap = new Map<string, VirtualFile>();
   let currentActiveFile: string | null = null;
 
+  // Check if we have a saved filesystem structure
+  const savedStructure = await storageService.getFileSystemStructure(coursePath, challengeId);
+  const filesToLoad = savedStructure || initialFiles.map(f => f.filename);
+
   // Load file contents from storage or fetch from server
   await Promise.all(
-    initialFiles.map(async (fileConfig) => {
+    filesToLoad.map(async (filename) => {
+      // Find file config from initialFiles (for metadata like readonly, hidden, etc.)
+      const fileConfig = initialFiles.find(f => f.filename === filename);
+      const isUserAdded = !fileConfig; // File added by user
+
       // Try to get from storage first
       const storedContent = await storageService.getEditorCode(
         coursePath,
         challengeId,
-        fileConfig.filename
+        filename
       );
 
       let content = storedContent;
 
       // If not in storage, try to fetch from server
-      if (!content) {
+      if (!content && fileConfig) {
         try {
           const response = await fetch(
-            `/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`
+            `/${language}/data/${coursePath}/${challengeId}/${filename}`
           );
           if (response.ok) {
             content = await response.text();
           }
         } catch (error) {
-          console.error(`Failed to load file ${fileConfig.filename}:`, error);
+          console.error(`Failed to load file ${filename}:`, error);
           content = ""; // Empty content as fallback
         }
       }
 
-      filesMap.set(fileConfig.filename, {
-        ...fileConfig,
+      filesMap.set(filename, {
+        filename,
         content: content || "",
+        readonly: fileConfig?.readonly ?? false,
+        hidden: fileConfig?.hidden ?? false,
+        autoreload: fileConfig?.autoreload ?? false,
+        removable: fileConfig?.removable ?? true,
       });
     })
   );
@@ -80,6 +93,12 @@ export async function createVirtualFileSystem(
   if (visibleFiles.length > 0) {
     currentActiveFile = visibleFiles[0].filename;
   }
+
+  // Helper to save filesystem structure
+  const saveStructure = () => {
+    const filenames = Array.from(filesMap.keys());
+    storageService.setFileSystemStructure(coursePath, challengeId, filenames);
+  };
 
   const dispatchEvent = (type: FileSystemEventType, filename: string, content?: string, autoreload?: boolean) => {
     window.dispatchEvent(
@@ -130,9 +149,11 @@ export async function createVirtualFileSystem(
           readonly: false,
           hidden: false,
           autoreload: false,
+          removable: true,
         };
         filesMap.set(filename, newFile);
         storageService.setEditorCode(coursePath, challengeId, filename, "");
+        saveStructure();
         dispatchEvent("file-added", filename);
 
         // Set as active file
@@ -143,9 +164,10 @@ export async function createVirtualFileSystem(
 
     removeFile(filename: string) {
       const file = filesMap.get(filename);
-      if (file && !file.readonly) {
+      if (file && file.removable !== false) {
         filesMap.delete(filename);
         storageService.deleteEditorCode(coursePath, challengeId, filename);
+        saveStructure();
         dispatchEvent("file-removed", filename);
 
         // If this was the active file, switch to another
@@ -185,6 +207,46 @@ export async function createVirtualFileSystem(
 
     getAllFiles() {
       return Array.from(filesMap.values());
+    },
+
+    async reset() {
+      // Clear all stored data for this challenge
+      await storageService.clearChallengeData(coursePath, challengeId);
+
+      // Clear current files
+      filesMap.clear();
+
+      // Reload initial files from server
+      await Promise.all(
+        initialFiles.map(async (fileConfig) => {
+          let content = "";
+          try {
+            const response = await fetch(
+              `/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`
+            );
+            if (response.ok) {
+              content = await response.text();
+            }
+          } catch (error) {
+            console.error(`Failed to load file ${fileConfig.filename}:`, error);
+          }
+
+          filesMap.set(fileConfig.filename, {
+            ...fileConfig,
+            content,
+          });
+        })
+      );
+
+      // Reset active file
+      const visibleFiles = Array.from(filesMap.values()).filter((f) => !f.hidden);
+      if (visibleFiles.length > 0) {
+        currentActiveFile = visibleFiles[0].filename;
+        dispatchEvent("active-file-change", currentActiveFile);
+      }
+
+      // Trigger file-added event to refresh UI
+      dispatchEvent("file-added", "");
     },
   };
 }

@@ -138,6 +138,47 @@ class StorageService {
       return {};
     }
   }
+
+  async getFileSystemStructure(
+    coursePath: string,
+    challengeId: string
+  ): Promise<string[] | null> {
+    const key = `fs_structure_${coursePath}_${challengeId}`;
+    const structure = await this.getValue(key);
+    return typeof structure === "string" ? JSON.parse(structure) : null;
+  }
+
+  async setFileSystemStructure(
+    coursePath: string,
+    challengeId: string,
+    filenames: string[]
+  ): Promise<void> {
+    const key = `fs_structure_${coursePath}_${challengeId}`;
+    await this.setValue(key, JSON.stringify(filenames));
+  }
+
+  async clearChallengeData(
+    coursePath: string,
+    challengeId: string
+  ): Promise<void> {
+    try {
+      const db = await this.dbPromise;
+      const allKeys = await db.getAllKeys(STORE_NAME);
+      const prefix = `challenge_${coursePath}_${challengeId}_`;
+      const fsKey = `fs_structure_${coursePath}_${challengeId}`;
+
+      // Delete all challenge files and structure
+      const keysToDelete = allKeys.filter(
+        (key) => key.startsWith(prefix) || key === fsKey
+      );
+
+      for (const key of keysToDelete) {
+        await db.delete(STORE_NAME, key);
+      }
+    } catch (error) {
+      console.error("Error clearing challenge data:", error);
+    }
+  }
 }
 
 export const storageService = new StorageService();

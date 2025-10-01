@@ -94,6 +94,20 @@ export default defineComponent({
       }
     },
 
+    async resetFileSystem() {
+      if (confirm("Naozaj chcete resetovať všetky súbory na pôvodný stav? Všetky zmeny budú stratené.")) {
+        try {
+          if (this.fileSystem) {
+            await this.fileSystem.reset();
+            this.updateVisibleFiles();
+            this.updateActiveFile();
+          }
+        } catch (error) {
+          console.error("Failed to reset filesystem:", error);
+        }
+      }
+    },
+
     setupAutoReload() {
       if (this.hasAutoReloadFiles) {
         this.autoReloadEnabled = true;
@@ -278,6 +292,7 @@ export default defineComponent({
         :content="activeFileContent"
         :filename="activeFile"
         :readonly="activeFileReadonly"
+        :challenge-key="`${coursePath}/${challengeId}`"
         @update:content="handleContentUpdate"
       />
     </div>
@@ -296,6 +311,13 @@ export default defineComponent({
         class="btn btn-success"
       >
         {{ isTesting ? "Testuje sa..." : "Otestovať riešenie" }}
+      </button>
+      <button
+        @click="resetFileSystem"
+        class="btn btn-secondary"
+        title="Resetovať všetky súbory na pôvodný stav"
+      >
+        Resetovať
       </button>
       <label v-if="hasAutoReloadFiles" class="auto-reload-toggle">
         <input type="checkbox" v-model="autoReloadEnabled" />
@@ -403,6 +425,15 @@ export default defineComponent({
 
 .btn-success:hover:not(:disabled) {
   background: #15803d;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #4b5563;
 }
 
 .auto-reload-toggle {
