@@ -1,5 +1,6 @@
 import { storageService } from "./storage";
 import type { ChallengeFile } from "../types";
+import { isTestFile } from "../utils";
 
 export interface VirtualFile extends ChallengeFile {
   content: string;
@@ -31,25 +32,6 @@ export interface FileSystemEvent {
   autoreload?: boolean;
 }
 
-/**
- * Helper to check if a filename is a test file
- */
-function isTestFile(filename: string): boolean {
-  return filename.startsWith("test.") || filename.startsWith("test_");
-}
-
-/**
- * Discover all files in the challenge directory
- */
-async function discoverChallengeFiles(
-  coursePath: string,
-  challengeId: string,
-  language: string
-): Promise<string[]> {
-  // We can't list directory contents in browser, so we'll need to try fetching common files
-  // For now, we'll just return empty - files should be defined in metadata or discovered via fetch
-  return [];
-}
 
 /**
  * Creates a virtual file system for managing code challenge files
@@ -105,10 +87,15 @@ export async function createVirtualFileSystem(
     filesToLoad.map(async (filename) => {
       // Find file config from allFiles (includes discovered test files)
       const fileConfig = allFiles.find(f => f.filename === filename);
-      const isUserAdded = !fileConfig; // File added by user
 
       // For test files, always make them readonly and hidden
       const isTest = isTestFile(filename);
+
+      // Skip test files that weren't discovered (i.e., not in allFiles)
+      // This prevents stale test files from savedStructure from being loaded
+      if (isTest && !fileConfig) {
+        return;
+      }
 
       // Try to get from storage first (but not for test files)
       let content: string | null = null;
@@ -135,15 +122,18 @@ export async function createVirtualFileSystem(
         }
       }
 
-      filesMap.set(filename, {
-        filename,
-        content: content || "",
-        originalContent: content || "", // Store original content from server
-        readonly: isTest ? true : (fileConfig?.readonly ?? false),
-        hidden: isTest ? true : (fileConfig?.hidden ?? false),
-        autoreload: fileConfig?.autoreload ?? false,
-        removable: isTest ? false : (fileConfig?.removable ?? true),
-      });
+      // Only add file if we have config or content
+      if (fileConfig || content) {
+        filesMap.set(filename, {
+          filename,
+          content: content || "",
+          originalContent: content || "", // Store original content from server
+          readonly: isTest ? true : (fileConfig?.readonly ?? false),
+          hidden: isTest ? true : (fileConfig?.hidden ?? false),
+          autoreload: fileConfig?.autoreload ?? false,
+          removable: isTest ? false : (fileConfig?.removable ?? true),
+        });
+      }
     })
   );
 
@@ -281,34 +271,13 @@ export async function createVirtualFileSystem(
       // Clear current files
       filesMap.clear();
 
-      // Re-fetch assignment.json to get the latest file list
-      let freshFileList = initialFiles;
-      try {
-        const cacheBuster = `?t=${Date.now()}`;
-        const assignmentResponse = await fetch(
-          `/${language}/data/${coursePath}/${challengeId}/assignment.json${cacheBuster}`,
-          { cache: 'no-store' }
-        );
-        if (assignmentResponse.ok) {
-          const assignmentData = await assignmentResponse.json();
-          if (assignmentData.files) {
-            freshFileList = assignmentData.files;
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to fetch fresh assignment.json, using original:', error);
-      }
-
-      // Reload files from server with cache busting
+      // Reload all files (including test files) from server
       await Promise.all(
-        freshFileList.map(async (fileConfig) => {
+        allFiles.map(async (fileConfig) => {
           let content = "";
           try {
-            // Add cache-busting parameter to force fresh fetch
-            const cacheBuster = `?t=${Date.now()}`;
             const response = await fetch(
-              `/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}${cacheBuster}`,
-              { cache: 'no-store' }
+              `/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`
             );
             if (response.ok) {
               content = await response.text();
@@ -320,6 +289,7 @@ export async function createVirtualFileSystem(
           filesMap.set(fileConfig.filename, {
             ...fileConfig,
             content,
+            originalContent: content, // Set original content for proper tracking
           });
         })
       );

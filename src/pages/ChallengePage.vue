@@ -138,19 +138,12 @@ export default defineComponent({
         const coursePath = this.pathSegments.slice(0, -1).join("/");
         const lang = this.language;
         const metadataPath = `/${lang}/data/${coursePath}/${this.challengeId}/metadata.json`;
-        const assignmentJsonPath = `/${lang}/data/${coursePath}/${this.challengeId}/assignment.json`; // Legacy
         const assignmentMdPath = `/${lang}/data/${coursePath}/${this.challengeId}/assignment.md`;
 
-        // Try metadata.json first (new format), fall back to assignment.json (legacy quiz format)
-        let metadata;
-        let metadataResponse = await fetch(metadataPath);
-
+        // Load metadata.json
+        const metadataResponse = await fetch(metadataPath);
         if (!metadataResponse.ok) {
-          // Try legacy assignment.json format
-          metadataResponse = await fetch(assignmentJsonPath);
-          if (!metadataResponse.ok) {
-            throw new Error("Challenge not found");
-          }
+          throw new Error("Challenge not found");
         }
 
         // Validate that we got JSON, not HTML (404 page)
@@ -159,6 +152,7 @@ export default defineComponent({
           throw new Error("Challenge not found");
         }
 
+        let metadata;
         try {
           const metadataText = await metadataResponse.text();
           metadata = JSON.parse(metadataText);
@@ -166,29 +160,26 @@ export default defineComponent({
           throw new Error("Challenge not found");
         }
 
-        // For new format with assignment.md, load and parse markdown
-        let title = metadata.title || this.i18nStore.t("challenge.titleNotDefined");
-        let assignmentContent = metadata.assignment || "";
-
+        // Load assignment.md and parse markdown
         const assignmentMdResponse = await fetch(assignmentMdPath);
-        if (assignmentMdResponse.ok) {
-          const assignmentMarkdown = await assignmentMdResponse.text();
-
-          // Parse markdown
-          const lines = assignmentMarkdown.split('\n');
-
-          // Extract title (first h1) if present
-          if (lines[0]?.startsWith('# ')) {
-            title = lines[0].substring(2).trim();
-            // Remove the title line and parse the rest as description
-            const description = lines.slice(1).join('\n').trim();
-            assignmentContent = await marked.parse(description);
-          } else {
-            assignmentContent = await marked.parse(assignmentMarkdown);
-          }
-        } else if (!metadata.assignment) {
-          // No assignment.md and no assignment in JSON
+        if (!assignmentMdResponse.ok) {
           throw new Error("Assignment content not found");
+        }
+
+        const assignmentMarkdown = await assignmentMdResponse.text();
+        const lines = assignmentMarkdown.split('\n');
+
+        // Extract title (first h1)
+        let title = this.i18nStore.t("challenge.titleNotDefined");
+        let assignmentContent = "";
+
+        if (lines[0]?.startsWith('# ')) {
+          title = lines[0].substring(2).trim();
+          // Remove the title line and parse the rest as description
+          const description = lines.slice(1).join('\n').trim();
+          assignmentContent = await marked.parse(description);
+        } else {
+          assignmentContent = await marked.parse(assignmentMarkdown);
         }
 
         // Combine metadata with parsed assignment
@@ -312,7 +303,7 @@ export default defineComponent({
             <h3 class="text-xl font-semibold text-yellow-400 mb-3">Správna odpoveď:</h3>
             <div class="text-gray-300">
               <template v-if="challengeData.answer.type === 'radio' || challengeData.answer.type === 'checkbox'">
-                <div v-for="option in challengeData.answer.options?.filter(o => o.correct)" :key="option.id" class="mb-1">
+                <div v-for="option in challengeData.answer.options?.filter((o) => o.correct)" :key="option.id" class="mb-1">
                   • {{ option.text }}
                 </div>
               </template>

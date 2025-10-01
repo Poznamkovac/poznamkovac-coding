@@ -1,7 +1,5 @@
 {
   "type": "quiz",
-  "title": "Textová odpoveď - Základy JavaScriptu",
-  "assignment": "Aký je výstup nasledujúceho kódu v JavaScripte?<br><code>console.log(typeof null)</code>",
   "maxScore": 5,
   "answer": {
     "type": "input",

@@ -31,43 +31,35 @@ function scanChallenges(dir) {
     if (entry.isDirectory() && /^\d+$/.test(entry.name)) {
       const challengeDir = path.join(dir, entry.name);
       const metadataPath = path.join(challengeDir, 'metadata.json');
-      const assignmentJsonPath = path.join(challengeDir, 'assignment.json'); // Legacy format
       const assignmentMdPath = path.join(challengeDir, 'assignment.md');
 
-      // Try metadata.json first (new format), then fall back to assignment.json (legacy)
-      let challengeFile = null;
-      let metadata = null;
-
-      if (fs.existsSync(metadataPath)) {
-        challengeFile = metadataPath;
-      } else if (fs.existsSync(assignmentJsonPath)) {
-        challengeFile = assignmentJsonPath;
+      // Require both metadata.json and assignment.md
+      if (!fs.existsSync(metadataPath) || !fs.existsSync(assignmentMdPath)) {
+        console.warn(`Warning: Challenge ${entry.name} is missing metadata.json or assignment.md`);
+        continue;
       }
 
-      if (challengeFile) {
-        try {
-          metadata = JSON.parse(fs.readFileSync(challengeFile, 'utf-8'));
+      try {
+        const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
 
-          // Extract title from assignment.md (first h1 line) or fall back to metadata/assignment.json
-          let title = metadata.title || `Challenge ${entry.name}`;
+        // Extract title from assignment.md (first h1 line)
+        const assignmentContent = fs.readFileSync(assignmentMdPath, 'utf-8');
+        const firstLine = assignmentContent.split('\n')[0];
+        let title = `Challenge ${entry.name}`;
 
-          if (fs.existsSync(assignmentMdPath)) {
-            const assignmentContent = fs.readFileSync(assignmentMdPath, 'utf-8');
-            const firstLine = assignmentContent.split('\n')[0];
-            if (firstLine?.startsWith('# ')) {
-              title = firstLine.substring(2).trim();
-            }
-          }
-
-          challenges.push({
-            id: entry.name,
-            title,
-            type: metadata.type || 'code',
-            difficulty: metadata.difficulty || 'medium',
-          });
-        } catch (error) {
-          console.warn(`Warning: Failed to parse ${challengeFile}:`, error.message);
+        if (firstLine?.startsWith('# ')) {
+          title = firstLine.substring(2).trim();
         }
+
+        challenges.push({
+          id: entry.name,
+          title,
+          type: metadata.type || 'code',
+          difficulty: metadata.difficulty || 'medium',
+          maxScore: metadata.maxScore || 10,
+        });
+      } catch (error) {
+        console.warn(`Warning: Failed to parse challenge ${entry.name}:`, error.message);
       }
     }
   }

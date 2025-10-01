@@ -7,6 +7,7 @@ import { titleCase, hashStringToColor } from "../utils";
 import { useI18nStore } from "../stores/i18n";
 import { storeToRefs } from "pinia";
 import type { Course, Challenge } from "../types";
+import { storageService } from "../services/storage";
 
 export default defineComponent({
   name: "CoursePage",
@@ -22,6 +23,7 @@ export default defineComponent({
     const { language } = storeToRefs(i18nStore);
 
     return {
+      i18nStore,
       language,
     };
   },
@@ -116,12 +118,23 @@ export default defineComponent({
 
           // Load challenges if any
           if (course.challenges && course.challenges.length > 0) {
-            this.challenges = course.challenges.map((challenge: any) => ({
-              id: parseInt(challenge.id, 10),
-              title: challenge.title,
-              maxScore: 0, // Will be loaded from assignment if needed
-              currentScore: 0,
-            }));
+            this.challenges = await Promise.all(
+              course.challenges.map(async (challenge: any) => {
+                const challengeId = challenge.id;
+                const score = await storageService.getChallengeScore(
+                  this.coursePath,
+                  challengeId,
+                  this.language as "sk" | "en"
+                );
+
+                return {
+                  id: parseInt(challengeId, 10),
+                  title: challenge.title,
+                  maxScore: challenge.maxScore || 10,
+                  currentScore: score || 0,
+                };
+              })
+            );
           }
         }
       } catch (error) {
@@ -174,19 +187,19 @@ export default defineComponent({
       <h2 class="text-3xl font-bold text-white mb-8">{{ courseTitle }}</h2>
 
       <div v-if="isLoading" class="text-center text-gray-400 py-12">
-        Loading...
+        {{ i18nStore.t("common.loading") }}
       </div>
 
       <div v-else>
         <div v-if="subcourses.length > 0" class="mb-8">
-          <h3 class="text-xl font-semibold text-white mb-4">Subcourses</h3>
+          <h3 class="text-xl font-semibold text-white mb-4">{{ i18nStore.t("course.subcourses") }}</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <CourseCard v-for="course in subcourses" :key="course.slug" :course="course" />
           </div>
         </div>
 
         <div v-if="challenges.length > 0">
-          <h3 class="text-xl font-semibold text-white mb-4">Challenges</h3>
+          <h3 class="text-xl font-semibold text-white mb-4">{{ i18nStore.t("course.challenges") }}</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <ChallengeCard
               v-for="challenge in challenges"
@@ -198,7 +211,7 @@ export default defineComponent({
         </div>
 
         <div v-if="subcourses.length === 0 && challenges.length === 0" class="text-center text-gray-400 py-12">
-          No content found in this course.
+          {{ i18nStore.t("course.noContent") }}
         </div>
       </div>
     </div>

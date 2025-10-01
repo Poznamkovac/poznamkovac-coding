@@ -38,3 +38,7 @@ export function titleCase(slug: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+
+export function isTestFile(filename: string): boolean {
+  return filename.startsWith("test.") || filename.startsWith("test_");
+}

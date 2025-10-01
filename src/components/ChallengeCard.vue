@@ -57,9 +57,9 @@ export default defineComponent({
       <span v-if="isCompleted" class="text-green-500 text-xl">✓</span>
     </div>
     <div class="flex items-center gap-2 text-sm text-gray-400">
-      <span>Max score: {{ challenge.maxScore }}</span>
+      <span>{{ i18nStore.t("challenge.maxScore") }}: {{ challenge.maxScore }}</span>
       <span v-if="challenge.currentScore !== undefined">
-        | Current: {{ challenge.currentScore }} ({{ scorePercentage }}%)
+        | {{ i18nStore.t("challenge.currentScore") }}: {{ challenge.currentScore }} ({{ scorePercentage }}%)
       </span>
     </div>
   </div>

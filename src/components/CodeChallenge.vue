@@ -8,6 +8,7 @@ import { runTests, type TestResult } from "../services/testRunner";
 import { storageService } from "../services/storage";
 import type { CodeChallengeData } from "../types";
 import { useI18nStore } from "../stores/i18n";
+import { isTestFile } from "../utils";
 
 export default defineComponent({
   name: "CodeChallenge",
@@ -80,7 +81,7 @@ export default defineComponent({
     hasTestFiles(): boolean {
       if (!this.fileSystem) return false;
       const allFiles = this.fileSystem.getAllFiles();
-      return allFiles.some((f) => this.isTestFile(f.filename));
+      return allFiles.some((f) => isTestFile(f.filename));
     },
 
     hasPreviewOrOutput(): boolean {
@@ -116,10 +117,6 @@ export default defineComponent({
   methods: {
     t(key: string, params?: Record<string, string | number>): string {
       return this.i18nStore.t(key, params);
-    },
-
-    isTestFile(filename: string): boolean {
-      return filename.startsWith("test.") || filename.startsWith("test_");
     },
 
     async initializeFileSystem() {
@@ -301,7 +298,7 @@ export default defineComponent({
         }
 
         // Find test file in the file system (not metadata, since tests are auto-discovered)
-        const testFile = allFiles.find((f) => this.isTestFile(f.filename));
+        const testFile = allFiles.find((f) => isTestFile(f.filename));
         if (!testFile) {
           this.executionError = this.t("challenge.noTestFile");
           return;
@@ -461,12 +458,6 @@ export default defineComponent({
           </div>
           <pre v-else-if="previewType === 'text'" class="preview-text">{{ previewContent }}</pre>
 
-          <!-- Execution Output -->
-          <div v-if="executionOutput && !testResult" class="output">
-            <h4>{{ t("challenge.output") }}</h4>
-            <pre>{{ executionOutput }}</pre>
-          </div>
-
           <!-- Execution Error -->
           <div v-if="executionError" class="error">
             <h4>{{ t("challenge.error") }}</h4>
@@ -483,10 +474,10 @@ export default defineComponent({
             <div v-if="testResult.feedback" class="test-feedback">
               {{ testResult.feedback }}
             </div>
-            <div v-if="testResult.output" class="test-output">
-              <h5>{{ t("challenge.testOutput") }}</h5>
+            <details v-if="testResult.output" class="test-output-details">
+              <summary>{{ t("challenge.testOutput") }}</summary>
               <pre>{{ testResult.output }}</pre>
-            </div>
+            </details>
           </div>
         </div>
       </div>
@@ -508,6 +499,7 @@ export default defineComponent({
   align-items: center;
   flex-wrap: wrap;
   margin-bottom: 8px;
+  justify-content: flex-end;
 }
 
 .btn {
@@ -785,9 +777,7 @@ export default defineComponent({
 }
 
 .preview-text,
-.output pre,
-.error pre,
-.test-output pre {
+.error pre {
   background: #1a1a1a;
   border: 1px solid #2d2d2d;
   border-radius: 8px;
@@ -861,9 +851,41 @@ export default defineComponent({
   margin-bottom: 12px;
 }
 
-.test-output h5 {
+.test-output-details {
+  margin-top: 12px;
+  border: 1px solid #2d2d2d;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.test-output-details summary {
+  padding: 12px 16px;
+  background: #1a1a1a;
+  cursor: pointer;
+  user-select: none;
   color: white;
-  margin-bottom: 8px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.test-output-details summary:hover {
+  background: #252525;
+}
+
+.test-output-details[open] summary {
+  border-bottom: 1px solid #2d2d2d;
+}
+
+.test-output-details pre {
+  background: #0f0f0f;
+  padding: 16px;
+  color: #ccc;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 13px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
 }
 
 /* Mobile responsive - stack editor and preview vertically */

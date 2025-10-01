@@ -9,8 +9,8 @@
       "challenges": [],
       "subcourses": [
         {
-          "slug": "beginner",
-          "path": "python/beginner",
+          "slug": "Začiatočník",
+          "path": "python/Začiatočník",
           "title": "Python Základy",
           "description": "Naučte sa základy programovania v Pythone",
           "challengeCount": 1,
@@ -19,7 +19,8 @@
               "id": "1",
               "title": "Hello World v Pythone",
               "type": "code",
-              "difficulty": "medium"
+              "difficulty": "medium",
+              "maxScore": 10
             }
           ],
           "subcourses": []
@@ -37,25 +38,29 @@
           "id": "1",
           "title": "a",
           "type": "quiz",
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "maxScore": 10
         },
         {
           "id": "2",
-          "title": "Challenge 2",
+          "title": "Interpretované jazyky",
           "type": "quiz",
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "maxScore": 15
         },
         {
           "id": "3",
           "title": "Textová odpoveď - Základy JavaScriptu",
           "type": "quiz",
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "maxScore": 5
         },
         {
           "id": "4",
           "title": "Programovacie paradigmy",
           "type": "quiz",
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "maxScore": 8
         }
       ],
       "subcourses": []
@@ -71,7 +76,8 @@
           "id": "1",
           "title": "HTML Stránka s Tlačidlom",
           "type": "code",
-          "difficulty": "medium"
+          "difficulty": "medium",
+          "maxScore": 10
         }
       ],
       "subcourses": []

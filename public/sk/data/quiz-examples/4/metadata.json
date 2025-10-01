@@ -1,7 +1,5 @@
 {
   "type": "quiz",
-  "title": "Programovacie paradigmy",
-  "assignment": "Ako sa nazýva programovacia paradigma, ktorá používa objekty a triedy?",
   "maxScore": 8,
   "answer": {
     "type": "input",

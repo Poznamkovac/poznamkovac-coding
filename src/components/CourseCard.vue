@@ -53,8 +53,15 @@ export default defineComponent({
 
       try {
         const color = new Color(this.course.color);
+        const rgb = color.rgb;
+
         // Calculate relative luminance using WCAG formula
-        const luminance = color.luminance();
+        // L = 0.2126 * R + 0.7152 * G + 0.0722 * B
+        const r = rgb.r / 255;
+        const g = rgb.g / 255;
+        const b = rgb.b / 255;
+
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
         // Use WCAG contrast ratio threshold (0.5 is a good middle point)
         // Lighter colors (luminance > 0.5) get dark text, darker colors get white text

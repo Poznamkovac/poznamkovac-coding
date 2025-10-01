@@ -1,7 +1,5 @@
 {
   "type": "code",
-  "title": "HTML Stránka s Tlačidlom",
-  "assignment": "Vytvorte jednoduchú HTML stránku s nadpisom a tlačidlom, ktoré po kliknutí zobrazí alert.",
   "maxScore": 10,
   "mainFile": "index.html",
   "files": [
