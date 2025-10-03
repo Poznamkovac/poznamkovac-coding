@@ -296,7 +296,11 @@ export default defineComponent({
             <h3 class="text-xl font-semibold text-yellow-400 mb-3">Správna odpoveď:</h3>
             <div class="text-gray-300">
               <template v-if="challengeData.answer.type === 'radio' || challengeData.answer.type === 'checkbox'">
-                <div v-for="option in challengeData.answer.options?.filter((o) => o.correct)" :key="option.id" class="mb-1">
+                <div
+                  v-for="option in challengeData.answer.options?.filter((o: { correct: boolean }) => o.correct)"
+                  :key="option.id"
+                  class="mb-1"
+                >
                   • {{ option.text }}
                 </div>
               </template>
