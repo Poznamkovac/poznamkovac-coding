@@ -207,7 +207,7 @@ export default defineComponent({
           this.coursePath,
           this.challengeId,
           this.challengeData.maxScore,
-          lang as "sk" | "en",
+          lang as "sk" | "en"
         );
         console.log(`Score saved: ${this.challengeData.maxScore} points`);
       }
@@ -297,7 +297,7 @@ export default defineComponent({
             <div class="text-gray-300">
               <template v-if="challengeData.answer.type === 'radio' || challengeData.answer.type === 'checkbox'">
                 <div
-                  v-for="option in challengeData.answer.options?.filter((o: { correct: boolean }) => o.correct)"
+                  v-for="option in challengeData.answer.options?.filter((o) => o.correct)"
                   :key="option.id"
                   class="mb-1"
                 >
