@@ -22,11 +22,6 @@ const routes: RouteRecordRaw[] = [
     component: () => import("../pages/EmbedCustomPage.vue"),
   },
   {
-    path: "/embed/create",
-    name: "embed-create",
-    component: () => import("../pages/CreateEmbedPage.vue"),
-  },
-  {
     path: "/embed/:pathMatch(.*)*",
     name: "embed-challenge",
     component: () => import("../pages/EmbedChallengePage.vue"),

@@ -7,7 +7,7 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#0a0a0a]">
+  <div class="min-h-screen bg-transparent">
     <slot />
   </div>
 </template>
