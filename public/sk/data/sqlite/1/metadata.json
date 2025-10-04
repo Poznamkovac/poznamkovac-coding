@@ -1,0 +1,25 @@
+{
+  "type": "code",
+  "maxScore": 10,
+  "mainFile": "query.sql",
+  "files": [
+    {
+      "filename": "schema.sql",
+      "readonly": true,
+      "hidden": false,
+      "autoreload": false
+    },
+    {
+      "filename": "data.sql",
+      "readonly": true,
+      "hidden": false,
+      "autoreload": false
+    },
+    {
+      "filename": "query.sql",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    }
+  ]
+}

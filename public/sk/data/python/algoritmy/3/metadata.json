@@ -1,0 +1,13 @@
+{
+  "type": "code",
+  "maxScore": 1,
+  "mainFile": "mergesort.py",
+  "files": [
+    {
+      "filename": "mergesort.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    }
+  ]
+}

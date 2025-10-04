@@ -5,7 +5,7 @@
       "path": "python",
       "title": "Python",
       "description": "",
-      "challengeCount": 1,
+      "challengeCount": 6,
       "challenges": [],
       "subcourses": [
         {
@@ -21,6 +21,51 @@
               "type": "code",
               "difficulty": "medium",
               "maxScore": 10
+            }
+          ],
+          "subcourses": []
+        },
+        {
+          "slug": "algoritmy",
+          "path": "python/algoritmy",
+          "title": "Algoritmy",
+          "description": "",
+          "challengeCount": 5,
+          "challenges": [
+            {
+              "id": "1",
+              "title": "Bubble sort",
+              "type": "code",
+              "difficulty": "medium",
+              "maxScore": 10
+            },
+            {
+              "id": "2",
+              "title": "Python quick-sort",
+              "type": "code",
+              "difficulty": "medium",
+              "maxScore": 1
+            },
+            {
+              "id": "3",
+              "title": "Python merge-sort",
+              "type": "code",
+              "difficulty": "medium",
+              "maxScore": 1
+            },
+            {
+              "id": "4",
+              "title": "Pažravá mincovka",
+              "type": "code",
+              "difficulty": "medium",
+              "maxScore": 5
+            },
+            {
+              "id": "5",
+              "title": "Fibonacciho postupnosť s memoizáciou",
+              "type": "code",
+              "difficulty": "medium",
+              "maxScore": 5
             }
           ],
           "subcourses": []
@@ -61,6 +106,23 @@
           "type": "quiz",
           "difficulty": "medium",
           "maxScore": 8
+        }
+      ],
+      "subcourses": []
+    },
+    {
+      "slug": "sqlite",
+      "path": "sqlite",
+      "title": "Sqlite",
+      "description": "",
+      "challengeCount": 1,
+      "challenges": [
+        {
+          "id": "1",
+          "title": "Základy SQL - SELECT",
+          "type": "code",
+          "difficulty": "medium",
+          "maxScore": 10
         }
       ],
       "subcourses": []

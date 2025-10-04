@@ -56,7 +56,7 @@ export default defineComponent({
       executionOutput: "",
       executionError: "",
       previewContent: "",
-      previewType: null as "web" | "image" | "text" | null,
+      previewType: null as "html" | "image" | "text" | null,
       testResult: null as TestResult | null,
       autoReloadEnabled: false,
       splitPosition: 50,
@@ -70,6 +70,7 @@ export default defineComponent({
     runnerLanguage(): string {
       const ext = this.challengeData.mainFile.split(".").pop()?.toLowerCase() || "";
       if (ext === "py") return "python";
+      if (ext === "sql") return "sqlite";
       if (["html", "css", "js"].includes(ext)) return "web";
       return "python";
     },
@@ -125,7 +126,7 @@ export default defineComponent({
           this.coursePath,
           this.challengeId,
           this.challengeData.files,
-          this.language,
+          this.language
         );
 
         this.updateVisibleFiles();
@@ -279,7 +280,7 @@ export default defineComponent({
 
           if (result.htmlContent) {
             this.previewContent = result.htmlContent;
-            this.previewType = "web";
+            this.previewType = "html";
           } else if (result.imageData) {
             this.previewContent = result.imageData;
             this.previewType = "image";
@@ -334,7 +335,7 @@ export default defineComponent({
             this.coursePath,
             this.challengeId,
             this.testResult.score,
-            this.language as "sk" | "en",
+            this.language as "sk" | "en"
           );
           console.log(`Code challenge score saved: ${this.testResult.score}/${this.testResult.maxScore} points`);
         }
@@ -466,7 +467,7 @@ export default defineComponent({
             <button class="placeholder-button">{{ t("challenge.runCode") }}</button>
           </div>
           <!-- Preview -->
-          <div v-if="previewType === 'web'" class="preview-web">
+          <div v-if="previewType === 'html'" class="preview-html">
             <iframe :srcdoc="previewContent" sandbox="allow-scripts"></iframe>
           </div>
           <div v-else-if="previewType === 'image'" class="preview-image">
@@ -767,18 +768,19 @@ export default defineComponent({
   background: #005a9e;
 }
 
-.preview-web {
+.preview-html {
   flex: 1;
   min-height: 400px;
+  background: transparent;
 }
 
-.preview-web iframe {
+.preview-html iframe {
   width: 100%;
   height: 100%;
   min-height: 400px;
   border: 1px solid #2d2d2d;
   border-radius: 8px;
-  background: white;
+  background: transparent;
 }
 
 .preview-image {

@@ -1,6 +1,7 @@
 import type { CodeRunner } from "./base";
 import { PythonRunner } from "./pythonRunner";
 import { WebRunner } from "./webRunner";
+import { SQLiteRunner } from "./sqliteRunner";
 
 class CodeRunnerRegistry {
   private runners: Map<string, CodeRunner> = new Map();
@@ -8,6 +9,7 @@ class CodeRunnerRegistry {
   constructor() {
     this.registerRunner(new PythonRunner());
     this.registerRunner(new WebRunner());
+    this.registerRunner(new SQLiteRunner());
   }
 
   registerRunner(runner: CodeRunner): void {

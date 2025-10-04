@@ -1,0 +1,13 @@
+{
+  "type": "code",
+  "maxScore": 1,
+  "mainFile": "quicksort.py",
+  "files": [
+    {
+      "filename": "quicksort.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    }
+  ]
+}

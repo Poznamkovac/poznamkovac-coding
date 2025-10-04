@@ -44,8 +44,13 @@ export async function createVirtualFileSystem(
   const filesMap = new Map<string, VirtualFile>();
   let currentActiveFile: string | null = null;
 
-  // Try to discover test files by attempting to fetch them
-  const testFileExtensions = [".py", ".js", ".ts"];
+  // Determine the file extension from the first file in initialFiles (usually the main file)
+  const mainFileExt = initialFiles.length > 0
+    ? initialFiles[0].filename.substring(initialFiles[0].filename.lastIndexOf('.'))
+    : '.py';
+
+  // Only try to discover test files matching the main file extension
+  const testFileExtensions = [mainFileExt];
   const testFilePatterns = ["test", "test_main"];
   const discoveredTestFiles: string[] = [];
 
@@ -55,7 +60,14 @@ export async function createVirtualFileSystem(
       try {
         const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${testFilename}`);
         if (response.ok) {
-          discoveredTestFiles.push(testFilename);
+          const text = await response.text();
+          // Validate that we didn't get the 404.html page
+          const looksLikeHTML = text.trim().toLowerCase().startsWith("<!doctype") ||
+                                 text.trim().startsWith("<html");
+
+          if (!looksLikeHTML) {
+            discoveredTestFiles.push(testFilename);
+          }
         }
       } catch {
         // File doesn't exist, continue
@@ -107,7 +119,32 @@ export async function createVirtualFileSystem(
         try {
           const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${filename}`);
           if (response.ok) {
-            content = await response.text();
+            const text = await response.text();
+            // Validate that we didn't get the 404.html page or other HTML content
+            const looksLikeHTML = text.trim().toLowerCase().startsWith("<!doctype") ||
+                                   text.trim().startsWith("<html") ||
+                                   text.includes("<script") && text.includes("</script>");
+
+            if (!looksLikeHTML) {
+              content = text;
+            } else {
+              console.error(`File ${filename} returned HTML instead of expected content (likely 404). First 200 chars:`, text.substring(0, 200));
+
+              // Provide sensible defaults for SQL files
+              if (filename.endsWith('.sql')) {
+                if (filename === 'query.sql') {
+                  content = '-- Write your SQL query here\nSELECT * FROM table_name;';
+                } else if (filename === 'schema.sql') {
+                  content = '-- Database schema will be loaded here';
+                } else if (filename === 'data.sql') {
+                  content = '-- Sample data will be loaded here';
+                } else {
+                  content = '-- SQL file';
+                }
+              } else {
+                content = ""; // Empty content as fallback
+              }
+            }
           }
         } catch (error) {
           console.error(`Failed to load file ${filename}:`, error);

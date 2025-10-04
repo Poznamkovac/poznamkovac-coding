@@ -1,0 +1,19 @@
+{
+  "type": "code",
+  "maxScore": 10,
+  "mainFile": "test.py",
+  "files": [
+    {
+      "filename": "test.py",
+      "readonly": true,
+      "hidden": true,
+      "autoreload": false
+    },
+    {
+      "filename": "bubble_sort.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    }
+  ]
+}

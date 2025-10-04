@@ -1,0 +1,19 @@
+{
+  "type": "code",
+  "maxScore": 5,
+  "mainFile": "test.py",
+  "files": [
+    {
+      "filename": "test.py",
+      "readonly": true,
+      "hidden": true,
+      "autoreload": false
+    },
+    {
+      "filename": "main.py",
+      "readonly": false,
+      "hidden": false,
+      "autoreload": false
+    }
+  ]
+}
