@@ -109,14 +109,11 @@ matplotlib.use('webagg')
 
       await this.pyodide.runPythonAsync(mainContent);
 
-      // No need to capture image data - webagg renders to DOM automatically
-      let imageData: string | undefined;
-
       return {
         success: !stderr,
         output: stdout.trim(),
         error: stderr.trim() || undefined,
-        imageData,
+        testContext: { pyodide: this.pyodide },
       };
     } catch (error: any) {
       return {

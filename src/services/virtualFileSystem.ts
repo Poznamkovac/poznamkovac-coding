@@ -44,29 +44,42 @@ export async function createVirtualFileSystem(
   const filesMap = new Map<string, VirtualFile>();
   let currentActiveFile: string | null = null;
 
-  // Determine the file extension from the first file in initialFiles (usually the main file)
-  const mainFileExt = initialFiles.length > 0
-    ? initialFiles[0].filename.substring(initialFiles[0].filename.lastIndexOf('.'))
-    : '.py';
-
-  // Only try to discover test files matching the main file extension
-  const testFileExtensions = [mainFileExt];
-  const testFilePatterns = ["test", "test_main"];
+  // Only try to discover test.js file (unified test framework)
   const discoveredTestFiles: string[] = [];
+  const testFilename = "test.js";
 
-  for (const pattern of testFilePatterns) {
-    for (const ext of testFileExtensions) {
-      const testFilename = `${pattern}${ext}`;
+  try {
+    const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${testFilename}`);
+    if (response.ok) {
+      const text = await response.text();
+      // Validate that we didn't get the 404.html page
+      const looksLikeHTML = text.trim().toLowerCase().startsWith("<!doctype") || text.trim().startsWith("<html");
+
+      if (!looksLikeHTML) {
+        discoveredTestFiles.push(testFilename);
+      }
+    }
+  } catch {
+    // File doesn't exist, continue
+  }
+
+  // Also check for legacy test files for backward compatibility
+  const mainFileExt =
+    initialFiles.length > 0 ? initialFiles[0].filename.substring(initialFiles[0].filename.lastIndexOf(".")) : ".py";
+
+  const legacyTestPatterns = ["test", "test_main"];
+  for (const pattern of legacyTestPatterns) {
+    const legacyTestFilename = `${pattern}${mainFileExt}`;
+    if (legacyTestFilename !== testFilename) {
+      // Don't duplicate test.js
       try {
-        const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${testFilename}`);
+        const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${legacyTestFilename}`);
         if (response.ok) {
           const text = await response.text();
-          // Validate that we didn't get the 404.html page
-          const looksLikeHTML = text.trim().toLowerCase().startsWith("<!doctype") ||
-                                 text.trim().startsWith("<html");
+          const looksLikeHTML = text.trim().toLowerCase().startsWith("<!doctype") || text.trim().startsWith("<html");
 
           if (!looksLikeHTML) {
-            discoveredTestFiles.push(testFilename);
+            discoveredTestFiles.push(legacyTestFilename);
           }
         }
       } catch {
@@ -121,25 +134,29 @@ export async function createVirtualFileSystem(
           if (response.ok) {
             const text = await response.text();
             // Validate that we didn't get the 404.html page or other HTML content
-            const looksLikeHTML = text.trim().toLowerCase().startsWith("<!doctype") ||
-                                   text.trim().startsWith("<html") ||
-                                   text.includes("<script") && text.includes("</script>");
+            const looksLikeHTML =
+              text.trim().toLowerCase().startsWith("<!doctype") ||
+              text.trim().startsWith("<html") ||
+              (text.includes("<script") && text.includes("</script>"));
 
             if (!looksLikeHTML) {
               content = text;
             } else {
-              console.error(`File ${filename} returned HTML instead of expected content (likely 404). First 200 chars:`, text.substring(0, 200));
+              console.error(
+                `File ${filename} returned HTML instead of expected content (likely 404). First 200 chars:`,
+                text.substring(0, 200),
+              );
 
               // Provide sensible defaults for SQL files
-              if (filename.endsWith('.sql')) {
-                if (filename === 'query.sql') {
-                  content = '-- Write your SQL query here\nSELECT * FROM table_name;';
-                } else if (filename === 'schema.sql') {
-                  content = '-- Database schema will be loaded here';
-                } else if (filename === 'data.sql') {
-                  content = '-- Sample data will be loaded here';
+              if (filename.endsWith(".sql")) {
+                if (filename === "query.sql") {
+                  content = "-- Write your SQL query here\nSELECT * FROM table_name;";
+                } else if (filename === "schema.sql") {
+                  content = "-- Database schema will be loaded here";
+                } else if (filename === "data.sql") {
+                  content = "-- Sample data will be loaded here";
                 } else {
-                  content = '-- SQL file';
+                  content = "-- SQL file";
                 }
               } else {
                 content = ""; // Empty content as fallback

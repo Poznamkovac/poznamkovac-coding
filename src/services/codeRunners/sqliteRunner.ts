@@ -17,22 +17,174 @@ export class SQLiteRunner extends BaseCodeRunner {
 
       this.initialized = true;
     } catch (error) {
-      console.error("Failed to initialize SQL.js:", error);
       throw error;
     }
   }
 
-  async execute(files: Record<string, string>, mainFile: string): Promise<ExecutionResult> {
-    console.log("[SQLiteRunner] Starting execution");
-    console.log("[SQLiteRunner] Files:", Object.keys(files));
-    console.log("[SQLiteRunner] Main file:", mainFile);
+  private buildHtmlContent(results: Array<{ query: string; result: any; error?: string; time: string }>): string {
+    // Create a virtual document using DOMParser
+    const styles = `
+      body {
+        background: #1e1e1e;
+        color: #e0e0e0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        margin: 0;
+        padding: 16px;
+        line-height: 1.6;
+      }
 
+      .query-container {
+        margin-bottom: 20px;
+      }
+
+      .query-time {
+        color: #888;
+        font-size: 12px;
+        margin-bottom: 8px;
+        opacity: 0.8;
+      }
+
+      .result-table {
+        border-collapse: collapse;
+        width: 100%;
+        border: 1px solid #404040;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #2d2d2d;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      }
+
+      .result-table th {
+        border: 1px solid #404040;
+        padding: 10px 14px;
+        text-align: left;
+        color: #fff;
+        font-weight: 600;
+        background: #3a3a3a;
+      }
+
+      .result-table td {
+        border: 1px solid #404040;
+        padding: 10px 14px;
+        color: #e0e0e0;
+        background: #2d2d2d;
+      }
+
+      .result-table tr:hover td {
+        background: #353535;
+      }
+
+      .row-count {
+        color: #888;
+        font-size: 12px;
+        margin-top: 8px;
+        opacity: 0.8;
+      }
+
+      .success-message {
+        color: #10b981;
+        font-weight: 500;
+      }
+
+      .error-message {
+        margin-bottom: 20px;
+        padding: 12px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 6px;
+        color: #ef4444;
+      }
+    `;
+
+    // Build body content using DOM methods
+    const fragment = document.createDocumentFragment();
+
+    results.forEach(({ result, error, time }) => {
+      const container = document.createElement("div");
+      container.className = "query-container";
+
+      // Add execution time
+      const timeDiv = document.createElement("div");
+      timeDiv.className = "query-time";
+      timeDiv.textContent = `Query executed in ${time} ms`;
+      container.appendChild(timeDiv);
+
+      if (error) {
+        // Add error message
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "error-message";
+        const strong = document.createElement("strong");
+        strong.textContent = "Error: ";
+        errorDiv.appendChild(strong);
+        errorDiv.appendChild(document.createTextNode(error));
+        fragment.appendChild(errorDiv);
+      } else if (result && result.length > 0) {
+        // Create table for results
+        result.forEach((tableResult: any) => {
+          const table = document.createElement("table");
+          table.className = "result-table";
+
+          // Create header
+          const thead = document.createElement("thead");
+          const headerRow = document.createElement("tr");
+          tableResult.columns.forEach((col: string) => {
+            const th = document.createElement("th");
+            th.textContent = col;
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+
+          // Create body
+          const tbody = document.createElement("tbody");
+          tableResult.values.forEach((row: any[]) => {
+            const tr = document.createElement("tr");
+            row.forEach((cell: any) => {
+              const td = document.createElement("td");
+              td.textContent = String(cell ?? "");
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
+          table.appendChild(tbody);
+          container.appendChild(table);
+
+          // Add row count
+          const rowCount = document.createElement("div");
+          rowCount.className = "row-count";
+          rowCount.textContent = `${tableResult.values.length} row(s) returned`;
+          container.appendChild(rowCount);
+        });
+      } else {
+        // No results returned
+        const successDiv = document.createElement("div");
+        successDiv.className = "success-message";
+        successDiv.textContent = "✓ Query executed successfully (no results returned)";
+        container.appendChild(successDiv);
+      }
+
+      fragment.appendChild(container);
+    });
+
+    // Convert fragment to HTML string
+    const tempDiv = document.createElement("div");
+    tempDiv.appendChild(fragment);
+
+    return `<!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>${styles}</style>
+        </head>
+        <body>${tempDiv.innerHTML}</body>
+      </html>`;
+  }
+
+  async execute(files: Record<string, string>, mainFile: string): Promise<ExecutionResult> {
     if (!this.SQL) {
-      const error = "SQLite runtime not initialized";
-      console.error("[SQLiteRunner]", error);
       return {
         success: false,
-        error,
+        error: "SQLite runtime not initialized",
       };
     }
 
@@ -40,25 +192,22 @@ export class SQLiteRunner extends BaseCodeRunner {
       // Create a new database instance
       this.db = new this.SQL.Database();
       if (!this.db) {
-        const error = "Failed to create database instance";
-        console.error("[SQLiteRunner]", error);
         return {
           success: false,
-          error,
+          error: "Failed to create database instance",
         };
       }
 
-      let htmlContent = `<html><head><style>body { background: transparent; color: #fff; font-family: system-ui; margin: 0; padding: 16px; }</style></head><body>`;
       let textOutput = "";
       let hasError = false;
+      let allResults: any[] = [];
+      const queryResults: Array<{ query: string; result: any; error?: string; time: string }> = [];
 
       // Process schema.sql if it exists
       if (files["schema.sql"]) {
         try {
-          console.log("[SQLiteRunner] Running schema.sql");
           this.db.run(files["schema.sql"]);
         } catch (error: any) {
-          console.error("[SQLiteRunner] Schema error:", error);
           return {
             success: false,
             error: `Schema error: ${error.message}`,
@@ -69,10 +218,8 @@ export class SQLiteRunner extends BaseCodeRunner {
       // Process data.sql if it exists (sample data)
       if (files["data.sql"]) {
         try {
-          console.log("[SQLiteRunner] Running data.sql");
           this.db.run(files["data.sql"]);
         } catch (error: any) {
-          console.error("[SQLiteRunner] Data insertion error:", error);
           return {
             success: false,
             error: `Data insertion error: ${error.message}`,
@@ -83,15 +230,11 @@ export class SQLiteRunner extends BaseCodeRunner {
       // Execute the main SQL file
       const mainContent = files[mainFile];
       if (!mainContent) {
-        const error = `Main file '${mainFile}' not found`;
-        console.error("[SQLiteRunner]", error);
         return {
           success: false,
-          error,
+          error: `Main file '${mainFile}' not found`,
         };
       }
-
-      console.log("[SQLiteRunner] Main content:", mainContent);
 
       // Remove SQL comments and split by semicolon
       const cleanedContent = mainContent
@@ -99,52 +242,26 @@ export class SQLiteRunner extends BaseCodeRunner {
         .filter((line) => !line.trim().startsWith("--"))
         .join("\n");
 
-      console.log("[SQLiteRunner] Cleaned content:", cleanedContent);
-
       const queries = cleanedContent
         .split(";")
         .map((q) => q.trim())
         .filter((q) => q.length > 0);
 
-      console.log("[SQLiteRunner] Queries to execute:", queries);
-
       for (const query of queries) {
         try {
-          console.log("[SQLiteRunner] Executing query:", query);
           const startTime = performance.now();
           const result = this.db.exec(query);
           const endTime = performance.now();
           const executionTime = (endTime - startTime).toFixed(2);
 
-          console.log("[SQLiteRunner] Query result:", result);
-
-          htmlContent += `<div style="margin-bottom: 20px;">`;
-          htmlContent += `<div style="color: #666; font-size: 12px; margin-bottom: 8px;">Query executed in ${executionTime} ms</div>`;
-
           if (result.length > 0) {
-            // Format results as HTML table
+            // Store results for test context
             for (const table of result) {
-              htmlContent += `<table style="border-collapse: collapse; width: 100%; border: 1px solid #333;">`;
-
-              // Column headers
-              htmlContent += `<thead><tr>`;
-              for (const col of table.columns) {
-                htmlContent += `<th style="border: 1px solid #333; padding: 8px 12px; text-align: left; color: #fff; font-weight: 600;">${col}</th>`;
-              }
-              htmlContent += `</tr></thead>`;
-
-              // Rows
-              htmlContent += `<tbody>`;
-              for (const row of table.values) {
-                htmlContent += `<tr>`;
-                for (const cell of row) {
-                  htmlContent += `<td style="border: 1px solid #333; padding: 8px 12px; color: #ccc;">${cell}</td>`;
-                }
-                htmlContent += `</tr>`;
-              }
-              htmlContent += `</tbody></table>`;
-
-              htmlContent += `<div style="color: #666; font-size: 12px; margin-top: 8px;">${table.values.length} row(s) returned</div>`;
+              const tableData = {
+                columns: table.columns,
+                rows: table.values,
+              };
+              allResults.push(tableData);
 
               // Build text output for test runner
               textOutput += table.columns.join(" | ") + "\n";
@@ -152,35 +269,39 @@ export class SQLiteRunner extends BaseCodeRunner {
                 textOutput += row.join(" | ") + "\n";
               }
             }
-          } else {
-            // Query executed successfully but returned no results
-            htmlContent += `<div style="color: #4ade80;">✓ Query executed successfully (no results returned)</div>`;
           }
 
-          htmlContent += `</div>`;
+          queryResults.push({
+            query,
+            result,
+            time: executionTime,
+          });
         } catch (error: any) {
-          console.error("[SQLiteRunner] Query execution error:", error);
-          console.error("[SQLiteRunner] Failed query:", query);
           hasError = true;
-          htmlContent += `<div style="margin-bottom: 20px; color: #ef4444;">`;
-          htmlContent += `<strong>Error:</strong> ${error.message}`;
-          htmlContent += `</div>`;
+          queryResults.push({
+            query,
+            result: null,
+            error: error.message,
+            time: "0",
+          });
         }
       }
 
-      htmlContent += `</body></html>`;
-
-      console.log("[SQLiteRunner] Execution complete. Success:", !hasError);
+      const htmlContent = this.buildHtmlContent(queryResults);
 
       return {
         success: !hasError,
         output: textOutput.trim(),
         htmlContent: htmlContent,
         error: hasError ? "One or more queries failed" : undefined,
+        testContext: {
+          sqlite: {
+            db: this.db,
+            results: allResults,
+          },
+        },
       };
     } catch (error: any) {
-      console.error("[SQLiteRunner] Unexpected error:", error);
-      console.error("[SQLiteRunner] Stack trace:", error.stack);
       return {
         success: false,
         error: error.message || String(error),

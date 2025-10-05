@@ -71,14 +71,14 @@ export default defineComponent({
           <p class="text-xl text-gray-300 mb-4">
             {{ t("challenge.notAvailableInLanguage") }}
           </p>
-          <p class="text-gray-400">This content is not available in {{ effectiveLanguage === "sk" ? "Slovak" : "English" }}.</p>
+          <p class="text-gray-400">This content is not available in {{ effectiveLanguage.toUpperCase() }}.</p>
         </div>
 
         <div v-else class="mb-8">
           <p class="text-xl text-gray-300 mb-4">
             {{ t("common.notFound") }}
           </p>
-          <p class="text-gray-400">The page you're looking for doesn't exist.</p>
+          <p class="text-gray-400">The page you're looking for doesn't exist or has been removed.</p>
         </div>
 
         <div class="flex gap-4 justify-center">

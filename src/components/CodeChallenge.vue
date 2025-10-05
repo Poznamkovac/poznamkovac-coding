@@ -56,7 +56,7 @@ export default defineComponent({
       executionOutput: "",
       executionError: "",
       previewContent: "",
-      previewType: null as "html" | "image" | "text" | null,
+      previewType: null as "html" | "text" | null,
       testResult: null as TestResult | null,
       autoReloadEnabled: false,
       splitPosition: 50,
@@ -126,7 +126,7 @@ export default defineComponent({
           this.coursePath,
           this.challengeId,
           this.challengeData.files,
-          this.language
+          this.language,
         );
 
         this.updateVisibleFiles();
@@ -172,7 +172,7 @@ export default defineComponent({
           if (this.editorHasFocus) {
             this.pendingAutoReload = true;
           } else {
-            this.runCode();
+            this.runCodeAndTests();
           }
         }
       } else if (type === "file-added" || type === "file-removed") {
@@ -189,7 +189,7 @@ export default defineComponent({
       // If there's a pending autoreload, execute it now that focus is lost
       if (this.pendingAutoReload && this.autoReloadEnabled) {
         this.pendingAutoReload = false;
-        this.runCode();
+        this.runCodeAndTests();
       }
     },
 
@@ -251,10 +251,11 @@ export default defineComponent({
       }
     },
 
-    async runCode() {
-      if (!this.fileSystem || this.isRunning) return;
+    async runCodeAndTests() {
+      if (!this.fileSystem || this.isRunning || this.isTesting) return;
 
       this.isRunning = true;
+      this.isTesting = true;
       this.executionOutput = "";
       this.executionError = "";
       this.previewContent = "";
@@ -269,10 +270,12 @@ export default defineComponent({
         }
 
         const files: Record<string, string> = {};
-        for (const file of this.fileSystem.getAllFiles()) {
+        const allFiles = this.fileSystem.getAllFiles();
+        for (const file of allFiles) {
           files[file.filename] = file.content;
         }
 
+        // First run the code
         const result = await runner.execute(files, this.challengeData.mainFile);
 
         if (result.success) {
@@ -281,9 +284,6 @@ export default defineComponent({
           if (result.htmlContent) {
             this.previewContent = result.htmlContent;
             this.previewType = "html";
-          } else if (result.imageData) {
-            this.previewContent = result.imageData;
-            this.previewType = "image";
           } else if (result.output) {
             this.previewContent = result.output;
             this.previewType = "text";
@@ -291,57 +291,38 @@ export default defineComponent({
         } else {
           this.executionError = result.error || "Unknown error occurred";
         }
+
+        // Then run tests if they exist
+        const testFile = allFiles.find((f) => isTestFile(f.filename));
+        if (testFile) {
+          this.testResult = await runTests(this.runnerLanguage, files, testFile.filename, this.challengeData.maxScore, {
+            mainFile: this.challengeData.mainFile,
+          });
+
+          // Merge test output with execution output
+          if (this.testResult.output && !this.executionOutput.includes(this.testResult.output)) {
+            // Only add test output if it's different from execution output
+            this.executionOutput = this.executionOutput;
+          }
+          if (this.testResult.error && !this.executionError) {
+            this.executionError = this.testResult.error;
+          }
+
+          // Save score to storage if test passed
+          if (this.testResult.passed && this.testResult.score > 0) {
+            await storageService.setChallengeScore(
+              this.coursePath,
+              this.challengeId,
+              this.testResult.score,
+              this.language as "sk" | "en",
+            );
+            console.log(`Code challenge score saved: ${this.testResult.score}/${this.testResult.maxScore} points`);
+          }
+        }
       } catch (error: any) {
         this.executionError = error.message || String(error);
       } finally {
         this.isRunning = false;
-      }
-    },
-
-    async runTestSuite() {
-      if (!this.fileSystem || this.isTesting) return;
-
-      this.isTesting = true;
-      this.testResult = null;
-      this.executionOutput = "";
-      this.executionError = "";
-
-      try {
-        const files: Record<string, string> = {};
-        const allFiles = this.fileSystem.getAllFiles();
-        for (const file of allFiles) {
-          files[file.filename] = file.content;
-        }
-
-        // Find test file in the file system (not metadata, since tests are auto-discovered)
-        const testFile = allFiles.find((f) => isTestFile(f.filename));
-        if (!testFile) {
-          this.executionError = this.t("challenge.noTestFile");
-          return;
-        }
-
-        this.testResult = await runTests(this.runnerLanguage, files, testFile.filename, this.challengeData.maxScore);
-
-        if (this.testResult.output) {
-          this.executionOutput = this.testResult.output;
-        }
-        if (this.testResult.error) {
-          this.executionError = this.testResult.error;
-        }
-
-        // Save score to storage if test passed
-        if (this.testResult.passed && this.testResult.score > 0) {
-          await storageService.setChallengeScore(
-            this.coursePath,
-            this.challengeId,
-            this.testResult.score,
-            this.language as "sk" | "en"
-          );
-          console.log(`Code challenge score saved: ${this.testResult.score}/${this.testResult.maxScore} points`);
-        }
-      } catch (error: any) {
-        this.executionError = error.message || String(error);
-      } finally {
         this.isTesting = false;
       }
     },
@@ -399,13 +380,9 @@ export default defineComponent({
 <template>
   <div class="code-challenge">
     <div class="actions-bar">
-      <button @click="runCode" :disabled="isRunning" class="btn btn-primary">
-        <span class="btn-icon">{{ isRunning ? "⏳" : "▶️" }}</span>
-        {{ isRunning ? t("challenge.running") : t("challenge.runCode") }}
-      </button>
-      <button v-if="hasTestFiles" @click="runTestSuite" :disabled="isTesting" class="btn btn-success">
-        <span class="btn-icon">{{ isTesting ? "⏳" : "✓" }}</span>
-        {{ isTesting ? t("challenge.testing") : t("challenge.testSolution") }}
+      <button @click="runCodeAndTests" :disabled="isRunning || isTesting" class="btn btn-primary">
+        <span class="btn-icon">{{ isRunning || isTesting ? "⏳" : "▶️" }}</span>
+        {{ isRunning || isTesting ? t("challenge.running") : t("challenge.runCode") }}
       </button>
       <button @click="resetFileSystem" class="btn btn-secondary" :title="t('challenge.resetConfirm')">
         <span class="btn-icon">↻</span>
@@ -461,7 +438,7 @@ export default defineComponent({
       <div class="preview-panel" :style="{ width: `${100 - splitPosition}%` }">
         <div class="output-container">
           <!-- Placeholder when no output -->
-          <div v-if="showPlaceholder" class="preview-placeholder" @click="runCode">
+          <div v-if="showPlaceholder" class="preview-placeholder" @click="runCodeAndTests">
             <div class="placeholder-icon">▶</div>
             <p>{{ t("challenge.previewPlaceholder") }}</p>
             <button class="placeholder-button">{{ t("challenge.runCode") }}</button>
@@ -469,9 +446,6 @@ export default defineComponent({
           <!-- Preview -->
           <div v-if="previewType === 'html'" class="preview-html">
             <iframe :srcdoc="previewContent" sandbox="allow-scripts"></iframe>
-          </div>
-          <div v-else-if="previewType === 'image'" class="preview-image">
-            <img :src="previewContent" alt="Output" />
           </div>
           <pre v-else-if="previewType === 'text'" class="preview-text">{{ previewContent }}</pre>
 
@@ -780,7 +754,7 @@ export default defineComponent({
   min-height: 400px;
   border: 1px solid #2d2d2d;
   border-radius: 8px;
-  background: transparent;
+  background: #1e1e1e;
 }
 
 .preview-image {

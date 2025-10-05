@@ -2,8 +2,8 @@ export interface ExecutionResult {
   success: boolean;
   output?: string;
   error?: string;
-  imageData?: string;
   htmlContent?: string;
+  testContext?: any; // Context object for test execution (e.g., pyodide instance, database, DOM)
 }
 
 export interface CodeRunner {
