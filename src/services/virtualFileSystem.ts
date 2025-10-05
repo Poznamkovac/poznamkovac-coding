@@ -7,6 +7,8 @@ export interface VirtualFile extends ChallengeFile {
   originalContent?: string; // Track original content from server
 }
 
+// TODO: fix test handling to use new logic of central test.js file
+
 export interface VirtualFileSystem {
   files: Map<string, VirtualFile>;
   activeFile: string | null;
@@ -51,13 +53,7 @@ export async function createVirtualFileSystem(
   try {
     const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${testFilename}`);
     if (response.ok) {
-      const text = await response.text();
-      // Validate that we didn't get the 404.html page
-      const looksLikeHTML = text.trim().toLowerCase().startsWith("<!doctype") || text.trim().startsWith("<html");
-
-      if (!looksLikeHTML) {
-        discoveredTestFiles.push(testFilename);
-      }
+      discoveredTestFiles.push(testFilename);
     }
   } catch {
     // File doesn't exist, continue
@@ -75,12 +71,7 @@ export async function createVirtualFileSystem(
       try {
         const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${legacyTestFilename}`);
         if (response.ok) {
-          const text = await response.text();
-          const looksLikeHTML = text.trim().toLowerCase().startsWith("<!doctype") || text.trim().startsWith("<html");
-
-          if (!looksLikeHTML) {
-            discoveredTestFiles.push(legacyTestFilename);
-          }
+          discoveredTestFiles.push(legacyTestFilename);
         }
       } catch {
         // File doesn't exist, continue
@@ -132,40 +123,11 @@ export async function createVirtualFileSystem(
         try {
           const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${filename}`);
           if (response.ok) {
-            const text = await response.text();
-            // Validate that we didn't get the 404.html page or other HTML content
-            const looksLikeHTML =
-              text.trim().toLowerCase().startsWith("<!doctype") ||
-              text.trim().startsWith("<html") ||
-              (text.includes("<script") && text.includes("</script>"));
-
-            if (!looksLikeHTML) {
-              content = text;
-            } else {
-              console.error(
-                `File ${filename} returned HTML instead of expected content (likely 404). First 200 chars:`,
-                text.substring(0, 200),
-              );
-
-              // Provide sensible defaults for SQL files
-              if (filename.endsWith(".sql")) {
-                if (filename === "query.sql") {
-                  content = "-- Write your SQL query here\nSELECT * FROM table_name;";
-                } else if (filename === "schema.sql") {
-                  content = "-- Database schema will be loaded here";
-                } else if (filename === "data.sql") {
-                  content = "-- Sample data will be loaded here";
-                } else {
-                  content = "-- SQL file";
-                }
-              } else {
-                content = ""; // Empty content as fallback
-              }
-            }
+            content = await response.text();
           }
         } catch (error) {
-          console.error(`Failed to load file ${filename}:`, error);
-          content = ""; // Empty content as fallback
+          console.warn("error fetching file", filename, error);
+          // will use empty content
         }
       }
 
@@ -327,14 +289,14 @@ export async function createVirtualFileSystem(
             if (response.ok) {
               content = await response.text();
             }
-          } catch (error) {
-            console.error(`Failed to load file ${fileConfig.filename}:`, error);
+          } catch {
+            // File doesn't exist, will use empty content
           }
 
           filesMap.set(fileConfig.filename, {
             ...fileConfig,
             content,
-            originalContent: content, // Set original content for proper tracking
+            originalContent: content,
           });
         }),
       );

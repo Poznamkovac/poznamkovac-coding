@@ -6,13 +6,13 @@
     {
       "filename": "schema.sql",
       "readonly": true,
-      "hidden": false,
+      "hidden": true,
       "autoreload": false
     },
     {
       "filename": "data.sql",
       "readonly": true,
-      "hidden": false,
+      "hidden": true,
       "autoreload": false
     },
     {
