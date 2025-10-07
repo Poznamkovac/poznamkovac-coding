@@ -50,7 +50,10 @@ export async function createVirtualFileSystem(
 
   try {
     const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${testFilename}`);
-    if (response.ok && !allFiles.some((f) => f.filename === testFilename)) {
+    const contentType = response.headers.get("content-type");
+    const isJavaScript = contentType?.includes("javascript") || contentType?.includes("text/plain");
+
+    if (response.ok && isJavaScript && !allFiles.some((f) => f.filename === testFilename)) {
       allFiles.push({
         filename: testFilename,
         readonly: true,
