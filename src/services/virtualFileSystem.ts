@@ -7,8 +7,6 @@ export interface VirtualFile extends ChallengeFile {
   originalContent?: string; // Track original content from server
 }
 
-// TODO: fix test handling to use new logic of central test.js file
-
 export interface VirtualFileSystem {
   files: Map<string, VirtualFile>;
   activeFile: string | null;
@@ -47,50 +45,22 @@ export async function createVirtualFileSystem(
   let currentActiveFile: string | null = null;
 
   // Only try to discover test.js file (unified test framework)
-  const discoveredTestFiles: string[] = [];
   const testFilename = "test.js";
+  const allFiles = [...initialFiles];
 
   try {
     const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${testFilename}`);
-    if (response.ok) {
-      discoveredTestFiles.push(testFilename);
-    }
-  } catch {
-    // File doesn't exist, continue
-  }
-
-  // Also check for legacy test files for backward compatibility
-  const mainFileExt =
-    initialFiles.length > 0 ? initialFiles[0].filename.substring(initialFiles[0].filename.lastIndexOf(".")) : ".py";
-
-  const legacyTestPatterns = ["test", "test_main"];
-  for (const pattern of legacyTestPatterns) {
-    const legacyTestFilename = `${pattern}${mainFileExt}`;
-    if (legacyTestFilename !== testFilename) {
-      // Don't duplicate test.js
-      try {
-        const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${legacyTestFilename}`);
-        if (response.ok) {
-          discoveredTestFiles.push(legacyTestFilename);
-        }
-      } catch {
-        // File doesn't exist, continue
-      }
-    }
-  }
-
-  // Combine initialFiles with discovered test files
-  const allFiles = [...initialFiles];
-  for (const testFile of discoveredTestFiles) {
-    if (!allFiles.some((f) => f.filename === testFile)) {
+    if (response.ok && !allFiles.some((f) => f.filename === testFilename)) {
       allFiles.push({
-        filename: testFile,
+        filename: testFilename,
         readonly: true,
         hidden: true,
         autoreload: false,
         removable: false,
       });
     }
+  } catch {
+    // File doesn't exist, continue
   }
 
   // Check if we have a saved filesystem structure
