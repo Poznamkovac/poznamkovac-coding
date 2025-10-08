@@ -5,9 +5,9 @@
     <title>Redirecting...</title>
     <script>
       // GitHub Pages SPA redirect
-      // Store the path and redirect to index.html
-      sessionStorage.setItem("redirect", location.pathname + location.search + location.hash);
-      location.replace(location.origin + "/index.html");
+      // Encode the path in a URL parameter
+      const path = location.pathname + location.search + location.hash;
+      location.replace(location.origin + "/index.html?redirect=" + encodeURIComponent(path));
     </script>
   </head>
   <body>

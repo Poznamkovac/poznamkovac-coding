@@ -29,13 +29,11 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
       const metadataPath = `/${lang}/data/${coursePath.value}/${challengeId.value}/metadata.json`;
       const assignmentMdPath = `/${lang}/data/${coursePath.value}/${challengeId.value}/assignment.md`;
 
-      // Load metadata.json
       const metadataResponse = await fetch(metadataPath);
       if (!metadataResponse.ok) {
         throw new Error("Challenge not found");
       }
 
-      // Validate that we got JSON, not HTML (404 page)
       const contentType = metadataResponse.headers.get("content-type");
       if (!contentType?.includes("application/json")) {
         throw new Error("Challenge not found");
@@ -49,7 +47,6 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
         throw new Error("Challenge not found");
       }
 
-      // Load assignment.md and parse markdown
       const assignmentMdResponse = await fetch(assignmentMdPath);
       if (!assignmentMdResponse.ok) {
         throw new Error("Assignment content not found");
@@ -58,20 +55,17 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
       const assignmentMarkdown = await assignmentMdResponse.text();
       const lines = assignmentMarkdown.split("\n");
 
-      // Extract title (first h1)
       let title = fallbackTitle;
       let assignmentContent = "";
 
       if (lines[0]?.startsWith("# ")) {
         title = lines[0].substring(2).trim();
-        // Remove the title line and parse the rest as description
         const description = lines.slice(1).join("\n").trim();
         assignmentContent = await marked.parse(description);
       } else {
         assignmentContent = await marked.parse(assignmentMarkdown);
       }
 
-      // Combine metadata with parsed assignment
       challengeData.value = {
         ...metadata,
         title,

@@ -8,9 +8,9 @@
     <script>
       // handle GitHub Pages SPA redirect from 404.html
       (function () {
-        const redirect = sessionStorage.getItem("redirect");
+        const params = new URLSearchParams(location.search);
+        const redirect = params.get("redirect");
         if (redirect) {
-          sessionStorage.removeItem("redirect");
           history.replaceState(null, "", redirect);
         }
       })();
