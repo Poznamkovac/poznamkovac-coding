@@ -50,8 +50,6 @@ export default defineComponent({
     addFile() {
       const filename = this.newFileName.trim();
       if (!filename) return;
-
-      // Prevent creating test files
       if (isTestFile(filename)) {
         alert("Cannot create test files. Test files are managed automatically.");
         return;

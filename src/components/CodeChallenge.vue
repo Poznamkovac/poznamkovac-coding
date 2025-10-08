@@ -64,6 +64,7 @@ export default defineComponent({
       pendingAutoReload: false,
       testJSContent: null as string | null, // Cached test.js content
       failedAttempts: 0,
+      saveTimer: null as number | null,
     };
   },
 
@@ -105,15 +106,20 @@ export default defineComponent({
   },
 
   beforeUnmount() {
+    // clean up auto-save debounce timer
+    if (this.saveTimer) {
+      window.clearTimeout(this.saveTimer);
+    }
+
     window.removeEventListener("vfs-event", this.handleFileSystemEvent as EventListener);
-    // Clean up resize listeners in case component unmounts during resize
+    // clean up resize listeners in case component unmounts during resize
     document.removeEventListener("mousemove", this.handleMouseMove);
     document.removeEventListener("mouseup", this.handleMouseUp);
     window.removeEventListener("blur", this.handleMouseUp);
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
 
-    // Remove overlay if it exists
+    // remove resize overlay if it exists
     const overlay = document.getElementById("resize-overlay");
     if (overlay) {
       overlay.remove();
@@ -168,9 +174,8 @@ export default defineComponent({
       }
     },
 
-    handleFileSystemEvent(event: Event) {
-      const customEvent = event as CustomEvent;
-      const { type, autoreload } = customEvent.detail;
+    handleFileSystemEvent(fsEvent: CustomEvent) {
+      const { type, filename, content, autoreload } = fsEvent.detail;
 
       if (type === "active-file-change") {
         this.updateActiveFile();
@@ -254,9 +259,21 @@ export default defineComponent({
     },
 
     handleContentUpdate(newContent: string) {
-      if (this.activeFile && this.fileSystem) {
-        this.fileSystem.updateFileContent(this.activeFile, newContent);
+      // Debounce saving to IndexedDB (save after 500ms of no typing)
+      if (this.activeFile) {
         this.activeFileContent = newContent;
+
+        // Clear existing timer
+        if (this.saveTimer) {
+          window.clearTimeout(this.saveTimer);
+        }
+
+        // Set new timer to save after 500ms
+        this.saveTimer = window.setTimeout(() => {
+          if (this.activeFile) {
+            storageService.setEditorCode(this.coursePath, this.challengeId, this.activeFile, newContent, this.language);
+          }
+        }, 500);
       }
     },
 
@@ -278,10 +295,25 @@ export default defineComponent({
           return;
         }
 
-        // Build files object (test files are now separate, not in VFS)
-        const files: Record<string, string> = {};
+        // Sync VFS with IndexedDB to get latest editor content
         const allFiles = this.fileSystem.getAllFiles();
         for (const file of allFiles) {
+          const savedContent = await storageService.getEditorCode(
+            this.coursePath,
+            this.challengeId,
+            file.filename,
+            this.language
+          );
+          if (savedContent !== null) {
+            // Update VFS with saved content from IndexedDB
+            this.fileSystem.files.set(file.filename, { ...file, content: savedContent });
+          }
+        }
+
+        // Build files object (test files are now separate, not in VFS)
+        const files: Record<string, string> = {};
+        const updatedFiles = this.fileSystem.getAllFiles();
+        for (const file of updatedFiles) {
           files[file.filename] = file.content;
         }
 

@@ -1,10 +1,8 @@
 import { storageService } from "./storage";
 import type { ChallengeFile } from "../types";
-import { isTestFile } from "../utils";
-
 export interface VirtualFile extends ChallengeFile {
   content: string;
-  originalContent?: string; // Track original content from server
+  originalContent?: string;
 }
 
 export interface VirtualFileSystem {
@@ -46,35 +44,19 @@ export async function createVirtualFileSystem(
   let currentActiveFile: string | null = null;
   const allFiles = [...initialFiles];
 
-  // Check if we have a saved filesystem structure
+  // check if we have a saved filesystem structure
   const savedStructure = await storageService.getFileSystemStructure(coursePath, challengeId);
   const filesToLoad = savedStructure || allFiles.map((f) => f.filename);
 
-  // Load file contents from storage or fetch from server
+  // load file contents from storage or fetch from server
   await Promise.all(
     filesToLoad.map(async (filename) => {
-      // Skip test files entirely - they're now handled separately
-      if (isTestFile(filename)) {
-        return;
-      }
-
-      // Find file config from allFiles
       const fileConfig = allFiles.find((f) => f.filename === filename);
+      let content: string | null = await storageService.getEditorCode(coursePath, challengeId, filename, language);
 
-      // Try to get from storage first
-      let content: string | null = await storageService.getEditorCode(coursePath, challengeId, filename);
-
-      // If not in storage, try to fetch from server
       if (!content && fileConfig) {
         try {
-          // Try new structure first: files/ subdirectory
           let response = await fetch(`/${language}/data/${coursePath}/${challengeId}/files/${filename}`);
-
-          // Fallback to old structure: flat directory
-          if (!response.ok) {
-            response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${filename}`);
-          }
-
           if (response.ok) {
             content = await response.text();
           }
@@ -84,12 +66,11 @@ export async function createVirtualFileSystem(
         }
       }
 
-      // Only add file if we have config or content
       if (fileConfig || content) {
         filesMap.set(filename, {
           filename,
           content: content || "",
-          originalContent: content || "", // Store original content from server
+          originalContent: content || "",
           readonly: fileConfig?.readonly ?? false,
           hidden: fileConfig?.hidden ?? false,
           autoreload: fileConfig?.autoreload ?? false,
@@ -99,13 +80,13 @@ export async function createVirtualFileSystem(
     }),
   );
 
-  // Set initial active file (first visible, non-hidden file)
+  // set initial active file (first visible, non-hidden file)
   const visibleFiles = Array.from(filesMap.values()).filter((f) => !f.hidden);
   if (visibleFiles.length > 0) {
     currentActiveFile = visibleFiles[0].filename;
   }
 
-  // Helper to save filesystem structure
+  // helper to save filesystem structure
   const saveStructure = () => {
     const filenames = Array.from(filesMap.keys());
     storageService.setFileSystemStructure(coursePath, challengeId, filenames);
@@ -148,10 +129,10 @@ export async function createVirtualFileSystem(
         // Only save to storage if content has been modified from original
         const hasBeenModified = content !== file.originalContent;
         if (hasBeenModified) {
-          storageService.setEditorCode(coursePath, challengeId, filename, content);
+          storageService.setEditorCode(coursePath, challengeId, filename, content, language);
         } else {
           // If content matches original, remove from storage (use server version)
-          storageService.deleteEditorCode(coursePath, challengeId, filename);
+          storageService.deleteEditorCode(coursePath, challengeId, filename, language);
         }
 
         dispatchEvent("file-change", filename, content, file.autoreload);
@@ -169,7 +150,7 @@ export async function createVirtualFileSystem(
           removable: true,
         };
         filesMap.set(filename, newFile);
-        storageService.setEditorCode(coursePath, challengeId, filename, "");
+        storageService.setEditorCode(coursePath, challengeId, filename, "", language);
         saveStructure();
         dispatchEvent("file-added", filename);
 
@@ -183,7 +164,7 @@ export async function createVirtualFileSystem(
       const file = filesMap.get(filename);
       if (file && file.removable !== false) {
         filesMap.delete(filename);
-        storageService.deleteEditorCode(coursePath, challengeId, filename);
+        storageService.deleteEditorCode(coursePath, challengeId, filename, language);
         saveStructure();
         dispatchEvent("file-removed", filename);
 
@@ -204,8 +185,8 @@ export async function createVirtualFileSystem(
         filesMap.delete(oldFilename);
         filesMap.set(newFilename, { ...file, filename: newFilename });
 
-        storageService.deleteEditorCode(coursePath, challengeId, oldFilename);
-        storageService.setEditorCode(coursePath, challengeId, newFilename, file.content);
+        storageService.deleteEditorCode(coursePath, challengeId, oldFilename, language);
+        storageService.setEditorCode(coursePath, challengeId, newFilename, file.content, language);
 
         if (currentActiveFile === oldFilename) {
           currentActiveFile = newFilename;
@@ -310,7 +291,7 @@ export async function createVirtualFileSystem(
               originalContent: content,
             });
             // Save to storage
-            storageService.setEditorCode(coursePath, challengeId, filename, content);
+            storageService.setEditorCode(coursePath, challengeId, filename, content, language);
             dispatchEvent("file-change", filename, content, existingFile.autoreload);
           } else {
             // Add new file from solution
@@ -324,7 +305,7 @@ export async function createVirtualFileSystem(
               autoreload: fileConfig?.autoreload ?? false,
               removable: fileConfig?.removable ?? true,
             });
-            storageService.setEditorCode(coursePath, challengeId, filename, content);
+            storageService.setEditorCode(coursePath, challengeId, filename, content, language);
             dispatchEvent("file-added", filename);
           }
         }

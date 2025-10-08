@@ -129,19 +129,22 @@ class StorageService {
     await this.setValue(key, score);
   }
 
-  async getEditorCode(coursePath: string, challengeId: string, filename: string): Promise<string | null> {
-    const key = `challenge_${coursePath}_${challengeId}_${filename}`;
+  async getEditorCode(coursePath: string, challengeId: string, filename: string, language?: string): Promise<string | null> {
+    const languagePrefix = language ? `${language}_` : "";
+    const key = `challenge_${languagePrefix}${coursePath}_${challengeId}_${filename}`;
     const code = await this.getValue(key);
     return typeof code === "string" ? code : null;
   }
 
-  async setEditorCode(coursePath: string, challengeId: string, filename: string, code: string): Promise<void> {
-    const key = `challenge_${coursePath}_${challengeId}_${filename}`;
+  async setEditorCode(coursePath: string, challengeId: string, filename: string, code: string, language?: string): Promise<void> {
+    const languagePrefix = language ? `${language}_` : "";
+    const key = `challenge_${languagePrefix}${coursePath}_${challengeId}_${filename}`;
     await this.setValue(key, code);
   }
 
-  async deleteEditorCode(coursePath: string, challengeId: string, filename: string): Promise<void> {
-    const key = `challenge_${coursePath}_${challengeId}_${filename}`;
+  async deleteEditorCode(coursePath: string, challengeId: string, filename: string, language?: string): Promise<void> {
+    const languagePrefix = language ? `${language}_` : "";
+    const key = `challenge_${languagePrefix}${coursePath}_${challengeId}_${filename}`;
     await this.deleteValue(key);
   }
 

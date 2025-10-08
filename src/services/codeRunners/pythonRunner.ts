@@ -109,7 +109,7 @@ matplotlib.use('webagg')
 
       await this.pyodide.runPythonAsync(mainContent);
 
-      // Check if we need to execute tests
+      // check if we need to execute tests
       let testCases;
       if (testJS) {
         const { executeTestJS } = await import("../testRunner");
@@ -142,26 +142,27 @@ matplotlib.use('webagg')
     if (!this.pyodide) return;
 
     try {
-      // Clear matplotlib figures if loaded
+      // clear all user modules from sys.modules to force reimport
       try {
         this.pyodide.runPython(`
 import sys
-if 'matplotlib.pyplot' in sys.modules:
-    import matplotlib.pyplot as plt
-    plt.close('all')
+user_modules = [name for name in list(sys.modules.keys()) if not name.startswith('_') and name not in sys.builtin_module_names]
+for module_name in user_modules:
+    if module_name in sys.modules:
+        del sys.modules[module_name]
         `);
       } catch (e) {
-        // Matplotlib not loaded, skip
+        console.warn("Error clearing Python modules:", e);
       }
 
-      // Clear files from filesystem
+      // clear files from filesystem
       const files = this.pyodide.FS.readdir("/home/pyodide");
       for (const file of files) {
         if (file !== "." && file !== "..") {
           try {
             this.pyodide.FS.unlink(`/home/pyodide/${file}`);
           } catch (e) {
-            // Ignore errors for directories or special files
+            // ignore errors for directories or special files
           }
         }
       }

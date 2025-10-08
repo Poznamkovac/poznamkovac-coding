@@ -6,6 +6,7 @@ import * as monaco from "monaco-editor";
 let sharedEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let currentContainer: HTMLElement | null = null;
 let currentChallengeKey: string | null = null;
+let modelChangeListener: monaco.IDisposable | null = null;
 
 export default defineComponent({
   name: "CodeEditor",
@@ -33,7 +34,6 @@ export default defineComponent({
 
   data() {
     return {
-      updateTimer: null as number | null,
       isInitialized: false,
     };
   },
@@ -90,15 +90,10 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    if (this.updateTimer) {
-      window.clearTimeout(this.updateTimer);
-    }
-    // Don't dispose the shared editor, just remove listeners
-    if (sharedEditor) {
-      const model = sharedEditor.getModel();
-      if (model) {
-        model.onDidChangeContent(() => {}); // Remove listener
-      }
+    // Dispose the model change listener
+    if (modelChangeListener) {
+      modelChangeListener.dispose();
+      modelChangeListener = null;
     }
   },
 
@@ -163,7 +158,12 @@ export default defineComponent({
         formatOnType: true,
       });
 
-      model.onDidChangeContent(() => {
+      // Dispose previous listener if it exists
+      if (modelChangeListener) {
+        modelChangeListener.dispose();
+      }
+
+      modelChangeListener = model.onDidChangeContent(() => {
         this.handleContentChange();
       });
 
@@ -187,6 +187,14 @@ export default defineComponent({
           model.setValue(this.content);
         }
         monaco.editor.setModelLanguage(model, this.language);
+
+        // Re-register the change listener to ensure it's bound to the current component instance
+        if (modelChangeListener) {
+          modelChangeListener.dispose();
+        }
+        modelChangeListener = model.onDidChangeContent(() => {
+          this.handleContentChange();
+        });
       }
 
       sharedEditor.updateOptions({ readOnly: this.readonly });
@@ -202,19 +210,14 @@ export default defineComponent({
     },
 
     handleContentChange() {
-      if (this.updateTimer) {
-        window.clearTimeout(this.updateTimer);
-      }
-
-      this.updateTimer = window.setTimeout(() => {
-        if (sharedEditor) {
-          const model = sharedEditor.getModel();
-          if (model) {
-            const newContent = model.getValue();
-            this.$emit("update:content", newContent);
-          }
+      // Emit changes immediately without debouncing
+      if (sharedEditor) {
+        const model = sharedEditor.getModel();
+        if (model) {
+          const newContent = model.getValue();
+          this.$emit("update:content", newContent);
         }
-      }, 300);
+      }
     },
   },
 });
