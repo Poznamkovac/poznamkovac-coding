@@ -30,4 +30,4 @@ class CodeRunnerRegistry {
 }
 
 export const codeRunnerRegistry = new CodeRunnerRegistry();
-export type { CodeRunner, ExecutionResult } from "./base";
+export type { CodeRunner, ExecutionResult, TestCaseResult } from "./base";

@@ -1,7 +1,13 @@
 async function test(context) {
   const pyodide = context.pyodide;
   if (!pyodide) {
-    throw new Error("pyodide not found in test context");
+    return [
+      {
+        name: "Inicializácia testovania",
+        passed: false,
+        error: "Pyodide runtime nie je k dispozícii",
+      },
+    ];
   }
 
   try {
@@ -14,47 +20,41 @@ except ImportError:
 
 # Test cases
 test_cases = [
-    ([1, 2, 5, 10, 20, 50, 100], 123, [100, 20, 2, 1]),
-    ([3, 1, 2], 10, [3, 3, 3, 1]),
-    ([10, 7, 1], 14, [10, 1, 1, 1, 1])  # Greedy test
+    ([1, 2, 5, 10, 20, 50, 100], 123, [100, 20, 2, 1], "Test 1: Základný prípad"),
+    ([3, 1, 2], 10, [3, 3, 3, 1], "Test 2: Jednoduché platidlá"),
+    ([10, 7, 1], 14, [10, 1, 1, 1, 1], "Test 3: Pažravý algoritmus")
 ]
 
-all_passed = True
-error_message = ""
+results = []
 
-for i, (platidla, suma, expected) in enumerate(test_cases):
+for i, (platidla, suma, expected, name) in enumerate(test_cases):
     result = mincovka_greedy(platidla.copy(), suma)
     if result != expected:
-        all_passed = False
         if i == 2 and result == [7, 7]:
-            error_message = f"Test {i+1}: Riešenie pre sumu 14 ({result}) je správne, ale nie je vypočítané pomocou pažravého algoritmu."
+            results.append((False, name, f"Riešenie ({result}) je správne, ale nie je vypočítané pomocou pažravého algoritmu."))
         else:
-            error_message = f"Test {i+1} zlyhal. Platidlá: {platidla}, Suma: {suma}, Očakávané: {expected}, Vaše: {result}"
+            results.append((False, name, f"Platidlá: {platidla}, Suma: {suma}, Očakávané: {expected}, Vaše: {result}"))
         break
+    else:
+        results.append((True, name, ""))
 
-(all_passed, error_message)
+results
     `;
 
-    const [passed, errorMessage] = pyodide.runPython(testCode);
+    const results = pyodide.runPython(testCode);
 
-    if (passed) {
-      return {
-        passed: true,
-        score: 5,
-        feedback: "Výborne! Funkcia mincovka_greedy() správne implementuje pažravý algoritmus.",
-      };
-    } else {
-      return {
-        passed: false,
-        score: 0,
-        feedback: errorMessage || "Funkcia mincovka_greedy() vrátila nesprávnu hodnotu.",
-      };
-    }
+    return results.map(([passed, name, error]) => ({
+      name,
+      passed,
+      error: error || undefined,
+    }));
   } catch (error) {
-    return {
-      passed: false,
-      score: 0,
-      feedback: `Chyba pri testovaní: ${error.message}`,
-    };
+    return [
+      {
+        name: "Vykonanie testov",
+        passed: false,
+        error: error.message,
+      },
+    ];
   }
 }

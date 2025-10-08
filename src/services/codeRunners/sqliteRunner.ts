@@ -180,7 +180,7 @@ export class SQLiteRunner extends BaseCodeRunner {
       </html>`;
   }
 
-  async execute(files: Record<string, string>, mainFile: string): Promise<ExecutionResult> {
+  async execute(files: Record<string, string>, mainFile: string, testJS?: string): Promise<ExecutionResult> {
     if (!this.SQL) {
       return {
         success: false,
@@ -289,6 +289,22 @@ export class SQLiteRunner extends BaseCodeRunner {
 
       const htmlContent = this.buildHtmlContent(queryResults);
 
+      // Check if we need to execute tests
+      let testCases;
+      if (testJS) {
+        const { executeTestJS } = await import("../testRunner");
+        const context = {
+          language: "sqlite",
+          stdout: textOutput.trim(),
+          sqlite: {
+            db: this.db,
+            results: allResults,
+          },
+        };
+
+        testCases = await executeTestJS(testJS, context);
+      }
+
       return {
         success: !hasError,
         output: textOutput.trim(),
@@ -300,6 +316,7 @@ export class SQLiteRunner extends BaseCodeRunner {
             results: allResults,
           },
         },
+        testCases,
       };
     } catch (error: any) {
       return {

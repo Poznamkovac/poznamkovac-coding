@@ -1,14 +1,13 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
+import { useI18n } from "vue-i18n";
 import FileTabs from "./FileTabs.vue";
 import CodeEditor from "./CodeEditor.vue";
 import { createVirtualFileSystem, type VirtualFileSystem, type VirtualFile } from "../services/virtualFileSystem";
 import { codeRunnerRegistry } from "../services/codeRunners";
-import { runTests, type TestResult } from "../services/testRunner";
+import { runTests, fetchTestJS, type TestResult } from "../services/testRunner";
 import { storageService } from "../services/storage";
 import type { CodeChallengeData } from "../types";
-import { useI18nStore } from "../stores/i18n";
-import { isTestFile } from "../utils";
 
 export default defineComponent({
   name: "CodeChallenge",
@@ -38,9 +37,9 @@ export default defineComponent({
   },
 
   setup() {
-    const i18nStore = useI18nStore();
+    const { t } = useI18n();
     return {
-      i18nStore,
+      t,
     };
   },
 
@@ -63,6 +62,7 @@ export default defineComponent({
       isResizing: false,
       editorHasFocus: false,
       pendingAutoReload: false,
+      testJSContent: null as string | null, // Cached test.js content
     };
   },
 
@@ -80,9 +80,7 @@ export default defineComponent({
     },
 
     hasTestFiles(): boolean {
-      if (!this.fileSystem) return false;
-      const allFiles = this.fileSystem.getAllFiles();
-      return allFiles.some((f) => isTestFile(f.filename));
+      return this.testJSContent !== null;
     },
 
     hasPreviewOrOutput(): boolean {
@@ -96,6 +94,7 @@ export default defineComponent({
 
   async mounted() {
     await this.initializeFileSystem();
+    await this.loadTestJS();
     this.setupAutoReload();
   },
 
@@ -116,10 +115,6 @@ export default defineComponent({
   },
 
   methods: {
-    t(key: string, params?: Record<string, string | number>): string {
-      return this.i18nStore.t(key, params);
-    },
-
     async initializeFileSystem() {
       try {
         this.fileSystem = await createVirtualFileSystem(
@@ -135,6 +130,14 @@ export default defineComponent({
         window.addEventListener("vfs-event", this.handleFileSystemEvent as EventListener);
       } catch (error) {
         console.error("Failed to initialize filesystem:", error);
+      }
+    },
+
+    async loadTestJS() {
+      try {
+        this.testJSContent = await fetchTestJS(this.coursePath, this.challengeId, this.language);
+      } catch (error) {
+        console.error("Failed to load test.js:", error);
       }
     },
 
@@ -269,6 +272,7 @@ export default defineComponent({
           return;
         }
 
+        // Build files object (test files are now separate, not in VFS)
         const files: Record<string, string> = {};
         const allFiles = this.fileSystem.getAllFiles();
         for (const file of allFiles) {
@@ -293,11 +297,14 @@ export default defineComponent({
         }
 
         // Then run tests if they exist
-        const testFile = allFiles.find((f) => isTestFile(f.filename));
-        if (testFile) {
-          this.testResult = await runTests(this.runnerLanguage, files, testFile.filename, this.challengeData.maxScore, {
-            mainFile: this.challengeData.mainFile,
-          });
+        if (this.testJSContent) {
+          this.testResult = await runTests(
+            this.runnerLanguage,
+            files,
+            this.challengeData.maxScore,
+            this.challengeData.mainFile,
+            this.testJSContent,
+          );
 
           // Merge test output with execution output
           if (this.testResult.output && !this.executionOutput.includes(this.testResult.output)) {
@@ -465,6 +472,23 @@ export default defineComponent({
             <div v-if="testResult.feedback" class="test-feedback">
               {{ testResult.feedback }}
             </div>
+
+            <!-- Individual test cases -->
+            <div v-if="testResult.testCases && testResult.testCases.length > 0" class="test-cases">
+              <div
+                v-for="(testCase, index) in testResult.testCases"
+                :key="index"
+                class="test-case"
+                :class="{ passed: testCase.passed, failed: !testCase.passed }"
+              >
+                <div class="test-case-header">
+                  <span class="test-case-icon">{{ testCase.passed ? "✓" : "✗" }}</span>
+                  <span class="test-case-name">{{ testCase.name }}</span>
+                </div>
+                <div v-if="testCase.error" class="test-case-error">{{ testCase.error }}</div>
+              </div>
+            </div>
+
             <details v-if="testResult.output" class="test-output-details">
               <summary>{{ t("challenge.testOutput") }}</summary>
               <pre>{{ testResult.output }}</pre>
@@ -843,6 +867,59 @@ export default defineComponent({
 .test-feedback {
   color: #ccc;
   margin-bottom: 12px;
+}
+
+.test-cases {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.test-case {
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid;
+}
+
+.test-case.passed {
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.05);
+}
+
+.test-case.failed {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.test-case-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.test-case-icon {
+  font-size: 16px;
+}
+
+.test-case.passed .test-case-icon {
+  color: #16a34a;
+}
+
+.test-case.failed .test-case-icon {
+  color: #dc2626;
+}
+
+.test-case-name {
+  color: white;
+  font-weight: 500;
+}
+
+.test-case-error {
+  margin-top: 8px;
+  color: #f87171;
+  font-size: 13px;
+  font-family: "Consolas", "Monaco", monospace;
 }
 
 .test-output-details {

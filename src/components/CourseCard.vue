@@ -1,4 +1,5 @@
 <script lang="ts">
+import { useI18n } from "vue-i18n";
 import { defineComponent } from "vue";
 import { useI18nStore } from "../stores/i18n";
 import { storeToRefs } from "pinia";
@@ -16,10 +17,12 @@ export default defineComponent({
   },
 
   setup() {
+    const { t } = useI18n();
     const i18nStore = useI18nStore();
     const { language: effectiveLanguage } = storeToRefs(i18nStore);
 
     return {
+      t,
       i18nStore,
       effectiveLanguage,
     };
@@ -33,17 +36,17 @@ export default defineComponent({
 
       if (this.effectiveLanguage === "sk") {
         if (count === 1) {
-          return this.i18nStore.t("course.challengeCountSingular", { count });
+          return this.t("course.challengeCountSingular", { count });
         } else if (count >= 2 && count <= 4) {
-          return this.i18nStore.t("course.challengeCountFew", { count });
+          return this.t("course.challengeCountFew", { count });
         } else {
-          return this.i18nStore.t("course.challengeCount", { count });
+          return this.t("course.challengeCount", { count });
         }
       } else {
         if (count === 1) {
-          return this.i18nStore.t("course.challengeCountSingular", { count });
+          return this.t("course.challengeCountSingular", { count });
         } else {
-          return this.i18nStore.t("course.challengeCount", { count });
+          return this.t("course.challengeCount", { count });
         }
       }
     },

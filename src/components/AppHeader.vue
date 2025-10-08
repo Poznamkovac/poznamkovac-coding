@@ -1,5 +1,6 @@
 <script lang="ts">
 import { defineComponent } from "vue";
+import { useI18n } from "vue-i18n";
 import { useI18nStore } from "../stores/i18n";
 import { storeToRefs } from "pinia";
 
@@ -7,20 +8,18 @@ export default defineComponent({
   name: "AppHeader",
 
   setup() {
+    const { t } = useI18n(); // Global $t() is now available
     const i18nStore = useI18nStore();
     const { language } = storeToRefs(i18nStore);
 
     return {
+      t,
       i18nStore,
       language,
     };
   },
 
   methods: {
-    t(key: string, params?: Record<string, string | number>): string {
-      return this.i18nStore.t(key, params);
-    },
-
     handleLanguageChange(lang: "sk" | "en") {
       const currentPath = this.$route.path;
       const pathLang = this.i18nStore.extractLanguageFromPath(currentPath);

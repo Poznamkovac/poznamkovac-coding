@@ -7,6 +7,7 @@ import { faDatabase, faProjectDiagram } from "@fortawesome/free-solid-svg-icons"
 
 import App from "./App.vue";
 import router from "./router";
+import { i18n } from "./i18n";
 import "./style.css";
 
 // Configure Monaco Editor workers
@@ -40,6 +41,7 @@ const app = createApp(App);
 const pinia = createPinia();
 
 app.use(pinia);
+app.use(i18n);
 app.use(router);
 app.component("FontAwesomeIcon", FontAwesomeIcon);
 

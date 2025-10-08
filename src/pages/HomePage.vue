@@ -1,4 +1,5 @@
 <script lang="ts">
+import { useI18n } from "vue-i18n";
 import { defineComponent } from "vue";
 import { storeToRefs } from "pinia";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
@@ -16,10 +17,12 @@ export default defineComponent({
   },
 
   setup() {
+    const { t } = useI18n();
     const i18nStore = useI18nStore();
     const { language } = storeToRefs(i18nStore);
 
     return {
+      t,
       i18nStore,
       language,
     };
@@ -43,10 +46,6 @@ export default defineComponent({
   },
 
   methods: {
-    t(key: string): string {
-      return this.i18nStore.t(key);
-    },
-
     async loadCourses() {
       this.isLoading = true;
       try {
@@ -81,7 +80,7 @@ export default defineComponent({
 <template>
   <DefaultLayout>
     <div class="container mx-auto px-4 py-8">
-      <h2 class="text-3xl font-bold text-white mb-8">{{ t("home.courses") || "Courses" }}</h2>
+      <h2 class="text-3xl font-bold text-white mb-8">{{ t("home.courses") }}</h2>
 
       <div v-if="isLoading" class="text-center text-gray-400 py-12">Loading courses...</div>
 

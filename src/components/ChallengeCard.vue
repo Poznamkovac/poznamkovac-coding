@@ -1,4 +1,5 @@
 <script lang="ts">
+import { useI18n } from "vue-i18n";
 import { defineComponent } from "vue";
 import { useI18nStore } from "../stores/i18n";
 import type { Challenge } from "../types";
@@ -18,9 +19,11 @@ export default defineComponent({
   },
 
   setup() {
+    const { t } = useI18n();
     const i18nStore = useI18nStore();
 
     return {
+      t,
       i18nStore,
     };
   },
@@ -57,9 +60,9 @@ export default defineComponent({
       <span v-if="isCompleted" class="text-green-500 text-xl">✓</span>
     </div>
     <div class="flex items-center gap-2 text-sm text-gray-400">
-      <span>{{ i18nStore.t("challenge.maxScore") }}: {{ challenge.maxScore }}</span>
+      <span>{{ t("challenge.maxScore") }}: {{ challenge.maxScore }}</span>
       <span v-if="challenge.currentScore !== undefined">
-        | {{ i18nStore.t("challenge.currentScore") }}: {{ challenge.currentScore }} ({{ scorePercentage }}%)
+        | {{ t("challenge.currentScore") }}: {{ challenge.currentScore }} ({{ scorePercentage }}%)
       </span>
     </div>
   </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { useI18n } from "vue-i18n";
 import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import QuizAnswer from "../components/QuizAnswer.vue";
@@ -21,10 +22,12 @@ export default defineComponent({
   },
 
   setup() {
+    const { t } = useI18n();
     const i18nStore = useI18nStore();
     const { language } = storeToRefs(i18nStore);
 
     return {
+      t,
       i18nStore,
       language,
     };
@@ -66,7 +69,7 @@ export default defineComponent({
     },
 
     breadcrumbs(): Array<{ text: string; path: string }> {
-      const crumbs: Array<{ text: string; path: string }> = [{ text: this.i18nStore.t("home.courses"), path: "/" }];
+      const crumbs: Array<{ text: string; path: string }> = [{ text: this.t("home.courses"), path: "/" }];
 
       const segments = this.pathSegments;
       let currentPath = "";
@@ -166,7 +169,7 @@ export default defineComponent({
         const lines = assignmentMarkdown.split("\n");
 
         // Extract title (first h1)
-        let title = this.i18nStore.t("challenge.titleNotDefined");
+        let title = this.t("challenge.titleNotDefined");
         let assignmentContent = "";
 
         if (lines[0]?.startsWith("# ")) {
@@ -257,7 +260,7 @@ export default defineComponent({
         <h2 class="text-3xl font-bold text-white mb-6">{{ challengeData.title }}</h2>
 
         <div class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6">
-          <h3 class="text-xl font-semibold text-white mb-4">{{ i18nStore.t("challenge.assignment") }}</h3>
+          <h3 class="text-xl font-semibold text-white mb-4">{{ t("challenge.assignment") }}</h3>
           <div class="markdown-content" v-html="challengeData.assignment"></div>
         </div>
 
@@ -346,14 +349,14 @@ export default defineComponent({
       <div v-else class="max-w-2xl mx-auto">
         <div class="bg-[#1a1a1a] border border-red-900/50 rounded-lg p-8 text-center">
           <div class="text-6xl mb-4">😕</div>
-          <h2 class="text-2xl font-bold text-white mb-3">{{ i18nStore.t("challenge.notFound") }}</h2>
-          <p class="text-gray-400 mb-6">{{ i18nStore.t("challenge.notFoundMessage") }}</p>
+          <h2 class="text-2xl font-bold text-white mb-3">{{ t("challenge.notFound") }}</h2>
+          <p class="text-gray-400 mb-6">{{ t("challenge.notFoundMessage") }}</p>
           <button
             @click="$router.push(i18nStore.getLocalizedPath(`/challenges/${coursePath}`))"
             class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition inline-flex items-center gap-2"
           >
             <span>←</span>
-            <span>{{ i18nStore.t("challenge.backToCourse") }}</span>
+            <span>{{ t("challenge.backToCourse") }}</span>
           </button>
         </div>
       </div>

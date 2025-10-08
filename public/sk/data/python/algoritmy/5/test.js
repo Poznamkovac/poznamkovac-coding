@@ -1,7 +1,13 @@
 async function test(context) {
   const pyodide = context.pyodide;
   if (!pyodide) {
-    throw new Error("pyodide not found in test context");
+    return [
+      {
+        name: "Inicializácia testovania",
+        passed: false,
+        error: "Pyodide runtime nie je k dispozícii",
+      },
+    ];
   }
 
   try {
@@ -15,9 +21,7 @@ except ImportError:
 # Run fibonacci to populate dp
 result = fibonacci(20)
 
-# Check if memoization is working
-test_passed = True
-error_message = ""
+results = []
 
 # Check specific values in dp
 expected_values = {
@@ -31,42 +35,36 @@ expected_values = {
 
 for n, expected in expected_values.items():
     if n not in dp:
-        test_passed = False
-        error_message = f"Hodnota dp[{n}] nie je v slovníku dp. Používate memoizáciu?"
+        results.append((False, f"Kontrola dp[{n}]", f"Hodnota dp[{n}] nie je v slovníku dp. Používate memoizáciu?"))
         break
     if dp[n] != expected:
-        test_passed = False
-        error_message = f"Nesprávna hodnota dp[{n}]. Očakávané: {expected}, Vaše: {dp[n]}"
+        results.append((False, f"Kontrola dp[{n}]", f"Nesprávna hodnota. Očakávané: {expected}, Vaše: {dp[n]}"))
         break
+    results.append((True, f"Kontrola dp[{n}]", ""))
 
 # Check that fibonacci(20) returns correct value
-if test_passed and result != 6765:
-    test_passed = False
-    error_message = f"fibonacci(20) vrátilo {result}, očakávané: 6765"
+if result != 6765:
+    results.append((False, "fibonacci(20)", f"Vrátilo {result}, očakávané: 6765"))
+else:
+    results.append((True, "fibonacci(20)", ""))
 
-(test_passed, error_message)
+results
     `;
 
-    const [passed, errorMessage] = pyodide.runPython(testCode);
+    const results = pyodide.runPython(testCode);
 
-    if (passed) {
-      return {
-        passed: true,
-        score: 5,
-        feedback: "Výborne! Funkcia fibonacci() správne používa memoizáciu a ukladá medzivýsledky do slovníka dp.",
-      };
-    } else {
-      return {
-        passed: false,
-        score: 0,
-        feedback: errorMessage || "Premenná dp obsahuje nesprávne hodnoty alebo funkcia nepoužíva memoizáciu.",
-      };
-    }
+    return results.map(([passed, name, error]) => ({
+      name,
+      passed,
+      error: error || undefined,
+    }));
   } catch (error) {
-    return {
-      passed: false,
-      score: 0,
-      feedback: `Chyba pri testovaní: ${error.message}`,
-    };
+    return [
+      {
+        name: "Vykonanie testov",
+        passed: false,
+        error: error.message,
+      },
+    ];
   }
 }

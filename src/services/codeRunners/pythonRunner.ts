@@ -27,7 +27,7 @@ export class PythonRunner extends BaseCodeRunner {
     return this.initPromise;
   }
 
-  async execute(files: Record<string, string>, mainFile: string): Promise<ExecutionResult> {
+  async execute(files: Record<string, string>, mainFile: string, testJS?: string): Promise<ExecutionResult> {
     if (!this.pyodide) {
       return {
         success: false,
@@ -109,11 +109,26 @@ matplotlib.use('webagg')
 
       await this.pyodide.runPythonAsync(mainContent);
 
+      // Check if we need to execute tests
+      let testCases;
+      if (testJS) {
+        const { executeTestJS } = await import("../testRunner");
+        const context = {
+          language: "python",
+          stdout: stdout.trim(),
+          stderr: stderr.trim(),
+          pyodide: this.pyodide,
+        };
+
+        testCases = await executeTestJS(testJS, context);
+      }
+
       return {
         success: !stderr,
         output: stdout.trim(),
         error: stderr.trim() || undefined,
         testContext: { pyodide: this.pyodide },
+        testCases,
       };
     } catch (error: any) {
       return {

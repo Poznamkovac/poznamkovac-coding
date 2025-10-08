@@ -43,28 +43,7 @@ export async function createVirtualFileSystem(
 ): Promise<VirtualFileSystem> {
   const filesMap = new Map<string, VirtualFile>();
   let currentActiveFile: string | null = null;
-
-  // Only try to discover test.js file (unified test framework)
-  const testFilename = "test.js";
   const allFiles = [...initialFiles];
-
-  try {
-    const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${testFilename}`);
-    const contentType = response.headers.get("content-type");
-    const isJavaScript = contentType?.includes("javascript") || contentType?.includes("text/plain");
-
-    if (response.ok && isJavaScript && !allFiles.some((f) => f.filename === testFilename)) {
-      allFiles.push({
-        filename: testFilename,
-        readonly: true,
-        hidden: true,
-        autoreload: false,
-        removable: false,
-      });
-    }
-  } catch {
-    // File doesn't exist, continue
-  }
 
   // Check if we have a saved filesystem structure
   const savedStructure = await storageService.getFileSystemStructure(coursePath, challengeId);
@@ -73,23 +52,16 @@ export async function createVirtualFileSystem(
   // Load file contents from storage or fetch from server
   await Promise.all(
     filesToLoad.map(async (filename) => {
-      // Find file config from allFiles (includes discovered test files)
-      const fileConfig = allFiles.find((f) => f.filename === filename);
-
-      // For test files, always make them readonly and hidden
-      const isTest = isTestFile(filename);
-
-      // Skip test files that weren't discovered (i.e., not in allFiles)
-      // This prevents stale test files from savedStructure from being loaded
-      if (isTest && !fileConfig) {
+      // Skip test files entirely - they're now handled separately
+      if (isTestFile(filename)) {
         return;
       }
 
-      // Try to get from storage first (but not for test files)
-      let content: string | null = null;
-      if (!isTest) {
-        content = await storageService.getEditorCode(coursePath, challengeId, filename);
-      }
+      // Find file config from allFiles
+      const fileConfig = allFiles.find((f) => f.filename === filename);
+
+      // Try to get from storage first
+      let content: string | null = await storageService.getEditorCode(coursePath, challengeId, filename);
 
       // If not in storage, try to fetch from server
       if (!content && fileConfig) {
@@ -110,10 +82,10 @@ export async function createVirtualFileSystem(
           filename,
           content: content || "",
           originalContent: content || "", // Store original content from server
-          readonly: isTest ? true : (fileConfig?.readonly ?? false),
-          hidden: isTest ? true : (fileConfig?.hidden ?? false),
+          readonly: fileConfig?.readonly ?? false,
+          hidden: fileConfig?.hidden ?? false,
           autoreload: fileConfig?.autoreload ?? false,
-          removable: isTest ? false : (fileConfig?.removable ?? true),
+          removable: fileConfig?.removable ?? true,
         });
       }
     }),

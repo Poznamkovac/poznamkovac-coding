@@ -1,4 +1,5 @@
 <script lang="ts">
+import { useI18n } from "vue-i18n";
 import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import { useI18nStore } from "../stores/i18n";
@@ -12,10 +13,12 @@ export default defineComponent({
   },
 
   setup() {
+    const { t } = useI18n();
     const i18nStore = useI18nStore();
     const { language: effectiveLanguage } = storeToRefs(i18nStore);
 
     return {
+      t,
       i18nStore,
       effectiveLanguage,
     };
@@ -46,10 +49,6 @@ export default defineComponent({
   },
 
   methods: {
-    t(key: string, params?: Record<string, string | number>): string {
-      return this.i18nStore.t(key, params);
-    },
-
     goBack() {
       this.$router.push(this.parentPath);
     },
