@@ -1,14 +1,8 @@
 {
   "type": "code",
   "maxScore": 5,
-  "mainFile": "test.py",
+  "mainFile": "fibonacci_dp.py",
   "files": [
-    {
-      "filename": "test.py",
-      "readonly": true,
-      "hidden": true,
-      "autoreload": false
-    },
     {
       "filename": "fibonacci_dp.py",
       "readonly": false,

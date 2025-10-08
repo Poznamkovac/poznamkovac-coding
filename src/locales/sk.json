@@ -40,10 +40,17 @@
     "testOutput": "Výstup testov:",
     "deleteFileConfirm": "Naozaj chcete odstrániť súbor \"{filename}\"?",
     "previewPlaceholder": "Kliknite na tlačidlo \"Spustiť kód\" pre zobrazenie výsledku",
-    "noTestFile": "V úlohe nebol nájdený testovací súbor"
+    "noTestFile": "V úlohe nebol nájdený testovací súbor",
+    "showSolution": "Zobraziť riešenie",
+    "solutionConfirm": "Tým prepíšete vaše aktuálne súbory vzorovým riešením. Chcete pokračovať?",
+    "solutionNotAvailable": "Riešenie pre túto úlohu nie je dostupné."
   },
   "common": {
     "loading": "Načítavam...",
     "notFound": "Nenájdené"
+  },
+  "database": {
+    "blocked": "Databáza je zablokovaná inou kartou prehliadača. Prosím, zatvorte všetky ostatné karty s touto aplikáciou a obnovte stránku.",
+    "error": "Zistená chyba pripojenia k databáze. Môže to byť spôsobené poškodenou databázou alebo viacerými otvorenými kartami súčasne.\n\nChcete resetovať databázu? Tým sa odstránia všetky uložené dáta (postup, kód) a stránka sa obnoví.\n\nKliknite na OK pre reset a obnovenie, alebo na Zrušiť pre obnovenie bez resetu."
   }
 }

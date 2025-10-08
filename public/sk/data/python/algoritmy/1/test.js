@@ -14,13 +14,11 @@ async function test(context) {
     const testCode = `
 import random
 
-# Check if bubble_sort function exists
 try:
     from bubble_sort import bubble_sort
 except ImportError:
     raise ImportError("Funkcia bubble_sort() nie je definovaná.")
 
-# Run tests
 results = []
 
 for i in range(10):

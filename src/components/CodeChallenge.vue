@@ -63,6 +63,7 @@ export default defineComponent({
       editorHasFocus: false,
       pendingAutoReload: false,
       testJSContent: null as string | null, // Cached test.js content
+      failedAttempts: 0,
     };
   },
 
@@ -90,12 +91,17 @@ export default defineComponent({
     showPlaceholder(): boolean {
       return !this.hasPreviewOrOutput;
     },
+
+    canShowSolution(): boolean {
+      return this.failedAttempts >= 3;
+    },
   },
 
   async mounted() {
     await this.initializeFileSystem();
     await this.loadTestJS();
     this.setupAutoReload();
+    this.failedAttempts = await storageService.getFailedAttempts(this.coursePath, this.challengeId);
   },
 
   beforeUnmount() {
@@ -315,7 +321,7 @@ export default defineComponent({
             this.executionError = this.testResult.error;
           }
 
-          // Save score to storage if test passed
+          // Save score to storage if test passed, or increment failed attempts
           if (this.testResult.passed && this.testResult.score > 0) {
             await storageService.setChallengeScore(
               this.coursePath,
@@ -323,7 +329,11 @@ export default defineComponent({
               this.testResult.score,
               this.language as "sk" | "en",
             );
+            await storageService.resetFailedAttempts(this.coursePath, this.challengeId);
+            this.failedAttempts = 0;
             console.log(`Code challenge score saved: ${this.testResult.score}/${this.testResult.maxScore} points`);
+          } else if (!this.testResult.passed) {
+            this.failedAttempts = await storageService.incrementFailedAttempts(this.coursePath, this.challengeId);
           }
         }
       } catch (error: any) {
@@ -380,6 +390,25 @@ export default defineComponent({
       document.removeEventListener("mouseup", this.handleMouseUp);
       window.removeEventListener("blur", this.handleMouseUp);
     },
+
+    async showSolution() {
+      const message = this.t("challenge.solutionConfirm");
+      if (!confirm(message)) {
+        return;
+      }
+
+      if (this.fileSystem) {
+        const success = await this.fileSystem.loadSolution();
+        if (success) {
+          this.updateVisibleFiles();
+          this.updateActiveFile();
+          // Optionally run tests immediately to show the solution works
+          await this.runCodeAndTests();
+        } else {
+          alert(this.t("challenge.solutionNotAvailable"));
+        }
+      }
+    },
   },
 });
 </script>
@@ -394,6 +423,10 @@ export default defineComponent({
       <button @click="resetFileSystem" class="btn btn-secondary" :title="t('challenge.resetConfirm')">
         <span class="btn-icon">↻</span>
         {{ t("challenge.reset") }}
+      </button>
+      <button v-if="canShowSolution" @click="showSolution" class="btn btn-warning">
+        <span class="btn-icon">💡</span>
+        {{ t("challenge.showSolution") }}
       </button>
       <label v-if="hasAutoReloadFiles" class="auto-reload-toggle">
         <input type="checkbox" v-model="autoReloadEnabled" />
@@ -695,6 +728,15 @@ export default defineComponent({
 
 .btn-secondary:hover:not(:disabled) {
   background: #4b5563;
+}
+
+.btn-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: #d97706;
 }
 
 .auto-reload-toggle {

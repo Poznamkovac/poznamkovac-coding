@@ -19,6 +19,7 @@ export interface VirtualFileSystem {
   getVisibleFiles: () => VirtualFile[];
   getAllFiles: () => VirtualFile[];
   reset: () => Promise<void>;
+  loadSolution: () => Promise<boolean>;
 }
 
 export type FileSystemEventType = "file-change" | "active-file-change" | "file-added" | "file-removed";
@@ -66,7 +67,14 @@ export async function createVirtualFileSystem(
       // If not in storage, try to fetch from server
       if (!content && fileConfig) {
         try {
-          const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${filename}`);
+          // Try new structure first: files/ subdirectory
+          let response = await fetch(`/${language}/data/${coursePath}/${challengeId}/files/${filename}`);
+
+          // Fallback to old structure: flat directory
+          if (!response.ok) {
+            response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${filename}`);
+          }
+
           if (response.ok) {
             content = await response.text();
           }
@@ -230,7 +238,14 @@ export async function createVirtualFileSystem(
         allFiles.map(async (fileConfig) => {
           let content = "";
           try {
-            const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`);
+            // Try new structure first: files/ subdirectory
+            let response = await fetch(`/${language}/data/${coursePath}/${challengeId}/files/${fileConfig.filename}`);
+
+            // Fallback to old structure: flat directory
+            if (!response.ok) {
+              response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`);
+            }
+
             if (response.ok) {
               content = await response.text();
             }
@@ -255,6 +270,78 @@ export async function createVirtualFileSystem(
 
       // Trigger file-added event to refresh UI
       dispatchEvent("file-added", "");
+    },
+
+    async loadSolution(): Promise<boolean> {
+      try {
+        // Fetch solution directory listing from metadata (we need to discover solution files)
+        // Try to fetch each file from allFiles from solution/ directory
+        const solutionFiles = new Map<string, string>();
+
+        // First, try to load all files from solution/ directory
+        const loadPromises = allFiles.map(async (fileConfig) => {
+          try {
+            const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/solution/${fileConfig.filename}`);
+            if (response.ok) {
+              const content = await response.text();
+              solutionFiles.set(fileConfig.filename, content);
+            }
+          } catch {
+            // File doesn't exist in solution, skip it
+          }
+        });
+
+        await Promise.all(loadPromises);
+
+        // If no solution files found, return false
+        if (solutionFiles.size === 0) {
+          return false;
+        }
+
+        // Upsert solution files into the current filesystem
+        // This preserves hidden/readonly files that are not in the solution
+        for (const [filename, content] of solutionFiles.entries()) {
+          const existingFile = filesMap.get(filename);
+          if (existingFile) {
+            // Update existing file
+            filesMap.set(filename, {
+              ...existingFile,
+              content,
+              originalContent: content,
+            });
+            // Save to storage
+            storageService.setEditorCode(coursePath, challengeId, filename, content);
+            dispatchEvent("file-change", filename, content, existingFile.autoreload);
+          } else {
+            // Add new file from solution
+            const fileConfig = allFiles.find((f) => f.filename === filename);
+            filesMap.set(filename, {
+              filename,
+              content,
+              originalContent: content,
+              readonly: fileConfig?.readonly ?? false,
+              hidden: fileConfig?.hidden ?? false,
+              autoreload: fileConfig?.autoreload ?? false,
+              removable: fileConfig?.removable ?? true,
+            });
+            storageService.setEditorCode(coursePath, challengeId, filename, content);
+            dispatchEvent("file-added", filename);
+          }
+        }
+
+        // Update structure
+        saveStructure();
+
+        // Refresh active file display
+        if (currentActiveFile && filesMap.has(currentActiveFile)) {
+          dispatchEvent("file-change", currentActiveFile, filesMap.get(currentActiveFile)?.content);
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Failed to load solution:", error);
+        return false;
+      }
     },
   };
 }

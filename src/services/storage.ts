@@ -1,4 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from "idb";
+import { i18n } from "../i18n";
 
 interface AppDB extends DBSchema {
   "challenge-data": {
@@ -12,25 +13,83 @@ const DB_VERSION = 1;
 const STORE_NAME = "challenge-data";
 
 class StorageService {
-  private dbPromise: Promise<IDBPDatabase<AppDB>>;
+  private dbPromise: Promise<IDBPDatabase<AppDB>> | null = null;
 
   constructor() {
     this.dbPromise = this.initializeDB();
   }
 
-  private initializeDB(): Promise<IDBPDatabase<AppDB>> {
-    return openDB<AppDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME);
-        }
-      },
-    });
+  private async initializeDB(): Promise<IDBPDatabase<AppDB>> {
+    try {
+      return await openDB<AppDB>(DB_NAME, DB_VERSION, {
+        upgrade(db, oldVersion, newVersion, transaction) {
+          // Create the store if it doesn't exist
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME);
+          }
+        },
+        blocked() {
+          const message = i18n.global.t("database.blocked");
+          console.warn(message);
+          alert(message);
+        },
+        blocking() {
+          console.warn("This tab is blocking a database upgrade in another tab.");
+        },
+      });
+    } catch (error) {
+      console.error("Failed to initialize database:", error);
+      throw error;
+    }
+  }
+
+  private async getDB(): Promise<IDBPDatabase<AppDB>> {
+    try {
+      if (!this.dbPromise) {
+        this.dbPromise = this.initializeDB();
+      }
+
+      const db = await this.dbPromise;
+
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        throw new Error("Database store missing after initialization");
+      }
+
+      return db;
+    } catch (error) {
+      console.error("Database connection error:", error);
+
+      const userConfirmed = confirm(i18n.global.t("database.error"));
+
+      if (userConfirmed) {
+        try {
+          const oldDb = await this.dbPromise?.catch(() => null);
+          if (oldDb) {
+            oldDb.close();
+          }
+        } catch {}
+
+        await new Promise<void>((resolve, reject) => {
+          const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+          deleteRequest.onsuccess = () => resolve();
+          deleteRequest.onerror = () => reject(deleteRequest.error);
+          deleteRequest.onblocked = () => {
+            console.warn("Database deletion blocked");
+            resolve();
+          };
+        });
+
+        console.log("Database deleted, reloading page...");
+      }
+
+      window.location.reload();
+      throw error; // for ts
+    }
   }
 
   async getValue(key: string): Promise<string | number | null> {
     try {
-      const db = await this.dbPromise;
+      const db = await this.getDB();
       const value = await db.get(STORE_NAME, key);
       return value !== undefined ? value : null;
     } catch (error) {
@@ -41,7 +100,7 @@ class StorageService {
 
   async setValue(key: string, value: string | number): Promise<void> {
     try {
-      const db = await this.dbPromise;
+      const db = await this.getDB();
       await db.put(STORE_NAME, value, key);
     } catch (error) {
       console.error("Error setting value in IndexedDB:", error);
@@ -51,7 +110,7 @@ class StorageService {
 
   async deleteValue(key: string): Promise<void> {
     try {
-      const db = await this.dbPromise;
+      const db = await this.getDB();
       await db.delete(STORE_NAME, key);
     } catch (error) {
       console.error("Error deleting value from IndexedDB:", error);
@@ -88,7 +147,7 @@ class StorageService {
 
   async getAllChallengeFiles(coursePath: string, challengeId: string, language: "sk" | "en"): Promise<Record<string, string>> {
     try {
-      const db = await this.dbPromise;
+      const db = await this.getDB();
       const allKeys = await db.getAllKeys(STORE_NAME);
       const prefix = `challenge_${language}_${coursePath}_${challengeId}_`;
 
@@ -124,20 +183,37 @@ class StorageService {
 
   async clearChallengeData(coursePath: string, challengeId: string): Promise<void> {
     try {
-      const db = await this.dbPromise;
+      const db = await this.getDB();
       const allKeys = await db.getAllKeys(STORE_NAME);
       const prefix = `challenge_${coursePath}_${challengeId}_`;
       const fsKey = `fs_structure_${coursePath}_${challengeId}`;
 
-      // Delete all challenge files and structure
       const keysToDelete = allKeys.filter((key) => key.startsWith(prefix) || key === fsKey);
-
       for (const key of keysToDelete) {
         await db.delete(STORE_NAME, key);
       }
     } catch (error) {
       console.error("Error clearing challenge data:", error);
     }
+  }
+
+  async getFailedAttempts(coursePath: string, challengeId: string): Promise<number> {
+    const key = `challenge_${coursePath}_${challengeId}_failed_attempts`;
+    const attempts = await this.getValue(key);
+    return typeof attempts === "number" ? attempts : typeof attempts === "string" ? parseInt(attempts, 10) : 0;
+  }
+
+  async incrementFailedAttempts(coursePath: string, challengeId: string): Promise<number> {
+    const current = await this.getFailedAttempts(coursePath, challengeId);
+    const newCount = current + 1;
+    const key = `challenge_${coursePath}_${challengeId}_failed_attempts`;
+    await this.setValue(key, newCount);
+    return newCount;
+  }
+
+  async resetFailedAttempts(coursePath: string, challengeId: string): Promise<void> {
+    const key = `challenge_${coursePath}_${challengeId}_failed_attempts`;
+    await this.deleteValue(key);
   }
 }
 

@@ -39,10 +39,17 @@
     "testOutput": "Test output:",
     "deleteFileConfirm": "Are you sure you want to delete the file \"{filename}\"?",
     "previewPlaceholder": "Click the \"Run Code\" button to see the result",
-    "noTestFile": "No test file found in challenge"
+    "noTestFile": "No test file found in challenge",
+    "showSolution": "Show Solution",
+    "solutionConfirm": "This will overwrite your current files with the reference solution. Do you want to continue?",
+    "solutionNotAvailable": "Solution is not available for this challenge."
   },
   "common": {
     "loading": "Loading...",
     "notFound": "Not Found"
+  },
+  "database": {
+    "blocked": "Database is blocked by another tab. Please close all other tabs with this app and reload the page.",
+    "error": "Database connection error detected. This might be due to a corrupted database or multiple tabs being open simultaneously.\n\nWould you like to reset the database? This will delete all stored data (progress, code) and reload the page.\n\nClick OK to reset and reload, or Cancel to just reload and try again."
   }
 }
