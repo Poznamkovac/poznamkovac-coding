@@ -21,6 +21,12 @@ const routes: RouteRecordRaw[] = [
     name: "embed-challenge-lang",
     component: () => import("../pages/EmbedChallengePage.vue"),
   },
+  // will default to sk lang:
+  {
+    path: "/embed/:pathMatch(.*)*",
+    name: "embed-challenge",
+    component: () => import("../pages/EmbedChallengePage.vue"),
+  },
   {
     path: "/:pathMatch(.*)*",
     name: "not-found",

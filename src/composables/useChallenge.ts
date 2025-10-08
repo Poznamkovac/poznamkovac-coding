@@ -25,7 +25,7 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
     isLoading.value = true;
 
     try {
-      const lang = language.value;
+      const lang = language.value === "auto" ? "sk" : language.value;
       const metadataPath = `/${lang}/data/${coursePath.value}/${challengeId.value}/metadata.json`;
       const assignmentMdPath = `/${lang}/data/${coursePath.value}/${challengeId.value}/assignment.md`;
 

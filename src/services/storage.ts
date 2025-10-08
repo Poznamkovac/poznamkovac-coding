@@ -12,31 +12,28 @@ const DB_NAME = "poznamkovac-coding-db";
 const DB_VERSION = 1;
 const STORE_NAME = "challenge-data";
 
+// global promise shared across all instances (across multiple tabs/iframes)
+let globalDBPromise: Promise<IDBPDatabase<AppDB>> | null = null;
+
+async function initializeDB(): Promise<IDBPDatabase<AppDB>> {
+  return await openDB<AppDB>(DB_NAME, DB_VERSION, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    },
+    blocked() {
+      alert(i18n.global.t("database.blocked"));
+    },
+  });
+}
+
 class StorageService {
-  private dbPromise: Promise<IDBPDatabase<AppDB>> | null = null;
-
-  constructor() {
-    this.dbPromise = this.initializeDB();
-  }
-
-  private async initializeDB(): Promise<IDBPDatabase<AppDB>> {
-    return await openDB<AppDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME);
-        }
-      },
-      blocked() {
-        alert(i18n.global.t("database.blocked"));
-      },
-    });
-  }
-
   private async getDB(): Promise<IDBPDatabase<AppDB>> {
-    if (!this.dbPromise) {
-      this.dbPromise = this.initializeDB();
+    if (!globalDBPromise) {
+      globalDBPromise = initializeDB();
     }
-    return this.dbPromise;
+    return globalDBPromise;
   }
 
   async getValue(key: string): Promise<string | number | null> {
