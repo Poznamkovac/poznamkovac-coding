@@ -20,19 +20,3 @@ export interface CodeRunner {
   cleanup(): void;
   isInitialized(): boolean;
 }
-
-export abstract class BaseCodeRunner implements CodeRunner {
-  abstract language: string;
-  protected initialized = false;
-
-  abstract initialize(): Promise<void>;
-  abstract execute(files: Record<string, string>, mainFile: string, testJS?: string): Promise<ExecutionResult>;
-
-  cleanup(): void {
-    // Default implementation - can be overridden
-  }
-
-  isInitialized(): boolean {
-    return this.initialized;
-  }
-}

@@ -1,13 +1,11 @@
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { useI18nStore } from "../stores/i18n";
-import { storeToRefs } from "pinia";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import ChallengeCard from "../components/ChallengeCard.vue";
 import CourseCard from "../components/CourseCard.vue";
 import { titleCase, hashStringToColor } from "../utils";
-import type { Course, Challenge } from "../types";
+import type { Course, Challenge, LanguageCode } from "../types";
 import { storageService } from "../services/storage";
 
 export default defineComponent({
@@ -21,12 +19,19 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-    const i18nStore = useI18nStore();
-    const { language } = storeToRefs(i18nStore);
+
+    const language = computed<LanguageCode>({
+      get() {
+        const stored = localStorage.getItem("language") as LanguageCode | null;
+        return stored || "auto";
+      },
+      set(value: LanguageCode) {
+        localStorage.setItem("language", value);
+      },
+    });
 
     return {
       t,
-      i18nStore,
       language,
     };
   },

@@ -106,20 +106,17 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    // clean up auto-save debounce timer
     if (this.saveTimer) {
       window.clearTimeout(this.saveTimer);
     }
 
     window.removeEventListener("vfs-event", this.handleFileSystemEvent as EventListener);
-    // clean up resize listeners in case component unmounts during resize
     document.removeEventListener("mousemove", this.handleMouseMove);
     document.removeEventListener("mouseup", this.handleMouseUp);
     window.removeEventListener("blur", this.handleMouseUp);
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
 
-    // remove resize overlay if it exists
     const overlay = document.getElementById("resize-overlay");
     if (overlay) {
       overlay.remove();
@@ -175,14 +172,12 @@ export default defineComponent({
     },
 
     handleFileSystemEvent(fsEvent: CustomEvent) {
-      const { type, filename, content, autoreload } = fsEvent.detail;
+      const { type, autoreload } = fsEvent.detail;
 
       if (type === "active-file-change") {
         this.updateActiveFile();
       } else if (type === "file-change") {
         if (autoreload && this.autoReloadEnabled) {
-          // Don't reload immediately while editor has focus
-          // Instead, mark that we need to reload when focus is lost
           if (this.editorHasFocus) {
             this.pendingAutoReload = true;
           } else {
@@ -200,7 +195,6 @@ export default defineComponent({
 
     handleEditorBlur() {
       this.editorHasFocus = false;
-      // If there's a pending autoreload, execute it now that focus is lost
       if (this.pendingAutoReload && this.autoReloadEnabled) {
         this.pendingAutoReload = false;
         this.runCodeAndTests();
@@ -247,7 +241,6 @@ export default defineComponent({
       if (this.fileSystem) {
         this.fileSystem.renameFile(oldFilename, newFilename);
         this.updateVisibleFiles();
-        // If the renamed file was active, update the active file
         if (this.activeFile === oldFilename) {
           this.activeFile = newFilename;
           const file = this.fileSystem.getFileContent(newFilename);
@@ -259,16 +252,13 @@ export default defineComponent({
     },
 
     handleContentUpdate(newContent: string) {
-      // Debounce saving to IndexedDB (save after 500ms of no typing)
       if (this.activeFile) {
         this.activeFileContent = newContent;
 
-        // Clear existing timer
         if (this.saveTimer) {
           window.clearTimeout(this.saveTimer);
         }
 
-        // Set new timer to save after 500ms
         this.saveTimer = window.setTimeout(() => {
           if (this.activeFile) {
             storageService.setEditorCode(this.coursePath, this.challengeId, this.activeFile, newContent, this.language);
@@ -295,7 +285,6 @@ export default defineComponent({
           return;
         }
 
-        // Sync VFS with IndexedDB to get latest editor content
         const allFiles = this.fileSystem.getAllFiles();
         for (const file of allFiles) {
           const savedContent = await storageService.getEditorCode(
@@ -305,19 +294,16 @@ export default defineComponent({
             this.language
           );
           if (savedContent !== null) {
-            // Update VFS with saved content from IndexedDB
             this.fileSystem.files.set(file.filename, { ...file, content: savedContent });
           }
         }
 
-        // Build files object (test files are now separate, not in VFS)
         const files: Record<string, string> = {};
         const updatedFiles = this.fileSystem.getAllFiles();
         for (const file of updatedFiles) {
           files[file.filename] = file.content;
         }
 
-        // First run the code
         const result = await runner.execute(files, this.challengeData.mainFile);
 
         if (result.success) {
@@ -334,7 +320,6 @@ export default defineComponent({
           this.executionError = result.error || "Unknown error occurred";
         }
 
-        // Then run tests if they exist
         if (this.testJSContent) {
           this.testResult = await runTests(
             this.runnerLanguage,
@@ -344,16 +329,13 @@ export default defineComponent({
             this.testJSContent,
           );
 
-          // Merge test output with execution output
           if (this.testResult.output && !this.executionOutput.includes(this.testResult.output)) {
-            // Only add test output if it's different from execution output
             this.executionOutput = this.executionOutput;
           }
           if (this.testResult.error && !this.executionError) {
             this.executionError = this.testResult.error;
           }
 
-          // Save score to storage if test passed, or increment failed attempts
           if (this.testResult.passed && this.testResult.score > 0) {
             await storageService.setChallengeScore(
               this.coursePath,
@@ -382,7 +364,6 @@ export default defineComponent({
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
 
-      // Create overlay to prevent iframe from capturing events
       const overlay = document.createElement("div");
       overlay.id = "resize-overlay";
       overlay.style.cssText = "position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; cursor: col-resize;";
@@ -412,7 +393,6 @@ export default defineComponent({
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
 
-      // Remove overlay
       const overlay = document.getElementById("resize-overlay");
       if (overlay) {
         overlay.remove();
@@ -434,7 +414,6 @@ export default defineComponent({
         if (success) {
           this.updateVisibleFiles();
           this.updateActiveFile();
-          // Optionally run tests immediately to show the solution works
           await this.runCodeAndTests();
         } else {
           alert(this.t("challenge.solutionNotAvailable"));

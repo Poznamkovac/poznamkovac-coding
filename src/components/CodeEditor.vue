@@ -2,7 +2,6 @@
 import { defineComponent } from "vue";
 import * as monaco from "monaco-editor";
 
-// Shared editor instance to avoid recreating within same challenge
 let sharedEditor: monaco.editor.IStandaloneCodeEditor | null = null;
 let currentContainer: HTMLElement | null = null;
 let currentChallengeKey: string | null = null;
@@ -90,7 +89,6 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    // Dispose the model change listener
     if (modelChangeListener) {
       modelChangeListener.dispose();
       modelChangeListener = null;
@@ -102,23 +100,18 @@ export default defineComponent({
       const container = this.$refs.editorContainer as HTMLElement;
       if (!container) return;
 
-      // Check if we've navigated to a different challenge
       if (sharedEditor && currentChallengeKey !== this.challengeKey) {
-        // Different challenge - dispose old editor and create new one
         sharedEditor.dispose();
         sharedEditor = null;
         currentContainer = null;
         currentChallengeKey = this.challengeKey;
         this.createEditor(container, this.content);
       }
-      // If editor exists and is in a different container, move it
       else if (sharedEditor && currentContainer !== container) {
-        // Detach from old container
         if (currentContainer && sharedEditor) {
           currentContainer.innerHTML = "";
         }
 
-        // Recreate in new container
         const currentModel = sharedEditor.getModel();
         const currentValue = currentModel?.getValue() || "";
         sharedEditor.dispose();
@@ -126,11 +119,9 @@ export default defineComponent({
 
         this.createEditor(container, currentValue);
       } else if (!sharedEditor) {
-        // Create new editor for the first time
         currentChallengeKey = this.challengeKey;
         this.createEditor(container, this.content);
       } else {
-        // Same challenge, same container - just update content and language
         this.updateEditorContent();
       }
 
@@ -158,7 +149,6 @@ export default defineComponent({
         formatOnType: true,
       });
 
-      // Dispose previous listener if it exists
       if (modelChangeListener) {
         modelChangeListener.dispose();
       }
@@ -167,7 +157,6 @@ export default defineComponent({
         this.handleContentChange();
       });
 
-      // Emit focus and blur events
       sharedEditor.onDidFocusEditorText(() => {
         this.$emit("focus");
       });
@@ -188,7 +177,6 @@ export default defineComponent({
         }
         monaco.editor.setModelLanguage(model, this.language);
 
-        // Re-register the change listener to ensure it's bound to the current component instance
         if (modelChangeListener) {
           modelChangeListener.dispose();
         }
@@ -210,7 +198,6 @@ export default defineComponent({
     },
 
     handleContentChange() {
-      // Emit changes immediately without debouncing
       if (sharedEditor) {
         const model = sharedEditor.getModel();
         if (model) {

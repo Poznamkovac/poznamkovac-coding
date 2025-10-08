@@ -10,9 +10,6 @@ export interface TestResult {
   testCases?: TestCaseResult[];
 }
 
-/**
- * Fetches test.js file from the challenge directory
- */
 export async function fetchTestJS(coursePath: string, challengeId: string, language: string): Promise<string | null> {
   try {
     const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/test.js`);
@@ -23,7 +20,6 @@ export async function fetchTestJS(coursePath: string, challengeId: string, langu
       return await response.text();
     }
   } catch {
-    // test.js doesn't exist
   }
   return null;
 }
@@ -47,10 +43,8 @@ export async function runTests(
       };
     }
 
-    // Execute the code (test.js is passed separately, not in files)
     const result: ExecutionResult = await runner.execute(files, mainFile, testJSContent);
 
-    // Simple rule: if there are errors, tests fail
     const hasError = result.error && result.error.trim().length > 0;
     const testCases = result.testCases || [];
     const allTestsPassed = testCases.length > 0 && testCases.every((tc) => tc.passed);

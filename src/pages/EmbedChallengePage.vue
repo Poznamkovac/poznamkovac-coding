@@ -1,15 +1,13 @@
 <script lang="ts">
 import { useI18n } from "vue-i18n";
-import { defineComponent } from "vue";
+import { defineComponent, computed, shallowRef } from "vue";
 import EmbedLayout from "../layouts/EmbedLayout.vue";
 import QuizAnswer from "../components/QuizAnswer.vue";
 import CodeChallenge from "../components/CodeChallenge.vue";
 import { validateQuizAnswer } from "../utils/quiz";
-import { useI18nStore } from "../stores/i18n";
-import { storeToRefs } from "pinia";
 import { storageService } from "../services/storage";
-import type { ChallengeData } from "../types";
-import { marked } from "marked";
+import type { LanguageCode } from "../types";
+import { useChallenge, type UseChallengeReturn } from "../composables/useChallenge";
 
 export default defineComponent({
   name: "EmbedChallengePage",
@@ -22,20 +20,28 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-    const i18nStore = useI18nStore();
-    const { language } = storeToRefs(i18nStore);
+
+    const language = computed<LanguageCode>({
+      get() {
+        const stored = localStorage.getItem("language") as LanguageCode | null;
+        return stored || "auto";
+      },
+      set(value: LanguageCode) {
+        localStorage.setItem("language", value);
+      },
+    });
+
+    const challenge = shallowRef<UseChallengeReturn | null>(null);
 
     return {
       t,
-      i18nStore,
       language,
+      challenge,
     };
   },
 
   data() {
     return {
-      isLoading: true,
-      challengeData: null as ChallengeData | null,
       userAnswer: "" as string | string[],
       attemptCount: 0,
       isCorrect: false,
@@ -57,6 +63,17 @@ export default defineComponent({
 
     coursePath(): string {
       return this.pathSegments.slice(0, -1).join("/");
+    },
+
+    // Proxy challenge composable properties
+    challengeData() {
+      if (!this.challenge) return null;
+      return this.challenge.challengeData.value;
+    },
+
+    isLoading(): boolean {
+      if (!this.challenge) return true;
+      return this.challenge.isLoading.value;
     },
 
     nextChallengeId(): number | null {
@@ -87,77 +104,26 @@ export default defineComponent({
   },
 
   mounted() {
+    this.challenge = useChallenge({
+      coursePath: computed(() => this.coursePath),
+      challengeId: computed(() => this.challengeId),
+      language: computed(() => this.language),
+      fallbackTitle: this.t("challenge.titleNotDefined"),
+    });
+
     this.loadChallenge();
   },
 
   methods: {
     async loadChallenge() {
-      this.isLoading = true;
       this.attemptCount = 0;
       this.isCorrect = false;
       this.showCorrectAnswer = false;
       this.hasCheckedOnce = false;
       this.userAnswer = "";
 
-      try {
-        const coursePath = this.pathSegments.slice(0, -1).join("/");
-        const lang = this.language;
-        const metadataPath = `/${lang}/data/${coursePath}/${this.challengeId}/metadata.json`;
-        const assignmentMdPath = `/${lang}/data/${coursePath}/${this.challengeId}/assignment.md`;
-
-        // Load metadata.json
-        const metadataResponse = await fetch(metadataPath);
-        if (!metadataResponse.ok) {
-          throw new Error("Challenge not found");
-        }
-
-        // Validate that we got JSON, not HTML (404 page)
-        const contentType = metadataResponse.headers.get("content-type");
-        if (!contentType?.includes("application/json")) {
-          throw new Error("Challenge not found");
-        }
-
-        let metadata;
-        try {
-          const metadataText = await metadataResponse.text();
-          metadata = JSON.parse(metadataText);
-        } catch (parseError) {
-          throw new Error("Challenge not found");
-        }
-
-        // Load assignment.md and parse markdown
-        const assignmentMdResponse = await fetch(assignmentMdPath);
-        if (!assignmentMdResponse.ok) {
-          throw new Error("Assignment content not found");
-        }
-
-        const assignmentMarkdown = await assignmentMdResponse.text();
-        const lines = assignmentMarkdown.split("\n");
-
-        // Extract title (first h1)
-        let title = this.t("challenge.titleNotDefined");
-        let assignmentContent = "";
-
-        if (lines[0]?.startsWith("# ")) {
-          title = lines[0].substring(2).trim();
-          // Remove the title line and parse the rest as description
-          const description = lines.slice(1).join("\n").trim();
-          assignmentContent = await marked.parse(description);
-        } else {
-          assignmentContent = await marked.parse(assignmentMarkdown);
-        }
-
-        // Combine metadata with parsed assignment
-        this.challengeData = {
-          ...metadata,
-          title,
-          assignment: assignmentContent,
-        } as ChallengeData;
-      } catch (error) {
-        console.error("Failed to load challenge:", error);
-        this.challengeData = null;
-      } finally {
-        this.isLoading = false;
+      if (this.challenge) {
+        await this.challenge.loadChallenge();
       }
     },
 
@@ -170,7 +136,6 @@ export default defineComponent({
       this.hasCheckedOnce = true;
 
       if (this.isCorrect && this.challengeData.maxScore) {
-        // Save score to storage
         const lang = this.language === "auto" ? "sk" : this.language;
         await storageService.setChallengeScore(
           this.coursePath,

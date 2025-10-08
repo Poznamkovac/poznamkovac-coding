@@ -10,7 +10,6 @@ import router from "./router";
 import { i18n } from "./i18n";
 import "./style.css";
 
-// Configure Monaco Editor workers
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
 import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";

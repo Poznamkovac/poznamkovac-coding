@@ -1,12 +1,10 @@
 <script lang="ts">
 import { useI18n } from "vue-i18n";
-import { defineComponent } from "vue";
-import { storeToRefs } from "pinia";
+import { defineComponent, computed } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import CourseCard from "../components/CourseCard.vue";
-import { useI18nStore } from "../stores/i18n";
 import { hashStringToColor } from "../utils";
-import type { Course } from "../types";
+import type { Course, LanguageCode } from "../types";
 
 export default defineComponent({
   name: "HomePage",
@@ -18,12 +16,19 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-    const i18nStore = useI18nStore();
-    const { language } = storeToRefs(i18nStore);
+
+    const language = computed<LanguageCode>({
+      get() {
+        const stored = localStorage.getItem("language") as LanguageCode | null;
+        return stored || "auto";
+      },
+      set(value: LanguageCode) {
+        localStorage.setItem("language", value);
+      },
+    });
 
     return {
       t,
-      i18nStore,
       language,
     };
   },
@@ -49,7 +54,6 @@ export default defineComponent({
     async loadCourses() {
       this.isLoading = true;
       try {
-        // Load course index from build-time generated file
         const response = await fetch("/index.json");
         if (!response.ok) {
           throw new Error("Failed to load course index");
@@ -59,7 +63,6 @@ export default defineComponent({
         const lang = this.language === "auto" ? "sk" : this.language;
         const coursesData = courseIndex[lang] || [];
 
-        // Transform to Course type with colors
         this.courses = coursesData.map((course: any) => ({
           slug: course.slug,
           title: course.title,

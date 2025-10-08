@@ -10,7 +10,8 @@
     "challenges": "Challenges",
     "noContent": "No content found in this course.",
     "challengeCount": "{count} challenges",
-    "challengeCountSingular": "{count} challenge"
+    "challengeCountSingular": "{count} challenge",
+    "challengeCountFew": "{count} challenges"
   },
   "challenge": {
     "assignment": "Assignment",

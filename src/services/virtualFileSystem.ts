@@ -31,9 +31,6 @@ export interface FileSystemEvent {
   autoreload?: boolean;
 }
 
-/**
- * Creates a virtual file system for managing code challenge files
- */
 export async function createVirtualFileSystem(
   coursePath: string,
   challengeId: string,
@@ -44,11 +41,9 @@ export async function createVirtualFileSystem(
   let currentActiveFile: string | null = null;
   const allFiles = [...initialFiles];
 
-  // check if we have a saved filesystem structure
   const savedStructure = await storageService.getFileSystemStructure(coursePath, challengeId);
   const filesToLoad = savedStructure || allFiles.map((f) => f.filename);
 
-  // load file contents from storage or fetch from server
   await Promise.all(
     filesToLoad.map(async (filename) => {
       const fileConfig = allFiles.find((f) => f.filename === filename);
@@ -62,7 +57,6 @@ export async function createVirtualFileSystem(
           }
         } catch (error) {
           console.warn("error fetching file", filename, error);
-          // will use empty content
         }
       }
 
@@ -80,13 +74,11 @@ export async function createVirtualFileSystem(
     }),
   );
 
-  // set initial active file (first visible, non-hidden file)
   const visibleFiles = Array.from(filesMap.values()).filter((f) => !f.hidden);
   if (visibleFiles.length > 0) {
     currentActiveFile = visibleFiles[0].filename;
   }
 
-  // helper to save filesystem structure
   const saveStructure = () => {
     const filenames = Array.from(filesMap.keys());
     storageService.setFileSystemStructure(coursePath, challengeId, filenames);
@@ -126,12 +118,10 @@ export async function createVirtualFileSystem(
       if (file && !file.readonly) {
         filesMap.set(filename, { ...file, content });
 
-        // Only save to storage if content has been modified from original
         const hasBeenModified = content !== file.originalContent;
         if (hasBeenModified) {
           storageService.setEditorCode(coursePath, challengeId, filename, content, language);
         } else {
-          // If content matches original, remove from storage (use server version)
           storageService.deleteEditorCode(coursePath, challengeId, filename, language);
         }
 
@@ -154,7 +144,6 @@ export async function createVirtualFileSystem(
         saveStructure();
         dispatchEvent("file-added", filename);
 
-        // Set as active file
         currentActiveFile = filename;
         dispatchEvent("active-file-change", filename);
       }
@@ -168,7 +157,6 @@ export async function createVirtualFileSystem(
         saveStructure();
         dispatchEvent("file-removed", filename);
 
-        // If this was the active file, switch to another
         if (currentActiveFile === filename) {
           const visibleFiles = Array.from(filesMap.values()).filter((f) => !f.hidden);
           currentActiveFile = visibleFiles.length > 0 ? visibleFiles[0].filename : null;
@@ -208,21 +196,16 @@ export async function createVirtualFileSystem(
     },
 
     async reset() {
-      // Clear all stored data for this challenge
       await storageService.clearChallengeData(coursePath, challengeId);
 
-      // Clear current files
       filesMap.clear();
 
-      // Reload all files (including test files) from server
       await Promise.all(
         allFiles.map(async (fileConfig) => {
           let content = "";
           try {
-            // Try new structure first: files/ subdirectory
             let response = await fetch(`/${language}/data/${coursePath}/${challengeId}/files/${fileConfig.filename}`);
 
-            // Fallback to old structure: flat directory
             if (!response.ok) {
               response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`);
             }
@@ -231,7 +214,6 @@ export async function createVirtualFileSystem(
               content = await response.text();
             }
           } catch {
-            // File doesn't exist, will use empty content
           }
 
           filesMap.set(fileConfig.filename, {
@@ -242,24 +224,19 @@ export async function createVirtualFileSystem(
         }),
       );
 
-      // Reset active file
       const visibleFiles = Array.from(filesMap.values()).filter((f) => !f.hidden);
       if (visibleFiles.length > 0) {
         currentActiveFile = visibleFiles[0].filename;
         dispatchEvent("active-file-change", currentActiveFile);
       }
 
-      // Trigger file-added event to refresh UI
       dispatchEvent("file-added", "");
     },
 
     async loadSolution(): Promise<boolean> {
       try {
-        // Fetch solution directory listing from metadata (we need to discover solution files)
-        // Try to fetch each file from allFiles from solution/ directory
         const solutionFiles = new Map<string, string>();
 
-        // First, try to load all files from solution/ directory
         const loadPromises = allFiles.map(async (fileConfig) => {
           try {
             const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/solution/${fileConfig.filename}`);
@@ -268,33 +245,26 @@ export async function createVirtualFileSystem(
               solutionFiles.set(fileConfig.filename, content);
             }
           } catch {
-            // File doesn't exist in solution, skip it
           }
         });
 
         await Promise.all(loadPromises);
 
-        // If no solution files found, return false
         if (solutionFiles.size === 0) {
           return false;
         }
 
-        // Upsert solution files into the current filesystem
-        // This preserves hidden/readonly files that are not in the solution
         for (const [filename, content] of solutionFiles.entries()) {
           const existingFile = filesMap.get(filename);
           if (existingFile) {
-            // Update existing file
             filesMap.set(filename, {
               ...existingFile,
               content,
               originalContent: content,
             });
-            // Save to storage
             storageService.setEditorCode(coursePath, challengeId, filename, content, language);
             dispatchEvent("file-change", filename, content, existingFile.autoreload);
           } else {
-            // Add new file from solution
             const fileConfig = allFiles.find((f) => f.filename === filename);
             filesMap.set(filename, {
               filename,
@@ -310,10 +280,8 @@ export async function createVirtualFileSystem(
           }
         }
 
-        // Update structure
         saveStructure();
 
-        // Refresh active file display
         if (currentActiveFile && filesMap.has(currentActiveFile)) {
           dispatchEvent("file-change", currentActiveFile, filesMap.get(currentActiveFile)?.content);
         }

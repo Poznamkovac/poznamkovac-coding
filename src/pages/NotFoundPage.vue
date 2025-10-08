@@ -1,9 +1,8 @@
 <script lang="ts">
 import { useI18n } from "vue-i18n";
-import { defineComponent } from "vue";
+import { defineComponent, computed } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
-import { useI18nStore } from "../stores/i18n";
-import { storeToRefs } from "pinia";
+import type { LanguageCode } from "../types";
 
 export default defineComponent({
   name: "NotFoundPage",
@@ -14,12 +13,14 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-    const i18nStore = useI18nStore();
-    const { language: effectiveLanguage } = storeToRefs(i18nStore);
+
+    const effectiveLanguage = computed(() => {
+      const stored = localStorage.getItem("language") as LanguageCode | null;
+      return stored || "auto";
+    });
 
     return {
       t,
-      i18nStore,
       effectiveLanguage,
     };
   },

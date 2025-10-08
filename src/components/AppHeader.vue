@@ -1,20 +1,27 @@
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { useI18nStore } from "../stores/i18n";
-import { storeToRefs } from "pinia";
+import { setLanguage, extractLanguageFromPath } from "../i18n";
+import type { LanguageCode } from "../types";
 
 export default defineComponent({
   name: "AppHeader",
 
   setup() {
     const { t } = useI18n(); // Global $t() is now available
-    const i18nStore = useI18nStore();
-    const { language } = storeToRefs(i18nStore);
+
+    const language = computed<LanguageCode>({
+      get() {
+        const stored = localStorage.getItem("language") as LanguageCode | null;
+        return stored || "auto";
+      },
+      set(value: LanguageCode) {
+        localStorage.setItem("language", value);
+      },
+    });
 
     return {
       t,
-      i18nStore,
       language,
     };
   },
@@ -22,9 +29,9 @@ export default defineComponent({
   methods: {
     handleLanguageChange(lang: "sk" | "en") {
       const currentPath = this.$route.path;
-      const pathLang = this.i18nStore.extractLanguageFromPath(currentPath);
+      const pathLang = extractLanguageFromPath(currentPath);
 
-      this.i18nStore.setLanguage(lang);
+      setLanguage(lang);
 
       if (currentPath.includes("/challenges/")) {
         let newPath = currentPath;

@@ -1,10 +1,11 @@
-import { BaseCodeRunner, type ExecutionResult } from "./base";
+import { type CodeRunner, type ExecutionResult } from "./base";
 import type { PyodideInterface } from "pyodide";
 
-export class PythonRunner extends BaseCodeRunner {
+export class PythonRunner implements CodeRunner {
   language = "python";
   private pyodide: PyodideInterface | null = null;
   private initPromise: Promise<void> | null = null;
+  private initialized = false;
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -101,7 +102,6 @@ export class PythonRunner extends BaseCodeRunner {
 import warnings
 warnings.filterwarnings('ignore')
 
-# Use the webagg backend for interactive plots
 import matplotlib
 matplotlib.use('webagg')
         `);
@@ -169,5 +169,9 @@ for module_name in user_modules:
     } catch (error) {
       console.warn("Error during Python cleanup:", error);
     }
+  }
+
+  isInitialized(): boolean {
+    return this.initialized;
   }
 }

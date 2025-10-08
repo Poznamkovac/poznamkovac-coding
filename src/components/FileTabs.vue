@@ -66,7 +66,6 @@ export default defineComponent({
     },
 
     startRename(filename: string) {
-      // Don't allow renaming readonly files or test files
       const file = this.files.find((f) => f.filename === filename);
       if (!file || file.readonly || isTestFile(filename)) {
         return;
@@ -92,7 +91,6 @@ export default defineComponent({
         return;
       }
 
-      // Prevent renaming to test file names
       if (isTestFile(newName)) {
         alert("Cannot rename to test file name. Test files are managed automatically.");
         this.cancelRename();

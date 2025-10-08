@@ -1,16 +1,15 @@
 <script lang="ts">
 import { useI18n } from "vue-i18n";
-import { defineComponent } from "vue";
+import { defineComponent, computed, shallowRef } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import QuizAnswer from "../components/QuizAnswer.vue";
 import CodeChallenge from "../components/CodeChallenge.vue";
 import { validateQuizAnswer } from "../utils/quiz";
 import { titleCase } from "../utils";
-import { useI18nStore } from "../stores/i18n";
-import { storeToRefs } from "pinia";
+import { getLocalizedPath } from "../i18n";
 import { storageService } from "../services/storage";
-import type { ChallengeData } from "../types";
-import { marked } from "marked";
+import type { LanguageCode } from "../types";
+import { useChallenge, type UseChallengeReturn } from "../composables/useChallenge";
 
 export default defineComponent({
   name: "ChallengePage",
@@ -23,20 +22,30 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-    const i18nStore = useI18nStore();
-    const { language } = storeToRefs(i18nStore);
+
+    const language = computed<LanguageCode>({
+      get() {
+        const stored = localStorage.getItem("language") as LanguageCode | null;
+        return stored || "auto";
+      },
+      set(value: LanguageCode) {
+        localStorage.setItem("language", value);
+      },
+    });
+
+    // Store challenge composable (will be set in mounted)
+    // Use shallowRef to prevent Vue from unwrapping the Refs inside
+    const challenge = shallowRef<UseChallengeReturn | null>(null);
 
     return {
       t,
-      i18nStore,
       language,
+      challenge,
     };
   },
 
   data() {
     return {
-      isLoading: true,
-      challengeData: null as ChallengeData | null,
       userAnswer: "" as string | string[],
       attemptCount: 0,
       isCorrect: false,
@@ -57,16 +66,27 @@ export default defineComponent({
       return this.pathSegments[this.pathSegments.length - 1];
     },
 
+    coursePath(): string {
+      return this.pathSegments.slice(0, -1).join("/");
+    },
+
+    // Proxy challenge composable properties
+    challengeData() {
+      if (!this.challenge) return null;
+      return this.challenge.challengeData.value;
+    },
+
+    isLoading(): boolean {
+      if (!this.challenge) return true;
+      return this.challenge.isLoading.value;
+    },
+
     isQuizChallenge(): boolean {
       return this.challengeData?.type === "quiz";
     },
 
     isCodeChallenge(): boolean {
       return this.challengeData?.type === "code";
-    },
-
-    coursePath(): string {
-      return this.pathSegments.slice(0, -1).join("/");
     },
 
     breadcrumbs(): Array<{ text: string; path: string }> {
@@ -130,77 +150,28 @@ export default defineComponent({
   },
 
   mounted() {
+    // Initialize challenge composable with reactive computed properties
+    this.challenge = useChallenge({
+      coursePath: computed(() => this.coursePath),
+      challengeId: computed(() => this.challengeId),
+      language: computed(() => this.language),
+      fallbackTitle: this.t("challenge.titleNotDefined"),
+    });
+
     this.loadChallenge();
   },
 
   methods: {
     async loadChallenge() {
-      this.isLoading = true;
       this.attemptCount = 0;
       this.isCorrect = false;
       this.showCorrectAnswer = false;
       this.hasCheckedOnce = false;
       this.userAnswer = "";
 
-      try {
-        const coursePath = this.pathSegments.slice(0, -1).join("/");
-        const lang = this.language;
-        const metadataPath = `/${lang}/data/${coursePath}/${this.challengeId}/metadata.json`;
-        const assignmentMdPath = `/${lang}/data/${coursePath}/${this.challengeId}/assignment.md`;
-
-        // Load metadata.json
-        const metadataResponse = await fetch(metadataPath);
-        if (!metadataResponse.ok) {
-          throw new Error("Challenge not found");
-        }
-
-        // Validate that we got JSON, not HTML (404 page)
-        const contentType = metadataResponse.headers.get("content-type");
-        if (!contentType?.includes("application/json")) {
-          throw new Error("Challenge not found");
-        }
-
-        let metadata;
-        try {
-          const metadataText = await metadataResponse.text();
-          metadata = JSON.parse(metadataText);
-        } catch (parseError) {
-          throw new Error("Challenge not found");
-        }
-
-        // Load assignment.md and parse markdown
-        const assignmentMdResponse = await fetch(assignmentMdPath);
-        if (!assignmentMdResponse.ok) {
-          throw new Error("Assignment content not found");
-        }
-
-        const assignmentMarkdown = await assignmentMdResponse.text();
-        const lines = assignmentMarkdown.split("\n");
-
-        // Extract title (first h1)
-        let title = this.t("challenge.titleNotDefined");
-        let assignmentContent = "";
-
-        if (lines[0]?.startsWith("# ")) {
-          title = lines[0].substring(2).trim();
-          // Remove the title line and parse the rest as description
-          const description = lines.slice(1).join("\n").trim();
-          assignmentContent = await marked.parse(description);
-        } else {
-          assignmentContent = await marked.parse(assignmentMarkdown);
-        }
-
-        // Combine metadata with parsed assignment
-        this.challengeData = {
-          ...metadata,
-          title,
-          assignment: assignmentContent,
-        } as ChallengeData;
-      } catch (error) {
-        console.error("Failed to load challenge:", error);
-        this.challengeData = null;
-      } finally {
-        this.isLoading = false;
+      // Use the composable's load function
+      if (this.challenge) {
+        await this.challenge.loadChallenge();
       }
     },
 
@@ -233,7 +204,7 @@ export default defineComponent({
       if (!this.nextChallengeId) return;
 
       const coursePath = this.pathSegments.slice(0, -1).join("/");
-      const nextPath = this.i18nStore.getLocalizedPath(`/challenges/${coursePath}/${this.nextChallengeId}`);
+      const nextPath = getLocalizedPath(`/challenges/${coursePath}/${this.nextChallengeId}`);
 
       this.$router.push(nextPath);
     },
@@ -241,6 +212,8 @@ export default defineComponent({
     navigateTo(path: string) {
       this.$router.push(path);
     },
+
+    getLocalizedPath,
 
     async copyEmbedCode() {
       try {
@@ -383,7 +356,7 @@ export default defineComponent({
           <h2 class="text-2xl font-bold text-white mb-3">{{ t("challenge.notFound") }}</h2>
           <p class="text-gray-400 mb-6">{{ t("challenge.notFoundMessage") }}</p>
           <button
-            @click="$router.push(i18nStore.getLocalizedPath(`/challenges/${coursePath}`))"
+            @click="$router.push(getLocalizedPath(`/challenges/${coursePath}`))"
             class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition inline-flex items-center gap-2"
           >
             <span>←</span>

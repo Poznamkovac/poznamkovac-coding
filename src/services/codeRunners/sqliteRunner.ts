@@ -1,16 +1,16 @@
-import { BaseCodeRunner, type ExecutionResult } from "./base";
+import { type CodeRunner, type ExecutionResult } from "./base";
 import initSqlJs, { type Database } from "sql.js";
 
-export class SQLiteRunner extends BaseCodeRunner {
+export class SQLiteRunner implements CodeRunner {
   language = "sqlite";
   private SQL: any = null;
   private db: Database | null = null;
+  private initialized = false;
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
     try {
-      // Load sql.js with CDN
       this.SQL = await initSqlJs({
         locateFile: (file: string) => `https://sql.js.org/dist/${file}`,
       });
@@ -22,7 +22,6 @@ export class SQLiteRunner extends BaseCodeRunner {
   }
 
   private buildHtmlContent(results: Array<{ query: string; result: any; error?: string; time: string }>): string {
-    // Create a virtual document using DOMParser
     const styles = `
       body {
         background: #1e1e1e;
@@ -96,21 +95,18 @@ export class SQLiteRunner extends BaseCodeRunner {
       }
     `;
 
-    // Build body content using DOM methods
     const fragment = document.createDocumentFragment();
 
     results.forEach(({ result, error, time }) => {
       const container = document.createElement("div");
       container.className = "query-container";
 
-      // Add execution time
       const timeDiv = document.createElement("div");
       timeDiv.className = "query-time";
       timeDiv.textContent = `Query executed in ${time} ms`;
       container.appendChild(timeDiv);
 
       if (error) {
-        // Add error message
         const errorDiv = document.createElement("div");
         errorDiv.className = "error-message";
         const strong = document.createElement("strong");
@@ -119,12 +115,11 @@ export class SQLiteRunner extends BaseCodeRunner {
         errorDiv.appendChild(document.createTextNode(error));
         fragment.appendChild(errorDiv);
       } else if (result && result.length > 0) {
-        // Create table for results
+        // create table for results
         result.forEach((tableResult: any) => {
           const table = document.createElement("table");
           table.className = "result-table";
 
-          // Create header
           const thead = document.createElement("thead");
           const headerRow = document.createElement("tr");
           tableResult.columns.forEach((col: string) => {
@@ -135,7 +130,6 @@ export class SQLiteRunner extends BaseCodeRunner {
           thead.appendChild(headerRow);
           table.appendChild(thead);
 
-          // Create body
           const tbody = document.createElement("tbody");
           tableResult.values.forEach((row: any[]) => {
             const tr = document.createElement("tr");
@@ -149,14 +143,13 @@ export class SQLiteRunner extends BaseCodeRunner {
           table.appendChild(tbody);
           container.appendChild(table);
 
-          // Add row count
           const rowCount = document.createElement("div");
           rowCount.className = "row-count";
           rowCount.textContent = `${tableResult.values.length} row(s) returned`;
           container.appendChild(rowCount);
         });
       } else {
-        // No results returned
+        // no results
         const successDiv = document.createElement("div");
         successDiv.className = "success-message";
         successDiv.textContent = "✓ Query executed successfully (no results returned)";
@@ -166,7 +159,6 @@ export class SQLiteRunner extends BaseCodeRunner {
       fragment.appendChild(container);
     });
 
-    // Convert fragment to HTML string
     const tempDiv = document.createElement("div");
     tempDiv.appendChild(fragment);
 
@@ -189,7 +181,6 @@ export class SQLiteRunner extends BaseCodeRunner {
     }
 
     try {
-      // Create a new database instance
       this.db = new this.SQL.Database();
       if (!this.db) {
         return {
@@ -203,7 +194,6 @@ export class SQLiteRunner extends BaseCodeRunner {
       let allResults: any[] = [];
       const queryResults: Array<{ query: string; result: any; error?: string; time: string }> = [];
 
-      // Process schema.sql if it exists
       if (files["schema.sql"]) {
         try {
           this.db.run(files["schema.sql"]);
@@ -215,7 +205,6 @@ export class SQLiteRunner extends BaseCodeRunner {
         }
       }
 
-      // Process data.sql if it exists (sample data)
       if (files["data.sql"]) {
         try {
           this.db.run(files["data.sql"]);
@@ -227,7 +216,6 @@ export class SQLiteRunner extends BaseCodeRunner {
         }
       }
 
-      // Execute the main SQL file
       const mainContent = files[mainFile];
       if (!mainContent) {
         return {
@@ -236,7 +224,6 @@ export class SQLiteRunner extends BaseCodeRunner {
         };
       }
 
-      // Remove SQL comments and split by semicolon
       const cleanedContent = mainContent
         .split("\n")
         .filter((line) => !line.trim().startsWith("--"))
@@ -255,7 +242,6 @@ export class SQLiteRunner extends BaseCodeRunner {
           const executionTime = (endTime - startTime).toFixed(2);
 
           if (result.length > 0) {
-            // Store results for test context
             for (const table of result) {
               const tableData = {
                 columns: table.columns,
@@ -263,7 +249,6 @@ export class SQLiteRunner extends BaseCodeRunner {
               };
               allResults.push(tableData);
 
-              // Build text output for test runner
               textOutput += table.columns.join(" | ") + "\n";
               for (const row of table.values) {
                 textOutput += row.join(" | ") + "\n";
@@ -289,7 +274,6 @@ export class SQLiteRunner extends BaseCodeRunner {
 
       const htmlContent = this.buildHtmlContent(queryResults);
 
-      // Check if we need to execute tests
       let testCases;
       if (testJS) {
         const { executeTestJS } = await import("../testRunner");
@@ -331,5 +315,9 @@ export class SQLiteRunner extends BaseCodeRunner {
       this.db.close();
       this.db = null;
     }
+  }
+
+  isInitialized(): boolean {
+    return this.initialized;
   }
 }

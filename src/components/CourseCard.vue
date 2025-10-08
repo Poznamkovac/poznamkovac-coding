@@ -1,9 +1,8 @@
 <script lang="ts">
 import { useI18n } from "vue-i18n";
-import { defineComponent } from "vue";
-import { useI18nStore } from "../stores/i18n";
-import { storeToRefs } from "pinia";
-import type { Course } from "../types";
+import { defineComponent, computed } from "vue";
+import { getLocalizedPath } from "../i18n";
+import type { Course, LanguageCode } from "../types";
 import { Color } from "@kurkle/color";
 
 export default defineComponent({
@@ -18,12 +17,19 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-    const i18nStore = useI18nStore();
-    const { language: effectiveLanguage } = storeToRefs(i18nStore);
+
+    const effectiveLanguage = computed<LanguageCode>({
+      get() {
+        const stored = localStorage.getItem("language") as LanguageCode | null;
+        return stored || "auto";
+      },
+      set(value: LanguageCode) {
+        localStorage.setItem("language", value);
+      },
+    });
 
     return {
       t,
-      i18nStore,
       effectiveLanguage,
     };
   },
@@ -58,19 +64,14 @@ export default defineComponent({
         const color = new Color(this.course.color);
         const rgb = color.rgb;
 
-        // Calculate relative luminance using WCAG formula
-        // L = 0.2126 * R + 0.7152 * G + 0.0722 * B
         const r = rgb.r / 255;
         const g = rgb.g / 255;
         const b = rgb.b / 255;
 
         const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
-        // Use WCAG contrast ratio threshold (0.5 is a good middle point)
-        // Lighter colors (luminance > 0.5) get dark text, darker colors get white text
         return luminance > 0.5 ? "#000000" : "#ffffff";
       } catch {
-        // Fallback to white if color parsing fails
         return "#ffffff";
       }
     },
@@ -78,7 +79,7 @@ export default defineComponent({
 
   methods: {
     handleClick() {
-      const path = this.i18nStore.getLocalizedPath(`/challenges/${this.course.slug}`);
+      const path = getLocalizedPath(`/challenges/${this.course.slug}`);
       this.$router.push(path);
     },
   },

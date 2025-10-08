@@ -1,7 +1,7 @@
 <script lang="ts">
 import { useI18n } from "vue-i18n";
 import { defineComponent } from "vue";
-import { useI18nStore } from "../stores/i18n";
+import { getLocalizedPath } from "../i18n";
 import type { Challenge } from "../types";
 
 export default defineComponent({
@@ -20,11 +20,9 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-    const i18nStore = useI18nStore();
 
     return {
       t,
-      i18nStore,
     };
   },
 
@@ -43,7 +41,7 @@ export default defineComponent({
 
   methods: {
     handleClick() {
-      const path = this.i18nStore.getLocalizedPath(`/challenges/${this.coursePath}/${this.challenge.id}`);
+      const path = getLocalizedPath(`/challenges/${this.coursePath}/${this.challenge.id}`);
       this.$router.push(path);
     },
   },

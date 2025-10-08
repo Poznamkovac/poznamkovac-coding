@@ -1,7 +1,8 @@
-import { BaseCodeRunner, type ExecutionResult } from "./base";
+import { type CodeRunner, type ExecutionResult } from "./base";
 
-export class WebRunner extends BaseCodeRunner {
+export class WebRunner implements CodeRunner {
   language = "web";
+  private initialized = false;
 
   async initialize(): Promise<void> {
     this.initialized = true;
@@ -14,42 +15,36 @@ export class WebRunner extends BaseCodeRunner {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
 
-    // Process CSS link tags
+    // CSS link tags
     const linkTags = doc.querySelectorAll('link[rel="stylesheet"]');
     linkTags.forEach((linkTag) => {
       const href = linkTag.getAttribute("href");
       if (href && this.isRelativePath(href)) {
-        // Find the CSS file in virtual filesystem
         const cssContent = files[href];
 
         if (cssContent) {
-          // Replace with inline style tag
           const styleTag = doc.createElement("style");
           styleTag.textContent = cssContent;
           styleTag.setAttribute("data-source-file", href);
           linkTag.replaceWith(styleTag);
         }
       }
-      // External URLs (http://, https://, //) are left as-is
     });
 
-    // Process script tags with src
+    // script tags
     const scriptTags = doc.querySelectorAll("script[src]");
     scriptTags.forEach((scriptTag) => {
       const src = scriptTag.getAttribute("src");
       if (src && this.isRelativePath(src)) {
-        // Find the JS file in virtual filesystem
         const jsContent = files[src];
 
         if (jsContent) {
-          // Replace with inline script
           const newScriptTag = doc.createElement("script");
           newScriptTag.textContent = jsContent;
           newScriptTag.setAttribute("data-source-file", src);
           scriptTag.replaceWith(newScriptTag);
         }
       }
-      // External URLs (http://, https://, //) are left as-is
     });
 
     return doc.documentElement.outerHTML;
@@ -68,11 +63,9 @@ export class WebRunner extends BaseCodeRunner {
 
   async execute(files: Record<string, string>, mainFile: string, testJS?: string): Promise<ExecutionResult> {
     try {
-      // Find HTML file or create a wrapper
       let htmlContent = files["index.html"] || files[mainFile];
 
       if (!htmlContent) {
-        // No HTML file found, create a basic wrapper
         htmlContent = `<!DOCTYPE html>
 <html>
 <head>
@@ -84,23 +77,17 @@ export class WebRunner extends BaseCodeRunner {
 </html>`;
       }
 
-      // Process HTML to inline relative resources
       htmlContent = this.processHTML(htmlContent, files);
 
-      // Check if we need to execute tests
       let testCases;
-
       if (testJS) {
-        // Inject test.js and run tests after page load
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlContent, "text/html");
 
-        // Add test.js script
         const testScript = doc.createElement("script");
         testScript.textContent = testJS;
         doc.body.appendChild(testScript);
 
-        // Add script to run tests and communicate results back
         const runnerScript = doc.createElement("script");
         runnerScript.textContent = `
           window.addEventListener('load', async function() {
@@ -142,6 +129,10 @@ export class WebRunner extends BaseCodeRunner {
   }
 
   cleanup(): void {
-    // No cleanup needed for web runner
+    // no cleanup needed for web runner
+  }
+
+  isInitialized(): boolean {
+    return this.initialized;
   }
 }
