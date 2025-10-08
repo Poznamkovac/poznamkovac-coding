@@ -55,14 +55,6 @@ export default defineComponent({
       return this.pathSegments[this.pathSegments.length - 1];
     },
 
-    isQuizChallenge(): boolean {
-      return this.challengeData?.type === "quiz";
-    },
-
-    isCodeChallenge(): boolean {
-      return this.challengeData?.type === "code";
-    },
-
     coursePath(): string {
       return this.pathSegments.slice(0, -1).join("/");
     },
@@ -220,7 +212,7 @@ export default defineComponent({
         </div>
 
         <!-- Quiz Challenge -->
-        <div v-if="isQuizChallenge && challengeData.type === 'quiz'" class="space-y-6">
+        <div v-if="challengeData.type === 'quiz'" class="space-y-6">
           <div class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6">
             <h3 class="text-xl font-semibold text-white mb-4">Vaša odpoveď</h3>
             <QuizAnswer v-model="userAnswer" :config="challengeData.answer" :disabled="false" />
@@ -284,7 +276,7 @@ export default defineComponent({
         </div>
 
         <!-- Code Challenge -->
-        <div v-else-if="isCodeChallenge && challengeData.type === 'code'">
+        <div v-else-if="challengeData.type === 'code'">
           <CodeChallenge
             :challenge-data="challengeData"
             :course-path="coursePath"

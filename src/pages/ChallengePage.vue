@@ -42,6 +42,7 @@ export default defineComponent({
       isCorrect: false,
       showCorrectAnswer: false,
       hasCheckedOnce: false,
+      embedCopied: false,
     };
   },
 
@@ -109,6 +110,14 @@ export default defineComponent({
       }
 
       return "";
+    },
+
+    embedIframeCode(): string {
+      const lang = this.$route.params.lang as string;
+      const coursePath = this.pathSegments.slice(0, -1).join("/");
+      const origin = window.location.origin;
+      const embedUrl = `${origin}/${lang}/embed/${coursePath}/${this.challengeId}`;
+      return `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0"></iframe>`;
     },
   },
 
@@ -232,6 +241,18 @@ export default defineComponent({
     navigateTo(path: string) {
       this.$router.push(path);
     },
+
+    async copyEmbedCode() {
+      try {
+        await navigator.clipboard.writeText(this.embedIframeCode);
+        this.embedCopied = true;
+        setTimeout(() => {
+          this.embedCopied = false;
+        }, 2000);
+      } catch (err) {
+        console.error("Failed to copy:", err);
+      }
+    },
   },
 });
 </script>
@@ -257,7 +278,17 @@ export default defineComponent({
           </template>
         </nav>
 
-        <h2 class="text-3xl font-bold text-white mb-6">{{ challengeData.title }}</h2>
+        <div class="flex items-start justify-between mb-6">
+          <h2 class="text-3xl font-bold text-white">{{ challengeData.title }}</h2>
+          <button
+            @click="copyEmbedCode"
+            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition flex items-center gap-2 text-sm"
+            :class="{ 'bg-green-600 hover:bg-green-600': embedCopied }"
+          >
+            <span v-if="embedCopied">✓ Skopírované!</span>
+            <span v-else>📋 Kopírovať embed kód</span>
+          </button>
+        </div>
 
         <div class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6">
           <h3 class="text-xl font-semibold text-white mb-4">{{ t("challenge.assignment") }}</h3>
