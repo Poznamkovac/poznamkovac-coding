@@ -270,14 +270,11 @@ export default defineComponent({
     },
 
     handleContentUpdate(newContent: string) {
-      if (this.activeFile) {
+      if (this.activeFile && this.fileSystem) {
         this.activeFileContent = newContent;
 
-        this.debouncedSave(() => {
-          if (this.activeFile) {
-            storageService.setEditorCode(this.coursePath, this.challengeId, this.activeFile, newContent, this.language);
-          }
-        });
+        // Update the file system which will dispatch the vfs-event for autoreload
+        this.fileSystem.updateFileContent(this.activeFile, newContent);
       }
     },
 

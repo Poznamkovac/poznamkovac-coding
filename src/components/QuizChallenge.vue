@@ -62,9 +62,9 @@ export default defineComponent({
       this.attemptCount++;
       this.hasCheckedOnce = true;
 
-      const correct = validateQuizAnswer(this.userAnswer, this.challengeData.answer);
+      const result = validateQuizAnswer(this.userAnswer, this.challengeData.answer);
 
-      if (correct) {
+      if (result.correct) {
         this.isCorrect = true;
         this.saveScore();
       }

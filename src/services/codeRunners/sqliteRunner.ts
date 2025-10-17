@@ -181,7 +181,15 @@ export class SQLiteRunner implements CodeRunner {
     }
 
     try {
-      // Only create new database if one doesn't exist (for notebooks)
+      // For notebooks, reuse the database; for code challenges, create fresh database
+      const isNotebook = _options?.skipCleanup === true;
+
+      if (!isNotebook && this.db) {
+        // Clean up existing database for code challenges
+        this.db.close();
+        this.db = null;
+      }
+
       if (!this.db) {
         this.db = new this.SQL.Database();
       }

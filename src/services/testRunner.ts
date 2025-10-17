@@ -202,7 +202,8 @@ export async function runNotebookTests(
   challengeId: string,
   uiLanguage: string,
   maxScore: number,
-  executeCellsUpTo: (cellIndex: number) => Promise<any>
+  executeCellsUpTo: (cellIndex: number) => Promise<any>,
+  specificCellIndex?: number
 ): Promise<NotebookTestResult> {
   try {
     // Fetch test.md file
@@ -263,7 +264,12 @@ export async function runNotebookTests(
     const cellResults: NotebookCellTestResult[] = [];
     let totalPassed = 0;
 
-    for (const cellTest of cellTests) {
+    // Filter tests to only run for specific cell if specified
+    const testsToRun = specificCellIndex !== undefined
+      ? cellTests.filter(test => test.cellIndex === specificCellIndex)
+      : cellTests;
+
+    for (const cellTest of testsToRun) {
       const cell = cells[cellTest.cellIndex];
 
       // Execute all cells up to and including this cell

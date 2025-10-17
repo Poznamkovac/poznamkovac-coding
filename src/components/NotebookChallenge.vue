@@ -407,16 +407,17 @@ export default defineComponent({
       try {
         const { runNotebookTests } = await import("../services/testRunner");
         const executeCellsUpTo = await this.createExecuteCellsUpToFunction();
-        const singleCellArray = [this.cells[cellIndex]];
 
+        // Pass all cells and specify which cell to test
         const results = await runNotebookTests(
-          singleCellArray,
+          this.cells,
           this.runnerLanguage,
           this.coursePath,
           this.challengeId,
           this.language,
           this.challengeData.maxScore,
-          executeCellsUpTo
+          executeCellsUpTo,
+          cellIndex
         );
 
         // Update test results for this specific cell
@@ -434,10 +435,9 @@ export default defineComponent({
           (r: any) => r.cellId !== cellId
         );
 
-        // Add new result
-        if (results.cellResults.length > 0) {
-          const cellResult = results.cellResults[0];
-          cellResult.cellIndex = cellIndex;
+        // Add new result for this specific cell
+        const cellResult = results.cellResults.find((r: any) => r.cellIndex === cellIndex);
+        if (cellResult) {
           cellResult.cellId = cellId;
           this.testResults.cellResults.push(cellResult);
         }
