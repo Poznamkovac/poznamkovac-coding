@@ -4,6 +4,7 @@ import { defineComponent, computed, shallowRef } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import QuizAnswer from "../components/QuizAnswer.vue";
 import CodeChallenge from "../components/CodeChallenge.vue";
+import NotebookChallenge from "../components/NotebookChallenge.vue";
 import { validateQuizAnswer } from "../utils/quiz";
 import { titleCase } from "../utils";
 import { getLocalizedPath } from "../i18n";
@@ -18,6 +19,7 @@ export default defineComponent({
     DefaultLayout,
     QuizAnswer,
     CodeChallenge,
+    NotebookChallenge,
   },
 
   setup() {
@@ -87,6 +89,10 @@ export default defineComponent({
 
     isCodeChallenge(): boolean {
       return this.challengeData?.type === "code";
+    },
+
+    isNotebookChallenge(): boolean {
+      return this.challengeData?.type === "notebook";
     },
 
     breadcrumbs(): Array<{ text: string; path: string }> {
@@ -263,7 +269,10 @@ export default defineComponent({
           </button>
         </div>
 
-        <div class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6">
+        <div
+          v-if="challengeData.type !== 'notebook'"
+          class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6"
+        >
           <h3 class="text-xl font-semibold text-white mb-4">{{ t("challenge.assignment") }}</h3>
           <div class="markdown-content" v-html="challengeData.assignment"></div>
         </div>
@@ -342,6 +351,16 @@ export default defineComponent({
         <!-- Code Challenge -->
         <div v-else-if="isCodeChallenge && challengeData.type === 'code'">
           <CodeChallenge
+            :challenge-data="challengeData"
+            :course-path="coursePath"
+            :challenge-id="challengeId"
+            :language="language"
+          />
+        </div>
+
+        <!-- Notebook Challenge -->
+        <div v-else-if="isNotebookChallenge && challengeData.type === 'notebook'">
+          <NotebookChallenge
             :challenge-data="challengeData"
             :course-path="coursePath"
             :challenge-id="challengeId"

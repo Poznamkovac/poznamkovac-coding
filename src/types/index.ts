@@ -23,7 +23,7 @@ export interface ChallengeFile {
   autoreload?: boolean;
 }
 
-export type ChallengeType = "code" | "quiz";
+export type ChallengeType = "code" | "quiz" | "notebook";
 
 export type QuizAnswerType = "radio" | "checkbox" | "input";
 
@@ -71,7 +71,28 @@ export interface CodeChallengeData {
   imageUrl?: string;
 }
 
-export type ChallengeData = QuizChallengeData | CodeChallengeData;
+export interface NotebookCell {
+  id: string;
+  code: string;
+  readonly: boolean;
+  hidden: boolean;
+  mustExecute: boolean;
+  autoreload: boolean;
+  output?: string;
+  error?: string;
+}
+
+export interface NotebookChallengeData {
+  type: "notebook";
+  title: string;
+  maxScore: number;
+  language: "python" | "web" | "sqlite";
+  cells: NotebookCell[];
+  markdownSections: string[]; // Rendered markdown sections between/around cells
+  imageUrl?: string;
+}
+
+export type ChallengeData = QuizChallengeData | CodeChallengeData | NotebookChallengeData;
 
 export interface TestResult {
   score?: number;

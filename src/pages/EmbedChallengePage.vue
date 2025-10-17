@@ -4,6 +4,7 @@ import { defineComponent, computed, shallowRef } from "vue";
 import EmbedLayout from "../layouts/EmbedLayout.vue";
 import QuizAnswer from "../components/QuizAnswer.vue";
 import CodeChallenge from "../components/CodeChallenge.vue";
+import NotebookChallenge from "../components/NotebookChallenge.vue";
 import { validateQuizAnswer } from "../utils/quiz";
 import { storageService } from "../services/storage";
 import type { LanguageCode } from "../types";
@@ -16,6 +17,7 @@ export default defineComponent({
     EmbedLayout,
     QuizAnswer,
     CodeChallenge,
+    NotebookChallenge,
   },
 
   setup() {
@@ -171,7 +173,10 @@ export default defineComponent({
       <div v-else-if="challengeData">
         <h2 class="text-3xl font-bold text-white mb-6">{{ challengeData.title }}</h2>
 
-        <div class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6">
+        <div
+          v-if="challengeData.type !== 'notebook'"
+          class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6"
+        >
           <h3 class="text-xl font-semibold text-white mb-4">{{ t("challenge.assignment") }}</h3>
           <div class="markdown-content" v-html="challengeData.assignment"></div>
         </div>
@@ -243,6 +248,16 @@ export default defineComponent({
         <!-- Code Challenge -->
         <div v-else-if="challengeData.type === 'code'">
           <CodeChallenge
+            :challenge-data="challengeData"
+            :course-path="coursePath"
+            :challenge-id="challengeId"
+            :language="language"
+          />
+        </div>
+
+        <!-- Notebook Challenge -->
+        <div v-else-if="challengeData.type === 'notebook'">
+          <NotebookChallenge
             :challenge-data="challengeData"
             :course-path="coursePath"
             :challenge-id="challengeId"

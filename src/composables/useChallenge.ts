@@ -1,6 +1,7 @@
 import { ref, Ref, ComputedRef } from "vue";
 import { marked } from "marked";
 import type { ChallengeData, LanguageCode } from "../types";
+import { parseNotebookMarkdown } from "../utils/notebookParser";
 
 export interface UseChallengeOptions {
   coursePath: Ref<string> | ComputedRef<string>;
@@ -53,24 +54,47 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
       }
 
       const assignmentMarkdown = await assignmentMdResponse.text();
-      const lines = assignmentMarkdown.split("\n");
 
-      let title = fallbackTitle;
-      let assignmentContent = "";
+      // Handle notebook type differently
+      if (metadata.type === "notebook") {
+        const { cells, markdownSections } = await parseNotebookMarkdown(assignmentMarkdown);
 
-      if (lines[0]?.startsWith("# ")) {
-        title = lines[0].substring(2).trim();
-        const description = lines.slice(1).join("\n").trim();
-        assignmentContent = await marked.parse(description);
+        // Extract title from first heading if present
+        let title = metadata.title || fallbackTitle;
+        const lines = assignmentMarkdown.split("\n");
+        if (lines[0]?.startsWith("# ")) {
+          title = lines[0].substring(2).trim();
+        }
+
+        challengeData.value = {
+          type: "notebook",
+          title,
+          maxScore: metadata.maxScore,
+          language: metadata.language || "python",
+          cells,
+          markdownSections,
+          imageUrl: metadata.imageUrl,
+        };
       } else {
-        assignmentContent = await marked.parse(assignmentMarkdown);
-      }
+        // Handle quiz and code types
+        const lines = assignmentMarkdown.split("\n");
+        let title = fallbackTitle;
+        let assignmentContent = "";
 
-      challengeData.value = {
-        ...metadata,
-        title,
-        assignment: assignmentContent,
-      } as ChallengeData;
+        if (lines[0]?.startsWith("# ")) {
+          title = lines[0].substring(2).trim();
+          const description = lines.slice(1).join("\n").trim();
+          assignmentContent = await marked.parse(description);
+        } else {
+          assignmentContent = await marked.parse(assignmentMarkdown);
+        }
+
+        challengeData.value = {
+          ...metadata,
+          title,
+          assignment: assignmentContent,
+        } as ChallengeData;
+      }
     } catch (error) {
       console.error("Failed to load challenge:", error);
       challengeData.value = null;

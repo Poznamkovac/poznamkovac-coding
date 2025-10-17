@@ -28,7 +28,7 @@ export class PythonRunner implements CodeRunner {
     return this.initPromise;
   }
 
-  async execute(files: Record<string, string>, mainFile: string, testJS?: string): Promise<ExecutionResult> {
+  async execute(files: Record<string, string>, mainFile: string, testJS?: string, options?: { skipCleanup?: boolean, plotTargetId?: string }): Promise<ExecutionResult> {
     if (!this.pyodide) {
       return {
         success: false,
@@ -37,8 +37,10 @@ export class PythonRunner implements CodeRunner {
     }
 
     try {
-      // Clear previous modules to ensure clean state
-      await this.cleanup();
+      // Clear previous modules to ensure clean state (unless skipCleanup for notebooks)
+      if (!options?.skipCleanup) {
+        await this.cleanup();
+      }
 
       // Remove old matplotlib plots from DOM
       const oldPlots = document.querySelectorAll('body > div[style*="display: inline-block"]');
@@ -98,12 +100,33 @@ export class PythonRunner implements CodeRunner {
       // Suppress warnings if matplotlib is loaded
       const hasMatplotlib = requirements.includes("matplotlib");
       if (hasMatplotlib) {
+        // Set target container for plots if provided
+        if (options?.plotTargetId) {
+          const targetElement = document.getElementById(options.plotTargetId);
+          if (targetElement) {
+            (document as any).pyodideMplTarget = targetElement;
+          }
+        }
+
         await this.pyodide.runPythonAsync(`
 import warnings
 warnings.filterwarnings('ignore')
 
 import matplotlib
 matplotlib.use('webagg')
+
+# Set smaller default figure size to prevent resize loops
+import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize'] = [8, 5]
+plt.rcParams['figure.dpi'] = 100
+        `);
+      }
+
+      // Close all previous matplotlib figures before running (for notebooks with skipCleanup)
+      if (hasMatplotlib && options?.skipCleanup) {
+        await this.pyodide.runPythonAsync(`
+import matplotlib.pyplot as plt
+plt.close('all')
         `);
       }
 

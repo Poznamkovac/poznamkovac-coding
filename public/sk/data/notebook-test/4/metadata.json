@@ -1,0 +1,6 @@
+{
+  "type": "notebook",
+  "maxScore": 10,
+  "language": "sqlite",
+  "title": "SQLite Notebook - Database Queries"
+}

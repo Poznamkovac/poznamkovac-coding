@@ -13,10 +13,15 @@ export interface ExecutionResult {
   testCases?: TestCaseResult[]; // Test case results if test.js was executed
 }
 
+export interface ExecutionOptions {
+  skipCleanup?: boolean; // For notebooks to preserve environment between cells
+  plotTargetId?: string; // ID of DOM element where matplotlib plots should be rendered
+}
+
 export interface CodeRunner {
   language: string;
   initialize(): Promise<void>;
-  execute(files: Record<string, string>, mainFile: string, testJS?: string): Promise<ExecutionResult>;
+  execute(files: Record<string, string>, mainFile: string, testJS?: string, options?: ExecutionOptions): Promise<ExecutionResult>;
   cleanup(): void;
   isInitialized(): boolean;
 }

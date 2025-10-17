@@ -172,7 +172,7 @@ export class SQLiteRunner implements CodeRunner {
       </html>`;
   }
 
-  async execute(files: Record<string, string>, mainFile: string, testJS?: string): Promise<ExecutionResult> {
+  async execute(files: Record<string, string>, mainFile: string, testJS?: string, options?: { skipCleanup?: boolean }): Promise<ExecutionResult> {
     if (!this.SQL) {
       return {
         success: false,
@@ -181,7 +181,10 @@ export class SQLiteRunner implements CodeRunner {
     }
 
     try {
-      this.db = new this.SQL.Database();
+      // Only create new database if one doesn't exist (for notebooks)
+      if (!this.db) {
+        this.db = new this.SQL.Database();
+      }
       if (!this.db) {
         return {
           success: false,
@@ -289,11 +292,17 @@ export class SQLiteRunner implements CodeRunner {
         testCases = await executeTestJS(testJS, context);
       }
 
+      // Collect all error messages
+      const errorMessages = queryResults
+        .filter(qr => qr.error)
+        .map(qr => `Query: ${qr.query.substring(0, 50)}...\nError: ${qr.error}`)
+        .join('\n\n');
+
       return {
         success: !hasError,
         output: textOutput.trim(),
         htmlContent: htmlContent,
-        error: hasError ? "One or more queries failed" : undefined,
+        error: hasError ? errorMessages : undefined,
         testContext: {
           sqlite: {
             db: this.db,
