@@ -5,7 +5,7 @@ import FileTabs from "./FileTabs.vue";
 import CodeEditor from "./CodeEditor.vue";
 import { createVirtualFileSystem, type VirtualFileSystem, type VirtualFile } from "../services/virtualFileSystem";
 import { codeRunnerRegistry } from "../services/codeRunners";
-import { runTests, fetchTestJS, type TestResult } from "../services/testRunner";
+import { runTests, fetchTestJS, fetchTestPy, type TestResult } from "../services/testRunner";
 import { storageService } from "../services/storage";
 import type { CodeChallengeData } from "../types";
 
@@ -62,7 +62,8 @@ export default defineComponent({
       isResizing: false,
       editorHasFocus: false,
       pendingAutoReload: false,
-      testJSContent: null as string | null, // Cached test.js content
+      testContent: null as string | null, // Cached test content (test.js or test.py)
+      testLanguage: null as string | null, // Language of the test file ('python' or 'javascript')
       failedAttempts: 0,
       saveTimer: null as number | null,
     };
@@ -82,7 +83,7 @@ export default defineComponent({
     },
 
     hasTestFiles(): boolean {
-      return this.testJSContent !== null;
+      return this.testContent !== null;
     },
 
     hasPreviewOrOutput(): boolean {
@@ -100,7 +101,7 @@ export default defineComponent({
 
   async mounted() {
     await this.initializeFileSystem();
-    await this.loadTestJS();
+    await this.loadTestFile();
     this.setupAutoReload();
     this.failedAttempts = await storageService.getFailedAttempts(this.coursePath, this.challengeId);
   },
@@ -142,11 +143,26 @@ export default defineComponent({
       }
     },
 
-    async loadTestJS() {
+    async loadTestFile() {
       try {
-        this.testJSContent = await fetchTestJS(this.coursePath, this.challengeId, this.language);
+        // For Python challenges, try test.py first, then fall back to test.js
+        if (this.runnerLanguage === 'python') {
+          const testPy = await fetchTestPy(this.coursePath, this.challengeId, this.language);
+          if (testPy) {
+            this.testContent = testPy;
+            this.testLanguage = 'python';
+            return;
+          }
+        }
+
+        // For non-Python or if test.py doesn't exist, use test.js
+        const testJS = await fetchTestJS(this.coursePath, this.challengeId, this.language);
+        if (testJS) {
+          this.testContent = testJS;
+          this.testLanguage = 'javascript';
+        }
       } catch (error) {
-        console.error("Failed to load test.js:", error);
+        console.error("Failed to load test file:", error);
       }
     },
 
@@ -320,13 +336,14 @@ export default defineComponent({
           this.executionError = result.error || "Unknown error occurred";
         }
 
-        if (this.testJSContent) {
+        if (this.testContent) {
           this.testResult = await runTests(
             this.runnerLanguage,
             files,
             this.challengeData.maxScore,
             this.challengeData.mainFile,
-            this.testJSContent,
+            this.testContent,
+            this.testLanguage || 'javascript',
           );
 
           if (this.testResult.output && !this.executionOutput.includes(this.testResult.output)) {

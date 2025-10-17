@@ -1,4 +1,4 @@
-import { type CodeRunner, type ExecutionResult } from "./base";
+import { type CodeRunner, type ExecutionResult, type TestCaseResult } from "./base";
 import type { PyodideInterface } from "pyodide";
 
 export class PythonRunner implements CodeRunner {
@@ -196,5 +196,71 @@ for module_name in user_modules:
 
   isInitialized(): boolean {
     return this.initialized;
+  }
+
+  /**
+   * Execute Python test code and return test results
+   * @param testCode - Python test code to execute
+   * @param context - Execution context (includes pyodide, stdout, stderr)
+   * @returns Array of test case results
+   */
+  async executePythonTest(testCode: string, context: any): Promise<TestCaseResult[]> {
+    if (!this.pyodide) {
+      return [
+        {
+          name: "Test initialization",
+          passed: false,
+          error: "Python runtime not initialized",
+        },
+      ];
+    }
+
+    try {
+      // Inject context values into Python globals
+      this.pyodide.globals.set('context', this.pyodide.toPy({
+        language: context.language || 'python',
+        stdout: context.stdout || '',
+        stderr: context.stderr || '',
+      }));
+
+      // Wrap test code in a function that returns results
+      const wrappedTestCode = `
+import sys
+from io import StringIO
+
+# Test code
+${testCode}
+
+# Return results as list of tuples: (passed, name, error)
+# Test code should populate a 'results' variable
+if 'results' not in dir():
+    results = [(False, "Test execution", "Test code must define a 'results' variable with test results")]
+
+results
+      `;
+
+      const results = this.pyodide.runPython(wrappedTestCode);
+
+      // Convert Python list to JS array of TestCaseResult
+      const testCases: TestCaseResult[] = [];
+      for (let i = 0; i < results.length; i++) {
+        const [passed, name, error] = results[i];
+        testCases.push({
+          name: name || `Test ${i + 1}`,
+          passed: Boolean(passed),
+          error: error || undefined,
+        });
+      }
+
+      return testCases;
+    } catch (error: any) {
+      return [
+        {
+          name: "Test execution",
+          passed: false,
+          error: error.message || String(error),
+        },
+      ];
+    }
   }
 }

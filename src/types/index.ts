@@ -99,3 +99,22 @@ export interface TestResult {
   details_ok?: string;
   details_wrong?: string;
 }
+
+export interface NotebookCellTestResult {
+  cellIndex: number;
+  cellId: string;
+  testCases: Array<{
+    name: string;
+    passed: boolean;
+    error?: string;
+  }>;
+  passed: boolean;
+  error?: string;
+}
+
+export interface NotebookTestResult {
+  score: number;
+  maxScore: number;
+  passed: boolean;
+  cellResults: NotebookCellTestResult[];
+}

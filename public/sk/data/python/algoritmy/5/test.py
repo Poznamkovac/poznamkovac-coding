@@ -1,22 +1,34 @@
 try:
-    from fibonacci_dp import fibonacci
+    from fibonacci_dp import fibonacci, dp
 except ImportError:
-    raise ImportError("Funkcia `fibonacci()` nie je definovaná.")
+    results = [(False, "Inicializácia testovania", "Funkcia fibonacci() alebo premenná dp nie je definovaná.")]
+else:
+    # Run fibonacci to populate dp
+    result = fibonacci(20)
 
-try:
-    from fibonacci_dp import dp
-except ImportError:
-    raise ImportError("Premenná s medzivýsledkami `dp` nie je definovaná.")
+    results = []
 
-fibonacci(20)
-try:
-    assert dp[0] == 0
-    assert dp[1] == 1
-    assert dp[5] == 5
-    assert dp[10] == 55
-    assert dp[15] == 610
-    assert dp[20] == 6765
-except (KeyError, AssertionError):
-    raise AssertionError("Premenná `dp` obsahuje nesprávne hodnoty.")
+    # Check specific values in dp
+    expected_values = {
+        0: 0,
+        1: 1,
+        5: 5,
+        10: 55,
+        15: 610,
+        20: 6765
+    }
 
-print("OK")
+    for n, expected in expected_values.items():
+        if n not in dp:
+            results.append((False, f"Kontrola dp[{n}]", f"Hodnota dp[{n}] nie je v slovníku dp. Používate memoizáciu?"))
+            break
+        if dp[n] != expected:
+            results.append((False, f"Kontrola dp[{n}]", f"Nesprávna hodnota. Očakávané: {expected}, Vaše: {dp[n]}"))
+            break
+        results.append((True, f"Kontrola dp[{n}]", ""))
+
+    # Check that fibonacci(20) returns correct value
+    if result != 6765:
+        results.append((False, "fibonacci(20)", f"Vrátilo {result}, očakávané: 6765"))
+    else:
+        results.append((True, "fibonacci(20)", ""))

@@ -172,7 +172,7 @@ export class SQLiteRunner implements CodeRunner {
       </html>`;
   }
 
-  async execute(files: Record<string, string>, mainFile: string, testJS?: string, options?: { skipCleanup?: boolean }): Promise<ExecutionResult> {
+  async execute(files: Record<string, string>, mainFile: string, testJS?: string, _options?: { skipCleanup?: boolean }): Promise<ExecutionResult> {
     if (!this.SQL) {
       return {
         success: false,
