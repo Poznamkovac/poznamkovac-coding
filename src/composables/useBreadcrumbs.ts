@@ -11,7 +11,7 @@ interface Breadcrumb {
 export function useBreadcrumbs(
   route: RouteLocationNormalizedLoaded,
   homeLabel: string,
-  includeLast = false
+  includeLast = false,
 ): ComputedRef<Breadcrumb[]> {
   return computed(() => {
     const crumbs: Breadcrumb[] = [{ text: homeLabel, path: "/" }];

@@ -96,18 +96,12 @@ export default defineComponent({
         if (!isHtml) {
           this.requirementsTxt = text;
         }
-      } catch {
-      }
+      } catch {}
     },
 
     async loadCellsFromStorage() {
       for (let i = 0; i < this.cells.length; i++) {
-        const savedCode = await storageService.getEditorCode(
-          this.coursePath,
-          this.challengeId,
-          this.cells[i].id,
-          this.language
-        );
+        const savedCode = await storageService.getEditorCode(this.coursePath, this.challengeId, this.cells[i].id, this.language);
         if (savedCode !== null) {
           this.cells[i].code = savedCode;
         }
@@ -156,24 +150,26 @@ export default defineComponent({
     getWebCellHTML(cellIndex: number): string {
       // Return the stored output (set by executeWebCell) or empty string
       const cell = this.cells[cellIndex];
-      if (!cell || !cell.output) return '';
+      if (!cell || !cell.output) return "";
       return cell.output;
     },
 
     getCodeWithLineNumbers(code: string): string {
-      const lines = code.split('\n');
+      const lines = code.split("\n");
       const highlighted = highlightCode(code, this.runnerLanguage);
-      const highlightedLines = highlighted.split('\n');
+      const highlightedLines = highlighted.split("\n");
 
-      return highlightedLines.map((line, index) => {
-        const lineNum = (index + 1).toString().padStart(lines.length.toString().length, ' ');
-        return `<span class="line-number">${lineNum}</span>${line}`;
-      }).join('\n');
+      return highlightedLines
+        .map((line, index) => {
+          const lineNum = (index + 1).toString().padStart(lines.length.toString().length, " ");
+          return `<span class="line-number">${lineNum}</span>${line}`;
+        })
+        .join("\n");
     },
 
     getCellHeight(code: string): string {
       // Calculate height based on number of lines (Monaco line height 19px)
-      const lineCount = code.split('\n').length;
+      const lineCount = code.split("\n").length;
       const lineHeight = 19;
       const minHeight = 60;
       const calculatedHeight = lineCount * lineHeight;
@@ -239,7 +235,7 @@ export default defineComponent({
         const plotTargetId = `plot-target-${cell.id}`;
         const plotTarget = document.getElementById(plotTargetId);
         if (plotTarget) {
-          plotTarget.innerHTML = '';
+          plotTarget.innerHTML = "";
         }
 
         // Handle web notebooks differently to maintain shared context
@@ -252,7 +248,7 @@ export default defineComponent({
         await this.$nextTick();
 
         // Prepare files for execution
-        const files: Record<string, string> = { "main": cell.code };
+        const files: Record<string, string> = { main: cell.code };
 
         // Include requirements.txt for Python if available
         if (this.runnerLanguage === "python" && this.requirementsTxt) {
@@ -261,7 +257,7 @@ export default defineComponent({
 
         const result = await runner.execute(files, "main", undefined, {
           skipCleanup: true,
-          plotTargetId
+          plotTargetId,
         });
 
         if (result.success) {
@@ -282,7 +278,6 @@ export default defineComponent({
         this.cells[cellIndex].error = error.message || String(error);
       }
     },
-
 
     async resetEnvironment() {
       const message = this.t("challenge.resetConfirm");
@@ -328,34 +323,37 @@ export default defineComponent({
           }
         }
 
-        if (this.runnerLanguage === 'web') {
-          let combinedHTML = '';
+        if (this.runnerLanguage === "web") {
+          let combinedHTML = "";
           for (let i = 0; i <= cellIndex; i++) {
             const cell = this.cells[i];
             if (cell.output) {
-              combinedHTML += cell.code + '\n';
+              combinedHTML += cell.code + "\n";
             }
           }
 
           const parser = new DOMParser();
-          const doc = parser.parseFromString(`<!DOCTYPE html><html><head></head><body>${combinedHTML}</body></html>`, 'text/html');
+          const doc = parser.parseFromString(
+            `<!DOCTYPE html><html><head></head><body>${combinedHTML}</body></html>`,
+            "text/html",
+          );
 
           return {
-            language: 'web',
+            language: "web",
             dom: doc,
             window: window,
           };
-        } else if (this.runnerLanguage === 'sqlite') {
+        } else if (this.runnerLanguage === "sqlite") {
           const targetCell = this.cells[cellIndex];
           const files: Record<string, string> = { "main.sql": targetCell.code };
           const result = await runner.execute(files, "main.sql", undefined, { skipCleanup: true });
           return result.testContext || {};
         } else {
           return {
-            language: 'python',
+            language: "python",
             pyodide: (runner as any).pyodide,
-            stdout: '',
-            stderr: ''
+            stdout: "",
+            stderr: "",
           };
         }
       };
@@ -378,7 +376,7 @@ export default defineComponent({
           this.challengeId,
           this.language,
           this.challengeData.maxScore,
-          executeCellsUpTo
+          executeCellsUpTo,
         );
 
         this.testResults = results;
@@ -417,7 +415,7 @@ export default defineComponent({
           this.language,
           this.challengeData.maxScore,
           executeCellsUpTo,
-          cellIndex
+          cellIndex,
         );
 
         // Update test results for this specific cell
@@ -426,14 +424,12 @@ export default defineComponent({
             score: 0,
             maxScore: this.challengeData.maxScore,
             passed: false,
-            cellResults: []
+            cellResults: [],
           };
         }
 
         // Remove old result for this cell if exists
-        this.testResults.cellResults = this.testResults.cellResults.filter(
-          (r: any) => r.cellId !== cellId
-        );
+        this.testResults.cellResults = this.testResults.cellResults.filter((r: any) => r.cellId !== cellId);
 
         // Add new result for this specific cell
         const cellResult = results.cellResults.find((r: any) => r.cellIndex === cellIndex);
@@ -463,19 +459,11 @@ export default defineComponent({
 <template>
   <div class="notebook-challenge">
     <div class="actions-bar">
-      <button
-        @click="runAllCells"
-        :disabled="isRunning || isRunningAll"
-        class="btn btn-primary"
-      >
+      <button @click="runAllCells" :disabled="isRunning || isRunningAll" class="btn btn-primary">
         <span class="btn-icon">{{ isRunning || isRunningAll ? "⏳" : "▶️" }}</span>
         {{ isRunning || isRunningAll ? t("challenge.running") : "Run All Cells" }}
       </button>
-      <button
-        @click="runTests"
-        :disabled="isRunningTests || isRunning"
-        class="btn btn-success"
-      >
+      <button @click="runTests" :disabled="isRunningTests || isRunning" class="btn btn-success">
         <span class="btn-icon">{{ isRunningTests ? "⏳" : "✓" }}</span>
         {{ isRunningTests ? "Running Tests..." : "Run Tests" }}
       </button>
@@ -499,11 +487,7 @@ export default defineComponent({
     <div class="notebook-container">
       <template v-for="(cell, index) in visibleCells" :key="cell.id">
         <!-- Markdown section before cell -->
-        <div
-          v-if="markdownSections[index]"
-          class="markdown-section"
-          v-html="markdownSections[index]"
-        ></div>
+        <div v-if="markdownSections[index]" class="markdown-section" v-html="markdownSections[index]"></div>
 
         <!-- Cell -->
         <div
@@ -530,21 +514,10 @@ export default defineComponent({
                 @blur="handleCellBlur"
               />
               <!-- Syntax highlighted code for unfocused cells -->
-              <pre
-                v-else
-                class="cell-code-highlight"
-                v-html="getCodeWithLineNumbers(cell.code)"
-              ></pre>
+              <pre v-else class="cell-code-highlight" v-html="getCodeWithLineNumbers(cell.code)"></pre>
             </div>
             <div v-if="!cell.readonly" class="cell-actions">
-              <button
-                @click.stop="runCell(cell.id)"
-                :disabled="isRunning"
-                class="cell-run-btn"
-                title="Run cell"
-              >
-                ▶
-              </button>
+              <button @click.stop="runCell(cell.id)" :disabled="isRunning" class="cell-run-btn" title="Run cell">▶</button>
               <button
                 @click.stop="runCellTests(cell.id)"
                 :disabled="isRunningTests || isRunning"
@@ -585,11 +558,7 @@ export default defineComponent({
           </div>
 
           <!-- Matplotlib plot target (always present for Python cells) -->
-          <div
-            v-if="runnerLanguage === 'python'"
-            :id="`plot-target-${cell.id}`"
-            class="plot-target"
-          ></div>
+          <div v-if="runnerLanguage === 'python'" :id="`plot-target-${cell.id}`" class="plot-target"></div>
 
           <!-- Test Results for this cell -->
           <div v-if="getCellTestResults(cell.id)" class="cell-test-results">
@@ -853,7 +822,8 @@ export default defineComponent({
 }
 
 /* Style matplotlib plots to fit container */
-.plot-target :deep(> div), .plot-target :deep(> div > div[tabindex="0"]) {
+.plot-target :deep(> div),
+.plot-target :deep(> div > div[tabindex="0"]) {
   width: 100% !important;
   max-width: 100%;
 }

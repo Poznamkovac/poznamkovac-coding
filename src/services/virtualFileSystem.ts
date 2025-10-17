@@ -213,8 +213,7 @@ export async function createVirtualFileSystem(
             if (response.ok) {
               content = await response.text();
             }
-          } catch {
-          }
+          } catch {}
 
           filesMap.set(fileConfig.filename, {
             ...fileConfig,
@@ -244,8 +243,7 @@ export async function createVirtualFileSystem(
               const content = await response.text();
               solutionFiles.set(fileConfig.filename, content);
             }
-          } catch {
-          }
+          } catch {}
         });
 
         await Promise.all(loadPromises);

@@ -84,6 +84,7 @@ FROM students;
 ## Summary
 
 You've learned:
+
 - Creating tables and inserting data
 - SELECT queries with filtering
 - Aggregation with GROUP BY

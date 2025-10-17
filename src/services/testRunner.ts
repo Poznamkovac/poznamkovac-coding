@@ -57,18 +57,18 @@ export async function runTests(
     let result: ExecutionResult;
 
     // For Python tests, execute them differently
-    if (testLanguage === 'python' && testContent) {
+    if (testLanguage === "python" && testContent) {
       result = await runner.execute(files, mainFile);
 
       // Run Python tests
       const context = {
-        language: 'python',
+        language: "python",
         pyodide: (runner as any).pyodide,
-        stdout: result.output || '',
-        stderr: result.error || '',
+        stdout: result.output || "",
+        stderr: result.error || "",
       };
 
-      const testCases = await executeTest(testContent, 'python', context);
+      const testCases = await executeTest(testContent, "python", context);
       result.testCases = testCases;
     } else {
       // For JS tests or no tests, use the old method
@@ -142,11 +142,7 @@ export async function executeTestJS(testJSCode: string, context: any): Promise<T
  * @param context - Execution context
  * @returns Array of test case results
  */
-export async function executeTest(
-  testCode: string,
-  testLanguage: string,
-  context: any
-): Promise<TestCaseResult[]> {
+export async function executeTest(testCode: string, testLanguage: string, context: any): Promise<TestCaseResult[]> {
   if (testLanguage === "python") {
     // Execute Python test
     if (!context.pyodide) {
@@ -203,7 +199,7 @@ export async function runNotebookTests(
   uiLanguage: string,
   maxScore: number,
   executeCellsUpTo: (cellIndex: number) => Promise<any>,
-  specificCellIndex?: number
+  specificCellIndex?: number,
 ): Promise<NotebookTestResult> {
   try {
     // Fetch test.md file
@@ -265,9 +261,8 @@ export async function runNotebookTests(
     let totalPassed = 0;
 
     // Filter tests to only run for specific cell if specified
-    const testsToRun = specificCellIndex !== undefined
-      ? cellTests.filter(test => test.cellIndex === specificCellIndex)
-      : cellTests;
+    const testsToRun =
+      specificCellIndex !== undefined ? cellTests.filter((test) => test.cellIndex === specificCellIndex) : cellTests;
 
     for (const cellTest of testsToRun) {
       const cell = cells[cellTest.cellIndex];

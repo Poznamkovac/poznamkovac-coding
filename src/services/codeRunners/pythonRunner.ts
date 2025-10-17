@@ -28,7 +28,12 @@ export class PythonRunner implements CodeRunner {
     return this.initPromise;
   }
 
-  async execute(files: Record<string, string>, mainFile: string, testJS?: string, options?: { skipCleanup?: boolean, plotTargetId?: string }): Promise<ExecutionResult> {
+  async execute(
+    files: Record<string, string>,
+    mainFile: string,
+    testJS?: string,
+    options?: { skipCleanup?: boolean; plotTargetId?: string },
+  ): Promise<ExecutionResult> {
     if (!this.pyodide) {
       return {
         success: false,
@@ -217,11 +222,14 @@ for module_name in user_modules:
 
     try {
       // Inject context values into Python globals
-      this.pyodide.globals.set('context', this.pyodide.toPy({
-        language: context.language || 'python',
-        stdout: context.stdout || '',
-        stderr: context.stderr || '',
-      }));
+      this.pyodide.globals.set(
+        "context",
+        this.pyodide.toPy({
+          language: context.language || "python",
+          stdout: context.stdout || "",
+          stderr: context.stderr || "",
+        }),
+      );
 
       // Wrap test code in a function that returns results
       const wrappedTestCode = `

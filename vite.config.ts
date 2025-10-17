@@ -9,7 +9,7 @@ export default defineConfig({
       strict: false,
     },
   },
-  assetsInclude: ['**/*.py', '**/*.md', '**/*.sql'],
+  assetsInclude: ["**/*.py", "**/*.md", "**/*.sql"],
   build: {
     chunkSizeWarningLimit: 4500,
     rollupOptions: {

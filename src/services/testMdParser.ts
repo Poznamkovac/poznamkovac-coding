@@ -18,11 +18,7 @@ export interface CellTest {
  * @param language - Language of the notebook (python, web, sqlite)
  * @returns Array of cell tests mapped to their original cell indices
  */
-export function parseTestMd(
-  testMdContent: string,
-  editableCellIndices: number[],
-  language: string
-): CellTest[] {
+export function parseTestMd(testMdContent: string, editableCellIndices: number[], language: string): CellTest[] {
   const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
   const tests: CellTest[] = [];
 
@@ -57,11 +53,7 @@ export function parseTestMd(
 /**
  * Fetches test.md file from server
  */
-export async function fetchTestMd(
-  coursePath: string,
-  challengeId: string,
-  language: string
-): Promise<string | null> {
+export async function fetchTestMd(coursePath: string, challengeId: string, language: string): Promise<string | null> {
   try {
     const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/test.md`);
     const contentType = response.headers.get("content-type");
@@ -70,7 +62,6 @@ export async function fetchTestMd(
     if (response.ok && isMarkdown) {
       return await response.text();
     }
-  } catch {
-  }
+  } catch {}
   return null;
 }

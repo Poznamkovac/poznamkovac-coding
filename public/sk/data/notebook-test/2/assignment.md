@@ -76,6 +76,7 @@ plt.show()
 ## Summary
 
 You've learned the basics of:
+
 - NumPy arrays and operations
 - Pandas DataFrames
 - Matplotlib plotting

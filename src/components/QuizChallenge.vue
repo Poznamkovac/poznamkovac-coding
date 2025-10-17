@@ -93,10 +93,7 @@ export default defineComponent({
       <QuizAnswer v-model="userAnswer" :config="challengeData.answer" :disabled="false" />
     </div>
 
-    <div
-      v-if="hasCheckedOnce && !isCorrect && !showCorrectAnswer"
-      class="bg-[#1a1a1a] border border-red-600 rounded-lg p-6"
-    >
+    <div v-if="hasCheckedOnce && !isCorrect && !showCorrectAnswer" class="bg-[#1a1a1a] border border-red-600 rounded-lg p-6">
       <div class="flex items-center gap-3 mb-2">
         <span class="text-2xl">✗</span>
         <h3 class="text-xl font-semibold text-red-400">Nesprávne</h3>

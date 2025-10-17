@@ -106,8 +106,7 @@ export default defineComponent({
         currentContainer = null;
         currentChallengeKey = this.challengeKey;
         this.createEditor(container, this.content);
-      }
-      else if (sharedEditor && currentContainer !== container) {
+      } else if (sharedEditor && currentContainer !== container) {
         if (currentContainer && sharedEditor) {
           currentContainer.innerHTML = "";
         }

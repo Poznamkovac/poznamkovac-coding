@@ -97,6 +97,7 @@ Create a dynamic list that uses the shared clickCount variable:
 ## Summary
 
 You've created:
+
 - HTML structure
 - CSS styling
 - Interactive JavaScript elements

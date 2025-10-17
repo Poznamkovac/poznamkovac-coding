@@ -172,7 +172,12 @@ export class SQLiteRunner implements CodeRunner {
       </html>`;
   }
 
-  async execute(files: Record<string, string>, mainFile: string, testJS?: string, _options?: { skipCleanup?: boolean }): Promise<ExecutionResult> {
+  async execute(
+    files: Record<string, string>,
+    mainFile: string,
+    testJS?: string,
+    _options?: { skipCleanup?: boolean },
+  ): Promise<ExecutionResult> {
     if (!this.SQL) {
       return {
         success: false,
@@ -302,9 +307,9 @@ export class SQLiteRunner implements CodeRunner {
 
       // Collect all error messages
       const errorMessages = queryResults
-        .filter(qr => qr.error)
-        .map(qr => `Query: ${qr.query.substring(0, 50)}...\nError: ${qr.error}`)
-        .join('\n\n');
+        .filter((qr) => qr.error)
+        .map((qr) => `Query: ${qr.query.substring(0, 50)}...\nError: ${qr.error}`)
+        .join("\n\n");
 
       return {
         success: !hasError,

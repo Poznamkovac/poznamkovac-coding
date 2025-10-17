@@ -38,6 +38,7 @@ for i in range(5):
 ## Summary
 
 This demonstrates the basic notebook functionality with:
+
 - Read-only cells that must execute
 - Editable cells
 - Markdown sections between cells

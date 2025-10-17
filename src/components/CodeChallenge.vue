@@ -148,11 +148,11 @@ export default defineComponent({
     async loadTestFile() {
       try {
         // For Python challenges, try test.py first, then fall back to test.js
-        if (this.runnerLanguage === 'python') {
+        if (this.runnerLanguage === "python") {
           const testPy = await fetchTestPy(this.coursePath, this.challengeId, this.language);
           if (testPy) {
             this.testContent = testPy;
-            this.testLanguage = 'python';
+            this.testLanguage = "python";
             return;
           }
         }
@@ -161,7 +161,7 @@ export default defineComponent({
         const testJS = await fetchTestJS(this.coursePath, this.challengeId, this.language);
         if (testJS) {
           this.testContent = testJS;
-          this.testLanguage = 'javascript';
+          this.testLanguage = "javascript";
         }
       } catch (error) {
         console.error("Failed to load test file:", error);
@@ -302,7 +302,7 @@ export default defineComponent({
             this.coursePath,
             this.challengeId,
             file.filename,
-            this.language
+            this.language,
           );
           if (savedContent !== null) {
             this.fileSystem.files.set(file.filename, { ...file, content: savedContent });
@@ -338,7 +338,7 @@ export default defineComponent({
             this.challengeData.maxScore,
             this.challengeData.mainFile,
             this.testContent,
-            this.testLanguage || 'javascript',
+            this.testLanguage || "javascript",
           );
 
           if (this.testResult.output && !this.executionOutput.includes(this.testResult.output)) {

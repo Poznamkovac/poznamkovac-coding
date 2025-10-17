@@ -103,10 +103,7 @@ export default defineComponent({
       <div v-else-if="challengeData">
         <h2 class="text-3xl font-bold text-white mb-6">{{ challengeData.title }}</h2>
 
-        <div
-          v-if="challengeData.type !== 'notebook'"
-          class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6"
-        >
+        <div v-if="challengeData.type !== 'notebook'" class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6">
           <h3 class="text-xl font-semibold text-white mb-4">{{ t("challenge.assignment") }}</h3>
           <div class="markdown-content" v-html="challengeData.assignment"></div>
         </div>

@@ -88,7 +88,9 @@ class StorageService {
     const db = await this.getDB();
     const allKeys = await db.getAllKeys(STORE_NAME);
     const prefix = this.makeChallengeKey(coursePath, challengeId, "", language);
-    const fileKeys = allKeys.filter((key) => key.startsWith(prefix) && key !== this.makeChallengeKey(coursePath, challengeId, "score", language));
+    const fileKeys = allKeys.filter(
+      (key) => key.startsWith(prefix) && key !== this.makeChallengeKey(coursePath, challengeId, "score", language),
+    );
 
     const result: Record<string, string> = {};
     for (const key of fileKeys) {
