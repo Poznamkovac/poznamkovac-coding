@@ -7,6 +7,7 @@ import { createVirtualFileSystem, type VirtualFileSystem, type VirtualFile } fro
 import { codeRunnerRegistry } from "../services/codeRunners";
 import { runTests, fetchTestJS, fetchTestPy, type TestResult } from "../services/testRunner";
 import { storageService } from "../services/storage";
+import { useDebouncedSave } from "../composables/useDebouncedSave";
 import type { CodeChallengeData } from "../types";
 
 export default defineComponent({
@@ -38,8 +39,10 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
+    const { debouncedSave } = useDebouncedSave();
     return {
       t,
+      debouncedSave,
     };
   },
 
@@ -62,20 +65,23 @@ export default defineComponent({
       isResizing: false,
       editorHasFocus: false,
       pendingAutoReload: false,
-      testContent: null as string | null, // Cached test content (test.js or test.py)
-      testLanguage: null as string | null, // Language of the test file ('python' or 'javascript')
+      testContent: null as string | null,
+      testLanguage: null as string | null,
       failedAttempts: 0,
-      saveTimer: null as number | null,
     };
   },
 
   computed: {
     runnerLanguage(): string {
+      const extToRunner: Record<string, string> = {
+        py: "python",
+        sql: "sqlite",
+        html: "web",
+        css: "web",
+        js: "web",
+      };
       const ext = this.challengeData.mainFile.split(".").pop()?.toLowerCase() || "";
-      if (ext === "py") return "python";
-      if (ext === "sql") return "sqlite";
-      if (["html", "css", "js"].includes(ext)) return "web";
-      return "python";
+      return extToRunner[ext] || "python";
     },
 
     hasAutoReloadFiles(): boolean {
@@ -107,10 +113,6 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    if (this.saveTimer) {
-      window.clearTimeout(this.saveTimer);
-    }
-
     window.removeEventListener("vfs-event", this.handleFileSystemEvent as EventListener);
     document.removeEventListener("mousemove", this.handleMouseMove);
     document.removeEventListener("mouseup", this.handleMouseUp);
@@ -271,15 +273,11 @@ export default defineComponent({
       if (this.activeFile) {
         this.activeFileContent = newContent;
 
-        if (this.saveTimer) {
-          window.clearTimeout(this.saveTimer);
-        }
-
-        this.saveTimer = window.setTimeout(() => {
+        this.debouncedSave(() => {
           if (this.activeFile) {
             storageService.setEditorCode(this.coursePath, this.challengeId, this.activeFile, newContent, this.language);
           }
-        }, 500);
+        });
       }
     },
 
@@ -362,7 +360,6 @@ export default defineComponent({
             );
             await storageService.resetFailedAttempts(this.coursePath, this.challengeId);
             this.failedAttempts = 0;
-            console.log(`Code challenge score saved: ${this.testResult.score}/${this.testResult.maxScore} points`);
           } else if (!this.testResult.passed) {
             this.failedAttempts = await storageService.incrementFailedAttempts(this.coursePath, this.challengeId);
           }

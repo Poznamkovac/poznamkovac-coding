@@ -1,10 +1,11 @@
 <script lang="ts">
 import { useI18n } from "vue-i18n";
-import { defineComponent, computed } from "vue";
+import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import CourseCard from "../components/CourseCard.vue";
 import { hashStringToColor } from "../utils";
-import type { Course, LanguageCode } from "../types";
+import { useLanguage } from "../composables/useLanguage";
+import type { Course } from "../types";
 
 export default defineComponent({
   name: "HomePage",
@@ -16,16 +17,7 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-
-    const language = computed<LanguageCode>({
-      get() {
-        const stored = localStorage.getItem("language") as LanguageCode | null;
-        return stored || "auto";
-      },
-      set(value: LanguageCode) {
-        localStorage.setItem("language", value);
-      },
-    });
+    const language = useLanguage();
 
     return {
       t,

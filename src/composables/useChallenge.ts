@@ -31,22 +31,11 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
       const assignmentMdPath = `/${lang}/data/${coursePath.value}/${challengeId.value}/assignment.md`;
 
       const metadataResponse = await fetch(metadataPath);
-      if (!metadataResponse.ok) {
+      if (!metadataResponse.ok || !metadataResponse.headers.get("content-type")?.includes("application/json")) {
         throw new Error("Challenge not found");
       }
 
-      const contentType = metadataResponse.headers.get("content-type");
-      if (!contentType?.includes("application/json")) {
-        throw new Error("Challenge not found");
-      }
-
-      let metadata;
-      try {
-        const metadataText = await metadataResponse.text();
-        metadata = JSON.parse(metadataText);
-      } catch (parseError) {
-        throw new Error("Challenge not found");
-      }
+      const metadata = await metadataResponse.json();
 
       const assignmentMdResponse = await fetch(assignmentMdPath);
       if (!assignmentMdResponse.ok) {
@@ -55,16 +44,10 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
 
       const assignmentMarkdown = await assignmentMdResponse.text();
 
-      // Handle notebook type differently
       if (metadata.type === "notebook") {
         const { cells, markdownSections } = await parseNotebookMarkdown(assignmentMarkdown);
-
-        // Extract title from first heading if present
-        let title = metadata.title || fallbackTitle;
         const lines = assignmentMarkdown.split("\n");
-        if (lines[0]?.startsWith("# ")) {
-          title = lines[0].substring(2).trim();
-        }
+        const title = lines[0]?.startsWith("# ") ? lines[0].substring(2).trim() : metadata.title || fallbackTitle;
 
         challengeData.value = {
           type: "notebook",
@@ -76,23 +59,15 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
           imageUrl: metadata.imageUrl,
         };
       } else {
-        // Handle quiz and code types
         const lines = assignmentMarkdown.split("\n");
-        let title = fallbackTitle;
-        let assignmentContent = "";
-
-        if (lines[0]?.startsWith("# ")) {
-          title = lines[0].substring(2).trim();
-          const description = lines.slice(1).join("\n").trim();
-          assignmentContent = await marked.parse(description);
-        } else {
-          assignmentContent = await marked.parse(assignmentMarkdown);
-        }
+        const hasTitle = lines[0]?.startsWith("# ");
+        const title = hasTitle ? lines[0].substring(2).trim() : fallbackTitle;
+        const content = hasTitle ? lines.slice(1).join("\n").trim() : assignmentMarkdown;
 
         challengeData.value = {
           ...metadata,
           title,
-          assignment: assignmentContent,
+          assignment: await marked.parse(content),
         } as ChallengeData;
       }
     } catch (error) {

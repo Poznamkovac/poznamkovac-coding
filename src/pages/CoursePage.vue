@@ -1,11 +1,14 @@
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent } from "vue";
 import { useI18n } from "vue-i18n";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
 import ChallengeCard from "../components/ChallengeCard.vue";
 import CourseCard from "../components/CourseCard.vue";
 import { titleCase, hashStringToColor } from "../utils";
-import type { Course, Challenge, LanguageCode } from "../types";
+import { getPathSegments } from "../utils/route";
+import { useLanguage } from "../composables/useLanguage";
+import { useBreadcrumbs } from "../composables/useBreadcrumbs";
+import type { Course, Challenge } from "../types";
 import { storageService } from "../services/storage";
 
 export default defineComponent({
@@ -19,16 +22,7 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-
-    const language = computed<LanguageCode>({
-      get() {
-        const stored = localStorage.getItem("language") as LanguageCode | null;
-        return stored || "auto";
-      },
-      set(value: LanguageCode) {
-        localStorage.setItem("language", value);
-      },
-    });
+    const language = useLanguage();
 
     return {
       t,
@@ -45,35 +39,21 @@ export default defineComponent({
   },
 
   computed: {
+    pathSegments(): string[] {
+      return getPathSegments(this.$route);
+    },
+
     coursePath(): string {
-      const match = this.$route.params.pathMatch;
-      return Array.isArray(match) ? match.join("/") : match || "";
+      return this.pathSegments.join("/");
     },
 
     courseTitle(): string {
-      const segments = this.coursePath.split("/");
-      const slug = segments[segments.length - 1] || "Course";
+      const slug = this.pathSegments[this.pathSegments.length - 1] || "Course";
       return titleCase(slug);
     },
 
     breadcrumbs(): Array<{ text: string; path: string }> {
-      const crumbs: Array<{ text: string; path: string }> = [{ text: this.t("home.courses"), path: "/" }];
-
-      const segments = this.coursePath.split("/");
-      let currentPath = "";
-
-      for (let i = 0; i < segments.length; i++) {
-        currentPath += (currentPath ? "/" : "") + segments[i];
-        const lang = this.$route.params.lang as string;
-        const routePath = lang ? `/${lang}/challenges/${currentPath}` : `/challenges/${currentPath}`;
-
-        crumbs.push({
-          text: titleCase(segments[i]),
-          path: routePath,
-        });
-      }
-
-      return crumbs;
+      return useBreadcrumbs(this.$route, this.t("home.courses"), true).value;
     },
   },
 

@@ -5,6 +5,7 @@ import CodeEditor from "./CodeEditor.vue";
 import { highlightCode } from "../utils/syntaxHighlight";
 import { codeRunnerRegistry } from "../services/codeRunners";
 import { storageService } from "../services/storage";
+import { useDebouncedSave } from "../composables/useDebouncedSave";
 import type { NotebookChallengeData, NotebookCell } from "../types";
 
 export default defineComponent({
@@ -35,7 +36,8 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-    return { t };
+    const { debouncedSave } = useDebouncedSave();
+    return { t, debouncedSave };
   },
 
   data() {
@@ -46,7 +48,6 @@ export default defineComponent({
       isRunning: false,
       isRunningAll: false,
       hasExecutedMustExecute: false,
-      saveTimer: null as number | null,
       requirementsTxt: null as string | null,
       isRunningTests: false,
       testResults: null as any,
@@ -77,12 +78,6 @@ export default defineComponent({
     await this.loadCellsFromStorage();
   },
 
-  beforeUnmount() {
-    if (this.saveTimer) {
-      window.clearTimeout(this.saveTimer);
-    }
-  },
-
   methods: {
     async loadRequirementsTxt() {
       try {
@@ -90,27 +85,18 @@ export default defineComponent({
         const requirementsPath = `/${lang}/data/${this.coursePath}/${this.challengeId}/requirements.txt`;
         const response = await fetch(requirementsPath);
 
-        if (response.ok) {
-          const contentType = response.headers.get("content-type");
-          // Check if we got HTML instead of the actual file (404 fallback to index.html)
-          if (contentType?.includes("text/html")) {
-            console.log("No requirements.txt found (optional)");
-            return;
-          }
+        if (!response.ok) return;
 
-          const text = await response.text();
-          // Double-check content isn't HTML
-          if (text.trim().toLowerCase().startsWith("<!doctype html>") || text.trim().toLowerCase().startsWith("<html")) {
-            console.log("No requirements.txt found (optional)");
-            return;
-          }
+        const contentType = response.headers.get("content-type");
+        if (contentType?.includes("text/html")) return;
 
+        const text = await response.text();
+        const isHtml = text.trim().toLowerCase().startsWith("<!doctype html>") || text.trim().toLowerCase().startsWith("<html");
+
+        if (!isHtml) {
           this.requirementsTxt = text;
-          console.log("Loaded requirements.txt");
         }
-      } catch (error) {
-        // requirements.txt is optional, so no error if not found
-        console.log("No requirements.txt found (optional)");
+      } catch {
       }
     },
 
@@ -149,42 +135,16 @@ export default defineComponent({
       if (cellIndex !== -1) {
         this.cells[cellIndex].code = newCode;
 
-        // Auto-execute if autoreload is enabled for this cell
         const cell = this.cells[cellIndex];
         if (cell.autoreload && this.runnerLanguage === "web") {
-          // Debounced auto-execution for web cells with autoreload
-          if (this.saveTimer) {
-            window.clearTimeout(this.saveTimer);
-          }
-
-          this.saveTimer = window.setTimeout(async () => {
-            // Save to storage
-            storageService.setEditorCode(
-              this.coursePath,
-              this.challengeId,
-              cellId,
-              newCode,
-              this.language
-            );
-
-            // Auto-execute the cell
+          this.debouncedSave(async () => {
+            storageService.setEditorCode(this.coursePath, this.challengeId, cellId, newCode, this.language);
             await this.runCell(cellId);
-          }, 500);
+          });
         } else {
-          // Just save without auto-execution
-          if (this.saveTimer) {
-            window.clearTimeout(this.saveTimer);
-          }
-
-          this.saveTimer = window.setTimeout(() => {
-            storageService.setEditorCode(
-              this.coursePath,
-              this.challengeId,
-              cellId,
-              newCode,
-              this.language
-            );
-          }, 500);
+          this.debouncedSave(() => {
+            storageService.setEditorCode(this.coursePath, this.challengeId, cellId, newCode, this.language);
+          });
         }
       }
     },
@@ -346,6 +306,61 @@ export default defineComponent({
       }
     },
 
+    async createExecuteCellsUpToFunction() {
+      const runner = await codeRunnerRegistry.getOrInitializeRunner(this.runnerLanguage);
+      if (!runner) {
+        throw new Error(`No runner available for ${this.runnerLanguage}`);
+      }
+
+      return async (cellIndex: number) => {
+        if (!this.hasExecutedMustExecute) {
+          const mustExecuteCells = this.cells.filter((c) => c.mustExecute);
+          for (const cell of mustExecuteCells) {
+            await this.executeCell(runner, cell);
+          }
+          this.hasExecutedMustExecute = true;
+        }
+
+        for (let i = 0; i <= cellIndex; i++) {
+          const cell = this.cells[i];
+          if (!cell.mustExecute) {
+            await this.executeCell(runner, cell);
+          }
+        }
+
+        if (this.runnerLanguage === 'web') {
+          let combinedHTML = '';
+          for (let i = 0; i <= cellIndex; i++) {
+            const cell = this.cells[i];
+            if (cell.output) {
+              combinedHTML += cell.code + '\n';
+            }
+          }
+
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(`<!DOCTYPE html><html><head></head><body>${combinedHTML}</body></html>`, 'text/html');
+
+          return {
+            language: 'web',
+            dom: doc,
+            window: window,
+          };
+        } else if (this.runnerLanguage === 'sqlite') {
+          const targetCell = this.cells[cellIndex];
+          const files: Record<string, string> = { "main.sql": targetCell.code };
+          const result = await runner.execute(files, "main.sql", undefined, { skipCleanup: true });
+          return result.testContext || {};
+        } else {
+          return {
+            language: 'python',
+            pyodide: (runner as any).pyodide,
+            stdout: '',
+            stderr: ''
+          };
+        }
+      };
+    },
+
     async runTests() {
       if (this.isRunningTests || this.isRunning) return;
 
@@ -354,67 +369,7 @@ export default defineComponent({
 
       try {
         const { runNotebookTests } = await import("../services/testRunner");
-
-        // Create a function to execute cells up to a specific index
-        const executeCellsUpTo = async (cellIndex: number) => {
-          const runner = await codeRunnerRegistry.getOrInitializeRunner(this.runnerLanguage);
-          if (!runner) {
-            throw new Error(`No runner available for ${this.runnerLanguage}`);
-          }
-
-          // Execute mustExecute cells first if not yet executed
-          if (!this.hasExecutedMustExecute) {
-            const mustExecuteCells = this.cells.filter((c) => c.mustExecute);
-            for (const cell of mustExecuteCells) {
-              await this.executeCell(runner, cell);
-            }
-            this.hasExecutedMustExecute = true;
-          }
-
-          // Execute all cells up to and including cellIndex
-          for (let i = 0; i <= cellIndex; i++) {
-            const cell = this.cells[i];
-            if (!cell.mustExecute) {
-              await this.executeCell(runner, cell);
-            }
-          }
-
-          // Return context for testing
-          if (this.runnerLanguage === 'web') {
-            // For web notebooks, build combined HTML and create DOM context
-            let combinedHTML = '';
-            for (let i = 0; i <= cellIndex; i++) {
-              const cell = this.cells[i];
-              if (cell.output) {
-                combinedHTML += cell.code + '\n';
-              }
-            }
-
-            // Create a temporary iframe to get DOM
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(`<!DOCTYPE html><html><head></head><body>${combinedHTML}</body></html>`, 'text/html');
-
-            return {
-              language: 'web',
-              dom: doc,
-              window: window,
-            };
-          } else if (this.runnerLanguage === 'sqlite') {
-            // For SQLite, execute the target cell to get its results
-            const targetCell = this.cells[cellIndex];
-            const files: Record<string, string> = { "main.sql": targetCell.code };
-            const result = await runner.execute(files, "main.sql", undefined, { skipCleanup: true });
-            return result.testContext || {};
-          } else {
-            // For Python, get context from pyodide
-            return {
-              language: 'python',
-              pyodide: (runner as any).pyodide,
-              stdout: '',
-              stderr: ''
-            };
-          }
-        };
+        const executeCellsUpTo = await this.createExecuteCellsUpToFunction();
 
         const results = await runNotebookTests(
           this.cells,
@@ -427,8 +382,6 @@ export default defineComponent({
         );
 
         this.testResults = results;
-
-        // Emit score update event
         this.$emit("score-update", results.score);
       } catch (error: any) {
         console.error("Test execution error:", error);
@@ -453,69 +406,7 @@ export default defineComponent({
 
       try {
         const { runNotebookTests } = await import("../services/testRunner");
-
-        // Create a function to execute cells up to a specific index
-        const executeCellsUpTo = async (targetCellIndex: number) => {
-          const runner = await codeRunnerRegistry.getOrInitializeRunner(this.runnerLanguage);
-          if (!runner) {
-            throw new Error(`No runner available for ${this.runnerLanguage}`);
-          }
-
-          // Execute mustExecute cells first if not yet executed
-          if (!this.hasExecutedMustExecute) {
-            const mustExecuteCells = this.cells.filter((c) => c.mustExecute);
-            for (const cell of mustExecuteCells) {
-              await this.executeCell(runner, cell);
-            }
-            this.hasExecutedMustExecute = true;
-          }
-
-          // Execute all cells up to and including targetCellIndex
-          for (let i = 0; i <= targetCellIndex; i++) {
-            const cell = this.cells[i];
-            if (!cell.mustExecute) {
-              await this.executeCell(runner, cell);
-            }
-          }
-
-          // Return context for testing
-          if (this.runnerLanguage === 'web') {
-            // For web notebooks, build combined HTML and create DOM context
-            let combinedHTML = '';
-            for (let i = 0; i <= targetCellIndex; i++) {
-              const cell = this.cells[i];
-              if (cell.output) {
-                combinedHTML += cell.code + '\n';
-              }
-            }
-
-            // Create a temporary iframe to get DOM
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(`<!DOCTYPE html><html><head></head><body>${combinedHTML}</body></html>`, 'text/html');
-
-            return {
-              language: 'web',
-              dom: doc,
-              window: window,
-            };
-          } else if (this.runnerLanguage === 'sqlite') {
-            // For SQLite, execute the target cell to get its results
-            const targetCell = this.cells[targetCellIndex];
-            const files: Record<string, string> = { "main.sql": targetCell.code };
-            const result = await runner.execute(files, "main.sql", undefined, { skipCleanup: true });
-            return result.testContext || {};
-          } else {
-            // For Python, get context from pyodide
-            return {
-              language: 'python',
-              pyodide: (runner as any).pyodide,
-              stdout: '',
-              stderr: ''
-            };
-          }
-        };
-
-        // Only test the specific cell by filtering cells
+        const executeCellsUpTo = await this.createExecuteCellsUpToFunction();
         const singleCellArray = [this.cells[cellIndex]];
 
         const results = await runNotebookTests(

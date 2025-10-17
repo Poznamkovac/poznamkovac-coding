@@ -52,41 +52,43 @@ class StorageService {
     await db.delete(STORE_NAME, key);
   }
 
+  private makeChallengeKey(coursePath: string, challengeId: string, suffix: string, language?: string): string {
+    const parts = ["challenge", language, coursePath, challengeId, suffix].filter(Boolean);
+    return parts.join("_");
+  }
+
   async getChallengeScore(coursePath: string, challengeId: string, language: "sk" | "en"): Promise<number> {
-    const key = `challenge_${language}_${coursePath}_${challengeId}_score`;
+    const key = this.makeChallengeKey(coursePath, challengeId, "score", language);
     const score = await this.getValue(key);
     return typeof score === "number" ? score : typeof score === "string" ? parseInt(score, 10) : 0;
   }
 
   async setChallengeScore(coursePath: string, challengeId: string, score: number, language: "sk" | "en"): Promise<void> {
-    const key = `challenge_${language}_${coursePath}_${challengeId}_score`;
+    const key = this.makeChallengeKey(coursePath, challengeId, "score", language);
     await this.setValue(key, score);
   }
 
   async getEditorCode(coursePath: string, challengeId: string, filename: string, language?: string): Promise<string | null> {
-    const languagePrefix = language ? `${language}_` : "";
-    const key = `challenge_${languagePrefix}${coursePath}_${challengeId}_${filename}`;
+    const key = this.makeChallengeKey(coursePath, challengeId, filename, language);
     const code = await this.getValue(key);
     return typeof code === "string" ? code : null;
   }
 
   async setEditorCode(coursePath: string, challengeId: string, filename: string, code: string, language?: string): Promise<void> {
-    const languagePrefix = language ? `${language}_` : "";
-    const key = `challenge_${languagePrefix}${coursePath}_${challengeId}_${filename}`;
+    const key = this.makeChallengeKey(coursePath, challengeId, filename, language);
     await this.setValue(key, code);
   }
 
   async deleteEditorCode(coursePath: string, challengeId: string, filename: string, language?: string): Promise<void> {
-    const languagePrefix = language ? `${language}_` : "";
-    const key = `challenge_${languagePrefix}${coursePath}_${challengeId}_${filename}`;
+    const key = this.makeChallengeKey(coursePath, challengeId, filename, language);
     await this.deleteValue(key);
   }
 
   async getAllChallengeFiles(coursePath: string, challengeId: string, language: "sk" | "en"): Promise<Record<string, string>> {
     const db = await this.getDB();
     const allKeys = await db.getAllKeys(STORE_NAME);
-    const prefix = `challenge_${language}_${coursePath}_${challengeId}_`;
-    const fileKeys = allKeys.filter((key) => key.startsWith(prefix) && key !== `${prefix}score`);
+    const prefix = this.makeChallengeKey(coursePath, challengeId, "", language);
+    const fileKeys = allKeys.filter((key) => key.startsWith(prefix) && key !== this.makeChallengeKey(coursePath, challengeId, "score", language));
 
     const result: Record<string, string> = {};
     for (const key of fileKeys) {
@@ -123,7 +125,7 @@ class StorageService {
   }
 
   async getFailedAttempts(coursePath: string, challengeId: string): Promise<number> {
-    const key = `challenge_${coursePath}_${challengeId}_failed_attempts`;
+    const key = this.makeChallengeKey(coursePath, challengeId, "failed_attempts");
     const attempts = await this.getValue(key);
     return typeof attempts === "number" ? attempts : typeof attempts === "string" ? parseInt(attempts, 10) : 0;
   }
@@ -131,13 +133,13 @@ class StorageService {
   async incrementFailedAttempts(coursePath: string, challengeId: string): Promise<number> {
     const current = await this.getFailedAttempts(coursePath, challengeId);
     const newCount = current + 1;
-    const key = `challenge_${coursePath}_${challengeId}_failed_attempts`;
+    const key = this.makeChallengeKey(coursePath, challengeId, "failed_attempts");
     await this.setValue(key, newCount);
     return newCount;
   }
 
   async resetFailedAttempts(coursePath: string, challengeId: string): Promise<void> {
-    const key = `challenge_${coursePath}_${challengeId}_failed_attempts`;
+    const key = this.makeChallengeKey(coursePath, challengeId, "failed_attempts");
     await this.deleteValue(key);
   }
 }

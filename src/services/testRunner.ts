@@ -13,45 +13,25 @@ export interface TestResult {
 }
 
 export async function fetchTestJS(coursePath: string, challengeId: string, language: string): Promise<string | null> {
-  try {
-    const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/test.js`);
-    const contentType = response.headers.get("content-type");
-    const isJavaScript = contentType?.includes("javascript") || contentType?.includes("text/plain");
+  const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/test.js`);
+  const contentType = response.headers.get("content-type");
+  const isJavaScript = contentType?.includes("javascript") || contentType?.includes("text/plain");
 
-    if (response.ok && isJavaScript) {
-      return await response.text();
-    }
-  } catch {
-  }
-  return null;
+  return response.ok && isJavaScript ? await response.text() : null;
 }
 
 export async function fetchTestPy(coursePath: string, challengeId: string, language: string): Promise<string | null> {
-  try {
-    const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/test.py`);
+  const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/test.py`);
+  const contentType = response.headers.get("content-type");
 
-    if (!response.ok) {
-      return null;
-    }
-
-    const contentType = response.headers.get("content-type");
-
-    // Check if we got HTML instead of the actual file (404 fallback to index.html)
-    if (contentType?.includes("text/html")) {
-      return null;
-    }
-
-    const text = await response.text();
-
-    // Double-check content isn't HTML
-    if (text.trim().toLowerCase().startsWith("<!doctype html>") || text.trim().toLowerCase().startsWith("<html")) {
-      return null;
-    }
-
-    return text;
-  } catch {
+  if (!response.ok || contentType?.includes("text/html")) {
+    return null;
   }
-  return null;
+
+  const text = await response.text();
+  const isHtml = text.trim().toLowerCase().startsWith("<!doctype html>") || text.trim().toLowerCase().startsWith("<html");
+
+  return isHtml ? null : text;
 }
 
 export async function runTests(

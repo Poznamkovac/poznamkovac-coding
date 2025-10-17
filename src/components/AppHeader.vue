@@ -1,24 +1,15 @@
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent } from "vue";
 import { useI18n } from "vue-i18n";
 import { setLanguage, extractLanguageFromPath } from "../i18n";
-import type { LanguageCode } from "../types";
+import { useLanguage } from "../composables/useLanguage";
 
 export default defineComponent({
   name: "AppHeader",
 
   setup() {
-    const { t } = useI18n(); // Global $t() is now available
-
-    const language = computed<LanguageCode>({
-      get() {
-        const stored = localStorage.getItem("language") as LanguageCode | null;
-        return stored || "auto";
-      },
-      set(value: LanguageCode) {
-        localStorage.setItem("language", value);
-      },
-    });
+    const { t } = useI18n();
+    const language = useLanguage();
 
     return {
       t,
