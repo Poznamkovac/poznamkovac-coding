@@ -352,7 +352,7 @@ export default defineComponent({
     getCellHeight(code: string): string {
       const lineCount = code.split("\n").length;
       // add extra height to prevent scrollbar when Monaco editor is focused
-      return `${Math.max(60, lineCount * 21)}px`;
+      return `${Math.max(60, lineCount * 24)}px`;
     },
 
     async runCell(cellId: string) {
@@ -1110,6 +1110,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-x: hidden;
   overflow-y: auto;
   padding: 16px;
   background: #1e1e1e;
@@ -1189,8 +1190,7 @@ export default defineComponent({
   padding: 0;
   margin: 0;
   color: #d4d4d4;
-  white-space: pre;
-  overflow-x: auto;
+  white-space: pre-wrap;
   height: 100%;
 }
 
