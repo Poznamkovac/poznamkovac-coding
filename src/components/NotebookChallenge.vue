@@ -678,10 +678,10 @@ export default defineComponent({
 
 .readonly-indicator {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(156, 163, 175, 0.3);
-  color: #9ca3af;
+  top: -8px;
+  left: -64px;
+  background: rgb(156, 163, 175);
+  color: black;
   padding: 2px 8px;
   border-radius: 3px;
   font-size: 11px;
