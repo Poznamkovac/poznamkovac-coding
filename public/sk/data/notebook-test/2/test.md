@@ -27,33 +27,9 @@ else:
     results.append((True, "Sum calculation", ""))
 ```
 
-# Test for Cell 2 (Create Pandas DataFrame)
+# cell 2 test not present
 
 ```python
-import pandas as pd
-
-results = []
-
-# Check if df is defined
-if 'df' not in dir():
-    results.append((False, "DataFrame creation", "Variable 'df' should be defined"))
-else:
-    # Check if it's a DataFrame
-    if not isinstance(df, pd.DataFrame):
-        results.append((False, "DataFrame type", "df should be a Pandas DataFrame"))
-    else:
-        # Check columns
-        expected_columns = ['Name', 'Age', 'Score']
-        if list(df.columns) != expected_columns:
-            results.append((False, "DataFrame columns", f"Columns should be {expected_columns}, got {list(df.columns)}"))
-        else:
-            results.append((True, "DataFrame columns", ""))
-
-        # Check number of rows
-        if len(df) != 5:
-            results.append((False, "DataFrame rows", f"Should have 5 rows, got {len(df)}"))
-        else:
-            results.append((True, "DataFrame rows", ""))
 ```
 
 # Test for Cell 3 (Filter DataFrame)

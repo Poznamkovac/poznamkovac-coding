@@ -276,3 +276,151 @@ export async function runNotebookTests(
     };
   }
 }
+
+/**
+ * Run tests for a notebook challenge with fail-fast strategy
+ * Stops execution at the first cell that has a failing test or execution error
+ * @param cells - All notebook cells
+ * @param language - Language of the notebook (python, web, sqlite)
+ * @param coursePath - Path to the course
+ * @param challengeId - Challenge ID
+ * @param uiLanguage - UI language (sk, en)
+ * @param maxScore - Maximum score for the challenge
+ * @param executeCellsUpTo - Function to execute cells up to a specific index
+ * @returns Test results for cells up to the first failure
+ */
+export async function runNotebookTestsFailFast(
+  cells: NotebookCell[],
+  language: "python" | "web" | "sqlite",
+  coursePath: string,
+  challengeId: string,
+  uiLanguage: string,
+  maxScore: number,
+  executeCellsUpTo: (cellIndex: number) => Promise<any>,
+): Promise<NotebookTestResult> {
+  try {
+    const testMdContent = await fetchTestMd(coursePath, challengeId, uiLanguage);
+    if (!testMdContent) {
+      return {
+        score: 0,
+        maxScore,
+        passed: false,
+        cellResults: [
+          {
+            cellIndex: 0,
+            cellId: "",
+            testCases: [
+              {
+                name: "Test file loading",
+                passed: false,
+                error: "No test.md file found for this notebook",
+              },
+            ],
+            passed: false,
+          },
+        ],
+      };
+    }
+    const editableCellIndices = cells
+      .map((cell, index) => (!cell.readonly && !cell.hidden ? index : -1))
+      .filter((index) => index !== -1);
+    const cellTests = parseTestMd(testMdContent, editableCellIndices, language);
+
+    if (cellTests.length === 0) {
+      return {
+        score: 0,
+        maxScore,
+        passed: false,
+        cellResults: [
+          {
+            cellIndex: 0,
+            cellId: "",
+            testCases: [
+              {
+                name: "Test parsing",
+                passed: false,
+                error: "No tests found in test.md",
+              },
+            ],
+            passed: false,
+          },
+        ],
+      };
+    }
+    const cellResults: NotebookCellTestResult[] = [];
+    let totalPassed = 0;
+
+    for (const cellTest of cellTests) {
+      const cell = cells[cellTest.cellIndex];
+
+      // Execute cells up to this point
+      const context = await executeCellsUpTo(cellTest.cellIndex);
+
+      // Check if the cell itself had an execution error
+      if (cell.error) {
+        cellResults.push({
+          cellIndex: cellTest.cellIndex,
+          cellId: cell.id,
+          testCases: [
+            {
+              name: "Cell execution",
+              passed: false,
+              error: `Cell execution failed: ${cell.error}`,
+            },
+          ],
+          passed: false,
+        });
+        // Stop execution on cell error
+        break;
+      }
+
+      const testCases = await executeTest(cellTest.testCode, cellTest.language, context);
+      const allTestsPassed = testCases.every((tc) => tc.passed);
+
+      cellResults.push({
+        cellIndex: cellTest.cellIndex,
+        cellId: cell.id,
+        testCases,
+        passed: allTestsPassed,
+      });
+
+      if (allTestsPassed) {
+        totalPassed++;
+      } else {
+        // Stop execution on first test failure
+        break;
+      }
+    }
+
+    const scorePerCell = maxScore / cellTests.length;
+    const score = Math.round(totalPassed * scorePerCell);
+    const allPassed = totalPassed === cellTests.length;
+
+    return {
+      score,
+      maxScore,
+      passed: allPassed,
+      cellResults,
+    };
+  } catch (error: any) {
+    return {
+      score: 0,
+      maxScore,
+      passed: false,
+      cellResults: [
+        {
+          cellIndex: 0,
+          cellId: "",
+          testCases: [
+            {
+              name: "Test execution",
+              passed: false,
+              error: error.message || String(error),
+            },
+          ],
+          passed: false,
+        },
+      ],
+    };
+  }
+}

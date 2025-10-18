@@ -53,6 +53,7 @@ export default defineComponent({
       isRunningTests: false,
       testResults: null as any,
       virtualFiles: {} as Record<string, string>, // Files to load into virtual FS
+      cellsWithTests: new Set<string>(), // Set of cell IDs that have tests
     };
   },
 
@@ -76,6 +77,7 @@ export default defineComponent({
 
     await this.loadVirtualFiles();
     await this.loadCellsFromStorage();
+    await this.loadCellsWithTests();
   },
 
   methods: {
@@ -121,6 +123,37 @@ export default defineComponent({
         if (savedCode !== null) {
           this.cells[i].code = savedCode;
         }
+      }
+    },
+
+    async loadCellsWithTests() {
+      try {
+        const { fetchTestMd, parseTestMd } = await import("../services/testMdParser");
+        const lang = this.language === "auto" ? "sk" : this.language;
+        const testMdContent = await fetchTestMd(this.coursePath, this.challengeId, lang);
+
+        if (!testMdContent) {
+          return;
+        }
+
+        const editableCellIndices = this.cells
+          .map((cell, index) => (!cell.readonly && !cell.hidden ? index : -1))
+          .filter((index) => index !== -1);
+
+        const cellTests = parseTestMd(testMdContent, editableCellIndices, this.runnerLanguage);
+
+        // Build a set of cell IDs that have tests
+        const cellIdsWithTests = new Set<string>();
+        for (const cellTest of cellTests) {
+          const cell = this.cells[cellTest.cellIndex];
+          if (cell) {
+            cellIdsWithTests.add(cell.id);
+          }
+        }
+
+        this.cellsWithTests = cellIdsWithTests;
+      } catch (error) {
+        console.error("Error loading test information:", error);
       }
     },
 
@@ -189,9 +222,42 @@ export default defineComponent({
 
     async runAllCells() {
       this.isRunningAll = true;
-      const cellIds = this.cells.map((c) => c.id);
-      await this.executeCells(cellIds);
-      this.isRunningAll = false;
+      try {
+        const runner = await codeRunnerRegistry.getOrInitializeRunner(this.runnerLanguage);
+        if (!runner) {
+          throw new Error(`No runner available for ${this.runnerLanguage}`);
+        }
+
+        // Execute mustExecute cells first
+        if (!this.hasExecutedMustExecute) {
+          const mustExecuteCells = this.cells.filter((c) => c.mustExecute);
+          for (const cell of mustExecuteCells) {
+            await this.executeCell(runner, cell);
+            // Check if mustExecute cell failed
+            if (cell.error) {
+              console.warn("MustExecute cell failed, stopping execution");
+              return;
+            }
+          }
+          this.hasExecutedMustExecute = true;
+        }
+
+        // Execute all non-mustExecute cells sequentially
+        for (const cell of this.cells) {
+          if (!cell.mustExecute) {
+            await this.executeCell(runner, cell);
+            // Stop if cell has error
+            if (cell.error) {
+              console.warn("Cell execution failed, stopping");
+              return;
+            }
+          }
+        }
+      } catch (error: any) {
+        console.error("Execution error:", error);
+      } finally {
+        this.isRunningAll = false;
+      }
     },
 
     async executeCells(cellIds: string[]) {
@@ -374,10 +440,10 @@ export default defineComponent({
       this.testResults = null;
 
       try {
-        const { runNotebookTests } = await import("../services/testRunner");
+        const { runNotebookTestsFailFast } = await import("../services/testRunner");
         const executeCellsUpTo = await this.createExecuteCellsUpToFunction();
 
-        const results = await runNotebookTests(
+        const results = await runNotebookTestsFailFast(
           this.cells,
           this.runnerLanguage,
           this.coursePath,
@@ -467,7 +533,7 @@ export default defineComponent({
         <span class="btn-icon">{{ isRunning || isRunningAll ? "⏳" : "▶️" }}</span>
         {{ isRunning || isRunningAll ? t("challenge.running") : t("challenge.runAllCells") }}
       </button>
-      <button :disabled="isRunningTests || isRunning" class="btn btn-success" @click="runTests">
+      <button v-if="cellsWithTests.size > 0" :disabled="isRunningTests || isRunning" class="btn btn-success" @click="runTests">
         <span class="btn-icon">{{ isRunningTests ? "⏳" : "✓" }}</span>
         {{ isRunningTests ? t("challenge.runningTests") : t("challenge.runTests") }}
       </button>
@@ -524,7 +590,7 @@ export default defineComponent({
             </div>
             <div class="cell-actions">
               <button
-                v-if="!cell.readonly"
+                v-if="!cell.readonly && cellsWithTests.has(cell.id)"
                 :disabled="isRunningTests || isRunning"
                 class="cell-test-btn"
                 title="Test cell"

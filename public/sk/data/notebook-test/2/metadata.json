@@ -1,5 +1,6 @@
 {
   "type": "notebook",
+  "progressive": true,
   "maxScore": 10,
   "language": "python",
   "title": "Python Notebook - Data Science",
