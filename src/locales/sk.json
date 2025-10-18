@@ -45,14 +45,15 @@
     "solutionConfirm": "Tým prepíšete vaše aktuálne súbory vzorovým riešením. Chcete pokračovať?",
     "solutionNotAvailable": "Riešenie pre túto úlohu nie je dostupné.",
     "readonly": "Iba na čítanie",
-    "runAllCells": "Spustiť všetky bunky",
+    "runAllCells": "Spustiť viditeľné bunky",
     "runTests": "Spustiť testy",
     "runningTests": "Testy sa spúšťajú...",
     "allTestsPassed": "Všetky testy prešli!",
     "someTestsFailed": "Niektoré testy zlyhali",
     "cellTests": "Testy bunky",
     "embedCopied": "Skopírované!",
-    "copyEmbedCode": "Kopírovať embed kód"
+    "copyEmbedCode": "Kopírovať embed kód",
+    "revealedCells": "Odhalené bunky"
   },
   "common": {
     "loading": "Načítavam...",

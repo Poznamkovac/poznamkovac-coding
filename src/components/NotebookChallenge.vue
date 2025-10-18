@@ -54,6 +54,8 @@ export default defineComponent({
       testResults: null as any,
       virtualFiles: {} as Record<string, string>, // Files to load into virtual FS
       cellsWithTests: new Set<string>(), // Set of cell IDs that have tests
+      maxRevealedCellIndex: -1, // Max cell index that should be revealed (for progressive mode)
+      newlyRevealedCells: new Set<number>(), // Track cells that were just revealed for animation
     };
   },
 
@@ -62,8 +64,50 @@ export default defineComponent({
       return this.challengeData.language || "python";
     },
 
+    isProgressiveMode(): boolean {
+      return this.challengeData.progressive === true;
+    },
+
     visibleCells(): NotebookCell[] {
       return this.cells.filter((cell) => !cell.hidden);
+    },
+
+    totalNonHiddenCells(): number {
+      return this.visibleCells.length;
+    },
+
+    revealedCellCount(): number {
+      if (!this.isProgressiveMode) {
+        return this.totalNonHiddenCells;
+      }
+      // Count cells up to maxRevealedCellIndex in the original cells array
+      let count = 0;
+      for (let i = 0; i <= this.maxRevealedCellIndex && i < this.cells.length; i++) {
+        if (!this.cells[i].hidden) {
+          count++;
+        }
+      }
+      return count;
+    },
+
+    shouldRevealCell(): (cellIndex: number) => boolean {
+      return (cellIndex: number) => {
+        if (!this.isProgressiveMode) {
+          return true;
+        }
+        return cellIndex <= this.maxRevealedCellIndex;
+      };
+    },
+
+    shouldRevealMarkdownSection(): (sectionIndex: number) => boolean {
+      return (sectionIndex: number) => {
+        if (!this.isProgressiveMode) {
+          return true;
+        }
+        // Section at index N is revealed if cell at index N is revealed
+        // (section comes before the cell)
+        return sectionIndex <= this.maxRevealedCellIndex;
+      };
     },
   },
 
@@ -78,6 +122,7 @@ export default defineComponent({
     await this.loadVirtualFiles();
     await this.loadCellsFromStorage();
     await this.loadCellsWithTests();
+    await this.initializeProgressiveMode();
   },
 
   methods: {
@@ -155,6 +200,100 @@ export default defineComponent({
       } catch (error) {
         console.error("Error loading test information:", error);
       }
+    },
+
+    async initializeProgressiveMode() {
+      if (!this.isProgressiveMode) {
+        // In non-progressive mode, all cells are revealed
+        this.maxRevealedCellIndex = this.cells.length - 1;
+        return;
+      }
+
+      // Load saved progress
+      const savedMaxIndex = await storageService.getMaxSuccessfulCellIndex(this.coursePath, this.challengeId, this.language);
+
+      // Find the first non-hidden cell index
+      const firstNonHiddenIndex = this.cells.findIndex((cell) => !cell.hidden);
+
+      if (savedMaxIndex >= 0) {
+        // Restore saved progress
+        this.maxRevealedCellIndex = savedMaxIndex;
+      } else {
+        // First time: reveal only the first non-hidden cell
+        this.maxRevealedCellIndex = firstNonHiddenIndex >= 0 ? firstNonHiddenIndex : 0;
+      }
+    },
+
+    async updateProgressiveReveal(cellIndex: number) {
+      if (!this.isProgressiveMode) {
+        return;
+      }
+
+      // Track which cells are newly revealed
+      const oldMaxIndex = this.maxRevealedCellIndex;
+
+      // Update maxRevealedCellIndex if this cell index is higher
+      if (cellIndex > this.maxRevealedCellIndex) {
+        this.maxRevealedCellIndex = cellIndex;
+        await storageService.setMaxSuccessfulCellIndex(this.coursePath, this.challengeId, cellIndex, this.language);
+
+        // Mark newly revealed cells for animation
+        for (let i = oldMaxIndex + 1; i <= cellIndex; i++) {
+          if (!this.cells[i]?.hidden) {
+            this.newlyRevealedCells.add(i);
+          }
+        }
+
+        // Wait for DOM update, then scroll to the last revealed cell and remove animation class
+        await this.$nextTick();
+        this.scrollToLastRevealed();
+
+        // Remove animation class after animation completes
+        setTimeout(() => {
+          this.newlyRevealedCells.clear();
+        }, 600); // Match animation duration
+      }
+    },
+
+    scrollToLastRevealed() {
+      // Find the last non-hidden cell that was revealed
+      const lastRevealedIndex = this.maxRevealedCellIndex;
+      if (lastRevealedIndex >= 0 && lastRevealedIndex < this.cells.length) {
+        const cell = this.cells[lastRevealedIndex];
+        if (cell && !cell.hidden) {
+          const element = document.getElementById(`cell-${cell.id}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      }
+    },
+
+    isCellSuccessful(cellIndex: number): boolean {
+      const cell = this.cells[cellIndex];
+      if (!cell) return false;
+
+      // Check if cell has error
+      if (cell.error) {
+        return false;
+      }
+
+      // If cell has tests, check if at least 50% passed
+      if (this.cellsWithTests.has(cell.id)) {
+        const testResult = this.getCellTestResults(cell.id);
+        if (!testResult) {
+          return false;
+        }
+
+        const totalTests = testResult.testCases.length;
+        const passedTests = testResult.testCases.filter((tc: any) => tc.passed).length;
+        return passedTests >= totalTests * 0.5;
+      }
+
+      // If no tests, cell is successful if it has been executed and has no error
+      // Cell is considered executed if output is defined (can be empty string) OR if error is defined
+      // This handles cells with no output (like imports) - they will have output as "" after execution
+      return cell.output !== undefined && !cell.error;
     },
 
     getCellIndex(cellId: string): number {
@@ -242,15 +381,31 @@ export default defineComponent({
           this.hasExecutedMustExecute = true;
         }
 
-        // Execute all non-mustExecute cells sequentially
-        for (const cell of this.cells) {
-          if (!cell.mustExecute) {
-            await this.executeCell(runner, cell);
-            // Stop if cell has error
-            if (cell.error) {
-              console.warn("Cell execution failed, stopping");
-              return;
-            }
+        // In progressive mode, only execute currently revealed cells and DON'T reveal new ones
+        // In non-progressive mode, execute all cells
+        const cellsToExecute: number[] = [];
+        for (let i = 0; i < this.cells.length; i++) {
+          const cell = this.cells[i];
+          if (cell.hidden || cell.mustExecute) continue;
+
+          // In progressive mode, only include currently revealed cells
+          if (this.isProgressiveMode && !this.shouldRevealCell(i)) {
+            continue;
+          }
+
+          cellsToExecute.push(i);
+        }
+
+        // Execute the captured cells
+        for (const i of cellsToExecute) {
+          const cell = this.cells[i];
+          await this.executeCell(runner, cell);
+
+          // In non-progressive mode: stop on error
+          // In progressive mode: don't stop, just continue (don't reveal)
+          if (!this.isProgressiveMode && cell.error) {
+            console.warn("Cell execution failed, stopping");
+            return;
           }
         }
       } catch (error: any) {
@@ -258,6 +413,15 @@ export default defineComponent({
       } finally {
         this.isRunningAll = false;
       }
+    },
+
+    findNextNonHiddenCellIndex(currentIndex: number): number {
+      for (let i = currentIndex + 1; i < this.cells.length; i++) {
+        if (!this.cells[i].hidden) {
+          return i;
+        }
+      }
+      return -1;
     },
 
     async executeCells(cellIds: string[]) {
@@ -279,8 +443,24 @@ export default defineComponent({
         }
         for (const cellId of cellIds) {
           const cell = this.cells.find((c) => c.id === cellId);
-          if (cell && !cell.mustExecute) {
-            await this.executeCell(runner, cell);
+          if (cell) {
+            // Only execute if not mustExecute (mustExecute cells are already executed above)
+            if (!cell.mustExecute) {
+              await this.executeCell(runner, cell);
+            }
+
+            // Handle progressive reveal for single cell execution
+            // Only reveal if: (1) in progressive mode, (2) cell executed successfully,
+            // (3) cell does NOT have tests (cells with tests should only reveal when tests pass)
+            if (this.isProgressiveMode && !cell.error && cell.output !== undefined) {
+              const cellIndex = this.getCellIndex(cellId);
+              if (cellIndex !== -1 && !this.cellsWithTests.has(cellId)) {
+                const nextNonHiddenIndex = this.findNextNonHiddenCellIndex(cellIndex);
+                if (nextNonHiddenIndex !== -1) {
+                  await this.updateProgressiveReveal(nextNonHiddenIndex);
+                }
+              }
+            }
           }
         }
       } catch (error: any) {
@@ -359,6 +539,14 @@ export default defineComponent({
       await runner?.cleanup?.();
 
       this.testResults = null;
+
+      // Reset progressive mode progress
+      if (this.isProgressiveMode) {
+        await storageService.deleteMaxSuccessfulCellIndex(this.coursePath, this.challengeId, this.language);
+        // Reset to first non-hidden cell
+        const firstNonHiddenIndex = this.cells.findIndex((cell) => !cell.hidden);
+        this.maxRevealedCellIndex = firstNonHiddenIndex >= 0 ? firstNonHiddenIndex : 0;
+      }
     },
 
     async createExecuteCellsUpToFunction() {
@@ -440,29 +628,194 @@ export default defineComponent({
       this.testResults = null;
 
       try {
-        const { runNotebookTestsFailFast } = await import("../services/testRunner");
-        const executeCellsUpTo = await this.createExecuteCellsUpToFunction();
-
-        const results = await runNotebookTestsFailFast(
-          this.cells,
-          this.runnerLanguage,
-          this.coursePath,
-          this.challengeId,
-          this.language,
-          this.challengeData.maxScore,
-          executeCellsUpTo,
-        );
-
-        this.testResults = results;
-        this.$emit("score-update", results.score);
-        if (results.passed && results.score > 0) {
-          await storageService.setChallengeScore(this.coursePath, this.challengeId, results.score, this.language as "sk" | "en");
+        // In progressive mode, we need to handle tests differently
+        if (this.isProgressiveMode) {
+          await this.runTestsProgressive();
+        } else {
+          await this.runTestsNormal();
         }
       } catch (error: any) {
         console.error("Test execution error:", error);
         alert(`Test error: ${error.message}`);
       } finally {
         this.isRunningTests = false;
+      }
+    },
+
+    async runTestsNormal() {
+      const { runNotebookTestsFailFast } = await import("../services/testRunner");
+      const executeCellsUpTo = await this.createExecuteCellsUpToFunction();
+
+      const results = await runNotebookTestsFailFast(
+        this.cells,
+        this.runnerLanguage,
+        this.coursePath,
+        this.challengeId,
+        this.language,
+        this.challengeData.maxScore,
+        executeCellsUpTo,
+      );
+
+      this.testResults = results;
+      this.$emit("score-update", results.score);
+      if (results.passed && results.score > 0) {
+        await storageService.setChallengeScore(this.coursePath, this.challengeId, results.score, this.language as "sk" | "en");
+      }
+    },
+
+    async runTestsProgressive() {
+      const { fetchTestMd, parseTestMd } = await import("../services/testMdParser");
+      const { executeTest } = await import("../services/testRunner");
+
+      const lang = this.language === "auto" ? "sk" : this.language;
+      const testMdContent = await fetchTestMd(this.coursePath, this.challengeId, lang);
+
+      if (!testMdContent) {
+        this.testResults = {
+          score: 0,
+          maxScore: this.challengeData.maxScore,
+          passed: false,
+          cellResults: [],
+        };
+        return;
+      }
+
+      const editableCellIndices = this.cells
+        .map((cell, index) => (!cell.readonly && !cell.hidden ? index : -1))
+        .filter((index) => index !== -1);
+      const allCellTests = parseTestMd(testMdContent, editableCellIndices, this.runnerLanguage);
+
+      if (allCellTests.length === 0) {
+        this.testResults = {
+          score: 0,
+          maxScore: this.challengeData.maxScore,
+          passed: false,
+          cellResults: [],
+        };
+        return;
+      }
+
+      const executeCellsUpTo = await this.createExecuteCellsUpToFunction();
+      const cellResults: any[] = [];
+      let totalPassed = 0;
+      let lastSuccessfulTestCellIndex = -1;
+
+      // Run ALL tests (not just revealed ones), with fail-fast
+      for (const cellTest of allCellTests) {
+        const cell = this.cells[cellTest.cellIndex];
+        const context = await executeCellsUpTo(cellTest.cellIndex);
+
+        // Check if cell execution failed
+        if (cell.error) {
+          cellResults.push({
+            cellIndex: cellTest.cellIndex,
+            cellId: cell.id,
+            testCases: [{ name: "Cell execution", passed: false, error: `Cell execution failed: ${cell.error}` }],
+            passed: false,
+          });
+          break;
+        }
+
+        const testCases = await executeTest(cellTest.testCode, cellTest.language, context);
+        const allTestsPassed = testCases.every((tc: any) => tc.passed);
+
+        cellResults.push({
+          cellIndex: cellTest.cellIndex,
+          cellId: cell.id,
+          testCases,
+          passed: allTestsPassed,
+        });
+
+        if (allTestsPassed) {
+          totalPassed++;
+          lastSuccessfulTestCellIndex = cellTest.cellIndex;
+        } else {
+          // Stop on first failure
+          break;
+        }
+      }
+
+      // Reveal cells progressively based on execution success
+      // Check ALL cells (not just tested ones) up to the last successful test
+      if (lastSuccessfulTestCellIndex >= 0) {
+        let maxRevealIndex = this.maxRevealedCellIndex;
+
+        // Helper function to check if a cell's tests passed (using cellResults, not this.testResults)
+        const cellTestsPassed = (cellIndex: number): boolean => {
+          const result = cellResults.find((r: any) => r.cellIndex === cellIndex);
+          if (!result) return false;
+          const totalTests = result.testCases.length;
+          const passedTests = result.testCases.filter((tc: any) => tc.passed).length;
+          return passedTests >= totalTests * 0.5;
+        };
+
+        // Check all cells from 0 to the end to determine max reveal point
+        // We check beyond lastSuccessfulTestCellIndex to handle cells without tests that come after
+        for (let i = 0; i < this.cells.length; i++) {
+          const cell = this.cells[i];
+          if (cell.hidden) continue;
+
+          // Stop if we've gone past all executed cells
+          // (executeCellsUpTo would have executed up to lastSuccessfulTestCellIndex)
+          if (i > lastSuccessfulTestCellIndex && !cell.output && !cell.error) {
+            break;
+          }
+
+          // Check if this cell should reveal the next one
+          const hasTests = this.cellsWithTests.has(cell.id);
+          const isSuccessful = hasTests
+            ? (!cell.error && cellTestsPassed(i)) // Cell with tests: check if tests passed
+            : (!cell.error && cell.output !== undefined); // Cell without tests: check if executed successfully
+
+          if (isSuccessful) {
+            const nextNonHiddenIndex = this.findNextNonHiddenCellIndex(i);
+            if (nextNonHiddenIndex !== -1 && nextNonHiddenIndex > maxRevealIndex) {
+              maxRevealIndex = nextNonHiddenIndex;
+            }
+          } else if (!cell.mustExecute) {
+            // Stop revealing if we hit a non-mustExecute cell that didn't succeed
+            break;
+          }
+        }
+
+        // Update to the max reveal index in one go
+        if (maxRevealIndex > this.maxRevealedCellIndex) {
+          const oldMaxIndex = this.maxRevealedCellIndex;
+          this.maxRevealedCellIndex = maxRevealIndex;
+          await storageService.setMaxSuccessfulCellIndex(this.coursePath, this.challengeId, maxRevealIndex, this.language);
+
+          // Mark newly revealed cells for animation
+          for (let i = oldMaxIndex + 1; i <= maxRevealIndex; i++) {
+            if (!this.cells[i]?.hidden) {
+              this.newlyRevealedCells.add(i);
+            }
+          }
+
+          // Wait for DOM update, then scroll to the last revealed cell
+          await this.$nextTick();
+          this.scrollToLastRevealed();
+
+          // Remove animation class after animation completes
+          setTimeout(() => {
+            this.newlyRevealedCells.clear();
+          }, 600);
+        }
+      }
+
+      const scorePerCell = this.challengeData.maxScore / allCellTests.length;
+      const score = Math.round(totalPassed * scorePerCell);
+      const allPassed = totalPassed === allCellTests.length;
+
+      this.testResults = {
+        score,
+        maxScore: this.challengeData.maxScore,
+        passed: allPassed,
+        cellResults,
+      };
+
+      this.$emit("score-update", score);
+      if (allPassed && score > 0) {
+        await storageService.setChallengeScore(this.coursePath, this.challengeId, score, this.language as "sk" | "en");
       }
     },
 
@@ -515,6 +868,14 @@ export default defineComponent({
           this.testResults.score = Math.round((passedCells / totalCells) * this.challengeData.maxScore);
           this.testResults.passed = passedCells === totalCells;
         }
+
+        // Handle progressive reveal for this cell
+        if (this.isProgressiveMode && this.isCellSuccessful(cellIndex)) {
+          const nextNonHiddenIndex = this.findNextNonHiddenCellIndex(cellIndex);
+          if (nextNonHiddenIndex !== -1) {
+            await this.updateProgressiveReveal(nextNonHiddenIndex);
+          }
+        }
       } catch (error: any) {
         console.error("Cell test execution error:", error);
         alert(`Test error: ${error.message}`);
@@ -555,17 +916,25 @@ export default defineComponent({
     </div>
 
     <div class="notebook-container">
-      <template v-for="(cell, index) in visibleCells" :key="cell.id">
-        <!-- Markdown section before cell -->
-        <div v-if="markdownSections[index]" class="markdown-section" v-html="markdownSections[index]" />
+      <template v-for="(cell, index) in cells" :key="cell.id">
+        <template v-if="!cell.hidden && shouldRevealCell(index)">
+          <!-- Markdown section before cell -->
+          <div
+            v-if="markdownSections[index] && shouldRevealMarkdownSection(index)"
+            class="markdown-section"
+            :class="{ 'reveal-animation': newlyRevealedCells.has(index) }"
+            v-html="markdownSections[index]"
+          />
 
-        <!-- Cell -->
-        <div
+          <!-- Cell -->
+          <div
+          :id="`cell-${cell.id}`"
           class="notebook-cell"
           :class="{
             focused: focusedCellId === cell.id,
             readonly: cell.readonly,
             'has-output': cell.output || cell.error,
+            'reveal-animation': newlyRevealedCells.has(index),
           }"
           @click="handleCellClick(cell.id)"
         >
@@ -630,9 +999,6 @@ export default defineComponent({
             </div>
           </div>
 
-          <!-- Matplotlib plot target (always present for Python cells) -->
-          <div v-if="runnerLanguage === 'python'" :id="`plot-target-${cell.id}`" class="plot-target" />
-
           <!-- Test Results for this cell -->
           <div v-if="getCellTestResults(cell.id)" class="cell-test-results">
             <div class="test-results-header">
@@ -653,10 +1019,31 @@ export default defineComponent({
             </div>
           </div>
         </div>
+
+          <!-- Matplotlib plot target - must exist even for unrevealed cells (for rendering during tests) -->
+          <div v-if="runnerLanguage === 'python'" :id="`plot-target-${cell.id}`" class="plot-target" />
+        </template>
+
+        <!-- Plot target for unrevealed cells (hidden but present in DOM for test execution) -->
+        <div
+          v-if="runnerLanguage === 'python' && !cell.hidden && !shouldRevealCell(index)"
+          :id="`plot-target-${cell.id}`"
+          class="plot-target"
+          style="display: none"
+        />
       </template>
 
       <!-- Trailing markdown section -->
-      <div v-if="markdownSections[visibleCells.length]" class="markdown-section" v-html="markdownSections[visibleCells.length]" />
+      <div
+        v-if="markdownSections[cells.length] && (!isProgressiveMode || shouldRevealMarkdownSection(cells.length))"
+        class="markdown-section"
+        v-html="markdownSections[cells.length]"
+      />
+    </div>
+
+    <!-- Cell counter for progressive mode -->
+    <div v-if="isProgressiveMode" class="cell-counter">
+      {{ t("challenge.revealedCells") }}: {{ revealedCellCount }} / {{ totalNonHiddenCells }}
     </div>
   </div>
 </template>
@@ -1027,6 +1414,36 @@ export default defineComponent({
 .btn-success:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.cell-counter {
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ccc;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  margin-top: 16px;
+}
+
+/* Progressive reveal animation */
+@keyframes revealPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.reveal-animation {
+  animation: revealPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 </style>
 

@@ -144,6 +144,25 @@ class StorageService {
     const key = this.makeChallengeKey(coursePath, challengeId, "failed_attempts");
     await this.deleteValue(key);
   }
+
+  async getMaxSuccessfulCellIndex(coursePath: string, challengeId: string, language?: string): Promise<number> {
+    const key = this.makeChallengeKey(coursePath, challengeId, "max_successful_cell", language);
+    const index = await this.getValue(key);
+    if (index === null || index === undefined) {
+      return -1;
+    }
+    return typeof index === "number" ? index : Number(index);
+  }
+
+  async setMaxSuccessfulCellIndex(coursePath: string, challengeId: string, cellIndex: number, language?: string): Promise<void> {
+    const key = this.makeChallengeKey(coursePath, challengeId, "max_successful_cell", language);
+    await this.setValue(key, cellIndex);
+  }
+
+  async deleteMaxSuccessfulCellIndex(coursePath: string, challengeId: string, language?: string): Promise<void> {
+    const key = this.makeChallengeKey(coursePath, challengeId, "max_successful_cell", language);
+    await this.deleteValue(key);
+  }
 }
 
 export const storageService = new StorageService();

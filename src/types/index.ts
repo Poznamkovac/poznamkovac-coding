@@ -91,6 +91,7 @@ export interface NotebookChallengeData {
   markdownSections: string[];
   files?: string[]; // Optional array of filenames to load into virtual FS
   imageUrl?: string;
+  progressive?: boolean; // Optional flag for progressive mode (default: false)
 }
 
 export type ChallengeData = QuizChallengeData | CodeChallengeData | NotebookChallengeData;

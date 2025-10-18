@@ -64,6 +64,7 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
           markdownSections,
           files: metadata.files,
           imageUrl: metadata.imageUrl,
+          progressive: metadata.progressive,
         };
       } else {
         const [title, content] = extractTitle(assignmentMarkdown);
