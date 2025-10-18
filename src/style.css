@@ -1,10 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  @apply leading-normal font-normal;
+  @apply leading-none font-normal;
 
   color-scheme: dark;
   @apply text-white/[0.87];
