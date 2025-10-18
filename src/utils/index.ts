@@ -21,7 +21,7 @@ export function hashStringToColor(str: string): string {
 }
 
 export function isNumeric(value: string): boolean {
-  return !isNaN(Number(value)) && !isNaN(parseFloat(value));
+  return !isNaN(Number(value));
 }
 
 export function parseUrlPath(path: string): { segments: string[]; isChallenge: boolean } {

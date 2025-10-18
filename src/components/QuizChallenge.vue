@@ -45,38 +45,28 @@ export default defineComponent({
 
   computed: {
     feedbackMessage(): string {
-      if (this.isCorrect && this.challengeData.answer.correctFeedback) {
-        return this.challengeData.answer.correctFeedback;
-      }
-
-      if (!this.isCorrect && this.hasCheckedOnce && this.challengeData.answer.incorrectFeedback) {
-        return this.challengeData.answer.incorrectFeedback;
-      }
-
+      if (this.isCorrect) return this.challengeData.answer.correctFeedback || "";
+      if (this.hasCheckedOnce) return this.challengeData.answer.incorrectFeedback || "";
       return "";
     },
   },
 
   methods: {
-    checkAnswer() {
+    async checkAnswer() {
       this.attemptCount++;
       this.hasCheckedOnce = true;
 
-      const result = validateQuizAnswer(this.userAnswer, this.challengeData.answer);
+      const { correct } = validateQuizAnswer(this.userAnswer, this.challengeData.answer);
 
-      if (result.correct) {
+      if (correct) {
         this.isCorrect = true;
-        this.saveScore();
+        const lang = this.language === "auto" ? "sk" : this.language;
+        await storageService.setChallengeScore(this.coursePath, this.challengeId, this.challengeData.maxScore, lang);
       }
     },
 
     revealAnswer() {
       this.showCorrectAnswer = true;
-    },
-
-    async saveScore() {
-      const lang = this.language === "auto" ? "sk" : this.language;
-      await storageService.setChallengeScore(this.coursePath, this.challengeId, this.challengeData.maxScore, lang);
     },
 
     goToNextChallenge() {

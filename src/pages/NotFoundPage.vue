@@ -1,8 +1,8 @@
 <script lang="ts">
 import { useI18n } from "vue-i18n";
-import { defineComponent, computed } from "vue";
+import { defineComponent } from "vue";
 import DefaultLayout from "../layouts/DefaultLayout.vue";
-import type { LanguageCode } from "../types";
+import { useLanguage } from "../composables/useLanguage";
 
 export default defineComponent({
   name: "NotFoundPage",
@@ -13,11 +13,7 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-
-    const effectiveLanguage = computed(() => {
-      const stored = localStorage.getItem("language") as LanguageCode | null;
-      return stored || "auto";
-    });
+    const effectiveLanguage = useLanguage();
 
     return {
       t,

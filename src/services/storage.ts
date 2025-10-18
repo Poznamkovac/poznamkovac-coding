@@ -60,7 +60,7 @@ class StorageService {
   async getChallengeScore(coursePath: string, challengeId: string, language: "sk" | "en"): Promise<number> {
     const key = this.makeChallengeKey(coursePath, challengeId, "score", language);
     const score = await this.getValue(key);
-    return typeof score === "number" ? score : typeof score === "string" ? parseInt(score, 10) : 0;
+    return typeof score === "number" ? score : Number(score) || 0;
   }
 
   async setChallengeScore(coursePath: string, challengeId: string, score: number, language: "sk" | "en"): Promise<void> {
@@ -129,7 +129,7 @@ class StorageService {
   async getFailedAttempts(coursePath: string, challengeId: string): Promise<number> {
     const key = this.makeChallengeKey(coursePath, challengeId, "failed_attempts");
     const attempts = await this.getValue(key);
-    return typeof attempts === "number" ? attempts : typeof attempts === "string" ? parseInt(attempts, 10) : 0;
+    return typeof attempts === "number" ? attempts : Number(attempts) || 0;
   }
 
   async incrementFailedAttempts(coursePath: string, challengeId: string): Promise<number> {

@@ -2,32 +2,23 @@ import hljs from "highlight.js/lib/core";
 import python from "highlight.js/lib/languages/python";
 import javascript from "highlight.js/lib/languages/javascript";
 import sql from "highlight.js/lib/languages/sql";
-import xml from "highlight.js/lib/languages/xml"; // For HTML
+import xml from "highlight.js/lib/languages/xml";
 
-// Register languages
 hljs.registerLanguage("python", python);
 hljs.registerLanguage("javascript", javascript);
 hljs.registerLanguage("sql", sql);
 hljs.registerLanguage("html", xml);
 
-/**
- * Highlights code with syntax highlighting matching VS Code Dark+ theme
- */
+const LANG_MAP: Record<string, string> = {
+  python: "python",
+  web: "html",
+  sqlite: "sql",
+};
+
 export function highlightCode(code: string, language: "python" | "web" | "sqlite"): string {
-  const langMap: Record<string, string> = {
-    python: "python",
-    web: "html",
-    sqlite: "sql",
-  };
-
-  const hlLang = langMap[language] || "plaintext";
-
   try {
-    const result = hljs.highlight(code, { language: hlLang });
-    return result.value;
-  } catch (e) {
-    console.error("Syntax highlighting failed:", e);
-    // Fallback to escaped plain text
+    return hljs.highlight(code, { language: LANG_MAP[language] || "plaintext" }).value;
+  } catch {
     return escapeHtml(code);
   }
 }

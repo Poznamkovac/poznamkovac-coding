@@ -65,16 +65,13 @@ export default defineComponent({
   },
 
   async mounted() {
-    // Initialize cells and markdown sections from challenge data
     this.cells = JSON.parse(JSON.stringify(this.challengeData.cells));
     this.markdownSections = [...this.challengeData.markdownSections];
 
-    // Load requirements.txt if it exists (for Python notebooks)
     if (this.runnerLanguage === "python") {
       await this.loadRequirementsTxt();
     }
 
-    // Load saved cell contents from storage
     await this.loadCellsFromStorage();
   },
 
@@ -119,10 +116,7 @@ export default defineComponent({
       }
     },
 
-    handleCellBlur() {
-      // Keep cell focused to maintain Monaco editor
-      // We'll only unfocus when clicking another cell
-    },
+    handleCellBlur() {},
 
     handleCellUpdate(cellId: string, newCode: string) {
       const cellIndex = this.getCellIndex(cellId);
@@ -148,10 +142,7 @@ export default defineComponent({
     },
 
     getWebCellHTML(cellIndex: number): string {
-      // Return the stored output (set by executeWebCell) or empty string
-      const cell = this.cells[cellIndex];
-      if (!cell || !cell.output) return "";
-      return cell.output;
+      return this.cells[cellIndex]?.output || "";
     },
 
     getCodeWithLineNumbers(code: string): string {
@@ -168,12 +159,8 @@ export default defineComponent({
     },
 
     getCellHeight(code: string): string {
-      // Calculate height based on number of lines (Monaco line height 19px)
       const lineCount = code.split("\n").length;
-      const lineHeight = 19;
-      const minHeight = 60;
-      const calculatedHeight = lineCount * lineHeight;
-      return `${Math.max(minHeight, calculatedHeight)}px`;
+      return `${Math.max(60, lineCount * 19)}px`;
     },
 
     async runCell(cellId: string) {
@@ -211,7 +198,6 @@ export default defineComponent({
         for (const cellId of cellIds) {
           const cell = this.cells.find((c) => c.id === cellId);
           if (cell && !cell.mustExecute) {
-            // Skip mustExecute cells since they're already run
             await this.executeCell(runner, cell);
           }
         }
@@ -227,30 +213,22 @@ export default defineComponent({
       if (cellIndex === -1) return;
 
       try {
-        // Clear previous output
         this.cells[cellIndex].output = undefined;
         this.cells[cellIndex].error = undefined;
 
-        // Clear previous matplotlib plots from the target container
         const plotTargetId = `plot-target-${cell.id}`;
         const plotTarget = document.getElementById(plotTargetId);
-        if (plotTarget) {
-          plotTarget.innerHTML = "";
-        }
+        if (plotTarget) plotTarget.innerHTML = "";
 
-        // Handle web notebooks differently to maintain shared context
         if (this.runnerLanguage === "web") {
           await this.executeWebCell(cell, cellIndex);
           return;
         }
 
-        // Wait for next tick to ensure DOM is updated
         await this.$nextTick();
 
-        // Prepare files for execution
         const files: Record<string, string> = { main: cell.code };
 
-        // Include requirements.txt for Python if available
         if (this.runnerLanguage === "python" && this.requirementsTxt) {
           files["requirements.txt"] = this.requirementsTxt;
         }
@@ -271,34 +249,23 @@ export default defineComponent({
     },
 
     async executeWebCell(cell: NotebookCell, cellIndex: number) {
-      try {
-        // Simple approach: just mark as executed, the iframe will render the cell's code directly
-        this.cells[cellIndex].output = cell.code;
-      } catch (error: any) {
-        this.cells[cellIndex].error = error.message || String(error);
-      }
+      this.cells[cellIndex].output = cell.code;
     },
 
     async resetEnvironment() {
-      const message = this.t("challenge.resetConfirm");
-      if (confirm(message)) {
-        this.hasExecutedMustExecute = false;
+      if (!confirm(this.t("challenge.resetConfirm"))) return;
 
-        // Clear all outputs
-        for (const cell of this.cells) {
-          cell.output = undefined;
-          cell.error = undefined;
-        }
+      this.hasExecutedMustExecute = false;
 
-        // Reinitialize runner (for Python/SQLite)
-        const runner = await codeRunnerRegistry.getOrInitializeRunner(this.runnerLanguage);
-        if (runner && runner.cleanup) {
-          await runner.cleanup();
-        }
-
-        // Clear test results
-        this.testResults = null;
+      for (const cell of this.cells) {
+        cell.output = undefined;
+        cell.error = undefined;
       }
+
+      const runner = await codeRunnerRegistry.getOrInitializeRunner(this.runnerLanguage);
+      await runner?.cleanup?.();
+
+      this.testResults = null;
     },
 
     async createExecuteCellsUpToFunction() {
@@ -428,17 +395,14 @@ export default defineComponent({
           };
         }
 
-        // Remove old result for this cell if exists
         this.testResults.cellResults = this.testResults.cellResults.filter((r: any) => r.cellId !== cellId);
 
-        // Add new result for this specific cell
         const cellResult = results.cellResults.find((r: any) => r.cellIndex === cellIndex);
         if (cellResult) {
           cellResult.cellId = cellId;
           this.testResults.cellResults.push(cellResult);
         }
 
-        // Recalculate overall score based on all cell results
         const totalCells = this.testResults.cellResults.length;
         const passedCells = this.testResults.cellResults.filter((r: any) => r.passed).length;
         if (totalCells > 0) {

@@ -52,27 +52,12 @@ export default defineComponent({
       return getCoursePath(this.$route);
     },
 
-    // Proxy challenge composable properties
     challengeData() {
-      if (!this.challenge) return null;
-      return this.challenge.challengeData.value;
+      return this.challenge?.challengeData.value ?? null;
     },
 
     isLoading(): boolean {
-      if (!this.challenge) return true;
-      return this.challenge.isLoading.value;
-    },
-
-    isQuizChallenge(): boolean {
-      return this.challengeData?.type === "quiz";
-    },
-
-    isCodeChallenge(): boolean {
-      return this.challengeData?.type === "code";
-    },
-
-    isNotebookChallenge(): boolean {
-      return this.challengeData?.type === "notebook";
+      return !this.challenge || this.challenge.isLoading.value;
     },
 
     breadcrumbs(): Array<{ text: string; path: string }> {
@@ -106,7 +91,6 @@ export default defineComponent({
   },
 
   mounted() {
-    // Initialize challenge composable with reactive computed properties
     this.challenge = useChallenge({
       coursePath: computed(() => this.coursePath),
       challengeId: computed(() => this.challengeId),
@@ -119,9 +103,7 @@ export default defineComponent({
 
   methods: {
     async loadChallenge() {
-      if (this.challenge) {
-        await this.challenge.loadChallenge();
-      }
+      await this.challenge?.loadChallenge();
     },
 
     goToNextChallenge() {
@@ -190,7 +172,7 @@ export default defineComponent({
         </div>
 
         <QuizChallenge
-          v-if="isQuizChallenge && challengeData.type === 'quiz'"
+          v-if="challengeData.type === 'quiz'"
           :challenge-data="challengeData"
           :course-path="coursePath"
           :challenge-id="challengeId"
@@ -198,25 +180,21 @@ export default defineComponent({
           @next-challenge="goToNextChallenge"
         />
 
-        <!-- Code Challenge -->
-        <div v-else-if="isCodeChallenge && challengeData.type === 'code'">
-          <CodeChallenge
-            :challenge-data="challengeData"
-            :course-path="coursePath"
-            :challenge-id="challengeId"
-            :language="language"
-          />
-        </div>
+        <CodeChallenge
+          v-else-if="challengeData.type === 'code'"
+          :challenge-data="challengeData"
+          :course-path="coursePath"
+          :challenge-id="challengeId"
+          :language="language"
+        />
 
-        <!-- Notebook Challenge -->
-        <div v-else-if="isNotebookChallenge && challengeData.type === 'notebook'">
-          <NotebookChallenge
-            :challenge-data="challengeData"
-            :course-path="coursePath"
-            :challenge-id="challengeId"
-            :language="language"
-          />
-        </div>
+        <NotebookChallenge
+          v-else-if="challengeData.type === 'notebook'"
+          :challenge-data="challengeData"
+          :course-path="coursePath"
+          :challenge-id="challengeId"
+          :language="language"
+        />
       </div>
 
       <div v-else class="max-w-2xl mx-auto">

@@ -119,11 +119,7 @@ export default defineComponent({
     window.removeEventListener("blur", this.handleMouseUp);
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
-
-    const overlay = document.getElementById("resize-overlay");
-    if (overlay) {
-      overlay.remove();
-    }
+    document.getElementById("resize-overlay")?.remove();
   },
 
   methods: {
@@ -147,7 +143,6 @@ export default defineComponent({
 
     async loadTestFile() {
       try {
-        // For Python challenges, try test.py first, then fall back to test.js
         if (this.runnerLanguage === "python") {
           const testPy = await fetchTestPy(this.coursePath, this.challengeId, this.language);
           if (testPy) {
@@ -157,7 +152,6 @@ export default defineComponent({
           }
         }
 
-        // For non-Python or if test.py doesn't exist, use test.js
         const testJS = await fetchTestJS(this.coursePath, this.challengeId, this.language);
         if (testJS) {
           this.testContent = testJS;
@@ -169,17 +163,14 @@ export default defineComponent({
     },
 
     async resetFileSystem() {
-      const message = this.t("challenge.resetConfirm");
-      if (confirm(message)) {
-        try {
-          if (this.fileSystem) {
-            await this.fileSystem.reset();
-            this.updateVisibleFiles();
-            this.updateActiveFile();
-          }
-        } catch (error) {
-          console.error("Failed to reset filesystem:", error);
-        }
+      if (!confirm(this.t("challenge.resetConfirm")) || !this.fileSystem) return;
+
+      try {
+        await this.fileSystem.reset();
+        this.updateVisibleFiles();
+        this.updateActiveFile();
+      } catch (error) {
+        console.error("Failed to reset filesystem:", error);
       }
     },
 
@@ -220,21 +211,18 @@ export default defineComponent({
     },
 
     updateVisibleFiles() {
-      if (this.fileSystem) {
-        this.visibleFiles = this.fileSystem.getVisibleFiles();
-      }
+      if (!this.fileSystem) return;
+      this.visibleFiles = this.fileSystem.getVisibleFiles();
     },
 
     updateActiveFile() {
       if (!this.fileSystem) return;
 
       this.activeFile = this.fileSystem.activeFile;
-      if (this.activeFile) {
-        const file = this.fileSystem.files.get(this.activeFile);
-        if (file) {
-          this.activeFileContent = file.content;
-          this.activeFileReadonly = file.readonly;
-        }
+      const file = this.activeFile ? this.fileSystem.files.get(this.activeFile) : null;
+      if (file) {
+        this.activeFileContent = file.content;
+        this.activeFileReadonly = file.readonly;
       }
     },
 
@@ -256,26 +244,24 @@ export default defineComponent({
     },
 
     handleFileRename(oldFilename: string, newFilename: string) {
-      if (this.fileSystem) {
-        this.fileSystem.renameFile(oldFilename, newFilename);
-        this.updateVisibleFiles();
-        if (this.activeFile === oldFilename) {
-          this.activeFile = newFilename;
-          const file = this.fileSystem.getFileContent(newFilename);
-          if (file !== undefined) {
-            this.activeFileContent = file;
-          }
+      if (!this.fileSystem) return;
+
+      this.fileSystem.renameFile(oldFilename, newFilename);
+      this.updateVisibleFiles();
+      if (this.activeFile === oldFilename) {
+        this.activeFile = newFilename;
+        const content = this.fileSystem.getFileContent(newFilename);
+        if (content !== undefined) {
+          this.activeFileContent = content;
         }
       }
     },
 
     handleContentUpdate(newContent: string) {
-      if (this.activeFile && this.fileSystem) {
-        this.activeFileContent = newContent;
+      if (!this.activeFile || !this.fileSystem) return;
 
-        // Update the file system which will dispatch the vfs-event for autoreload
-        this.fileSystem.updateFileContent(this.activeFile, newContent);
-      }
+      this.activeFileContent = newContent;
+      this.fileSystem.updateFileContent(this.activeFile, newContent);
     },
 
     async runCodeAndTests() {
@@ -341,10 +327,7 @@ export default defineComponent({
             this.testLanguage || "javascript",
           );
 
-          if (this.testResult.output && !this.executionOutput.includes(this.testResult.output)) {
-            this.executionOutput = this.executionOutput;
-          }
-          if (this.testResult.error && !this.executionError) {
+          if (!this.executionError && this.testResult.error) {
             this.executionError = this.testResult.error;
           }
 
@@ -404,10 +387,7 @@ export default defineComponent({
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
 
-      const overlay = document.getElementById("resize-overlay");
-      if (overlay) {
-        overlay.remove();
-      }
+      document.getElementById("resize-overlay")?.remove();
 
       document.removeEventListener("mousemove", this.handleMouseMove);
       document.removeEventListener("mouseup", this.handleMouseUp);
@@ -415,20 +395,15 @@ export default defineComponent({
     },
 
     async showSolution() {
-      const message = this.t("challenge.solutionConfirm");
-      if (!confirm(message)) {
-        return;
-      }
+      if (!confirm(this.t("challenge.solutionConfirm")) || !this.fileSystem) return;
 
-      if (this.fileSystem) {
-        const success = await this.fileSystem.loadSolution();
-        if (success) {
-          this.updateVisibleFiles();
-          this.updateActiveFile();
-          await this.runCodeAndTests();
-        } else {
-          alert(this.t("challenge.solutionNotAvailable"));
-        }
+      const success = await this.fileSystem.loadSolution();
+      if (success) {
+        this.updateVisibleFiles();
+        this.updateActiveFile();
+        await this.runCodeAndTests();
+      } else {
+        alert(this.t("challenge.solutionNotAvailable"));
       }
     },
   },

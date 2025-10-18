@@ -41,10 +41,7 @@ export default defineComponent({
     showAddFileDialog() {
       this.showAddDialog = true;
       this.newFileName = "";
-      this.$nextTick(() => {
-        const input = this.$refs.newFileInput as HTMLInputElement;
-        if (input) input.focus();
-      });
+      this.$nextTick(() => (this.$refs.newFileInput as HTMLInputElement)?.focus());
     },
 
     addFile() {
@@ -56,29 +53,24 @@ export default defineComponent({
       }
 
       this.$emit("file-add", filename);
-      this.showAddDialog = false;
-      this.newFileName = "";
+      this.closeAddDialog();
     },
 
-    cancelAdd() {
+    closeAddDialog() {
       this.showAddDialog = false;
       this.newFileName = "";
     },
 
     startRename(filename: string) {
       const file = this.files.find((f) => f.filename === filename);
-      if (!file || file.readonly || isTestFile(filename)) {
-        return;
-      }
+      if (!file || file.readonly || isTestFile(filename)) return;
 
       this.renamingFile = filename;
       this.renameValue = filename;
       this.$nextTick(() => {
-        const input = this.$refs[`rename-${filename}`] as HTMLInputElement[];
-        if (input && input[0]) {
-          input[0].focus();
-          input[0].select();
-        }
+        const input = (this.$refs[`rename-${filename}`] as HTMLInputElement[])?.[0];
+        input?.focus();
+        input?.select();
       });
     },
 
@@ -86,14 +78,11 @@ export default defineComponent({
       if (!this.renamingFile) return;
 
       const newName = this.renameValue.trim();
-      if (!newName) {
-        this.cancelRename();
-        return;
-      }
-
-      if (isTestFile(newName)) {
-        alert("Cannot rename to test file name. Test files are managed automatically.");
-        this.cancelRename();
+      if (!newName || isTestFile(newName)) {
+        if (isTestFile(newName)) {
+          alert("Cannot rename to test file name. Test files are managed automatically.");
+        }
+        this.closeRenameDialog();
         return;
       }
 
@@ -101,11 +90,10 @@ export default defineComponent({
         this.$emit("file-rename", this.renamingFile, newName);
       }
 
-      this.renamingFile = null;
-      this.renameValue = "";
+      this.closeRenameDialog();
     },
 
-    cancelRename() {
+    closeRenameDialog() {
       this.renamingFile = null;
       this.renameValue = "";
     },
@@ -132,7 +120,7 @@ export default defineComponent({
           class="tab-rename-input"
           @blur="finishRename"
           @keyup.enter="finishRename"
-          @keyup.esc="cancelRename"
+          @keyup.esc="closeRenameDialog"
           @click.stop
         />
         <span v-else class="tab-name">{{ file.filename }}</span>
@@ -149,8 +137,7 @@ export default defineComponent({
       <button class="tab tab-add" @click="showAddFileDialog" title="Pridať súbor">+</button>
     </div>
 
-    <!-- Add file dialog -->
-    <div v-if="showAddDialog" class="add-dialog-overlay" @click="cancelAdd">
+    <div v-if="showAddDialog" class="add-dialog-overlay" @click="closeAddDialog">
       <div class="add-dialog" @click.stop>
         <h3 class="text-white mb-3">Nový súbor</h3>
         <input
@@ -160,11 +147,13 @@ export default defineComponent({
           placeholder="názov-súboru.py"
           class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white mb-3"
           @keyup.enter="addFile"
-          @keyup.esc="cancelAdd"
+          @keyup.esc="closeAddDialog"
         />
         <div class="flex gap-2">
           <button @click="addFile" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition">Pridať</button>
-          <button @click="cancelAdd" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition">Zrušiť</button>
+          <button @click="closeAddDialog" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition">
+            Zrušiť
+          </button>
         </div>
       </div>
     </div>

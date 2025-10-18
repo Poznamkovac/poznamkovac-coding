@@ -51,10 +51,8 @@ export async function createVirtualFileSystem(
 
       if (!content && fileConfig) {
         try {
-          let response = await fetch(`/${language}/data/${coursePath}/${challengeId}/files/${filename}`);
-          if (response.ok) {
-            content = await response.text();
-          }
+          const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/files/${filename}`);
+          if (response.ok) content = await response.text();
         } catch (error) {
           console.warn("error fetching file", filename, error);
         }
@@ -115,18 +113,17 @@ export async function createVirtualFileSystem(
 
     updateFileContent(filename: string, content: string) {
       const file = filesMap.get(filename);
-      if (file && !file.readonly) {
-        filesMap.set(filename, { ...file, content });
+      if (!file || file.readonly) return;
 
-        const hasBeenModified = content !== file.originalContent;
-        if (hasBeenModified) {
-          storageService.setEditorCode(coursePath, challengeId, filename, content, language);
-        } else {
-          storageService.deleteEditorCode(coursePath, challengeId, filename, language);
-        }
+      filesMap.set(filename, { ...file, content });
 
-        dispatchEvent("file-change", filename, content, file.autoreload);
+      if (content !== file.originalContent) {
+        storageService.setEditorCode(coursePath, challengeId, filename, content, language);
+      } else {
+        storageService.deleteEditorCode(coursePath, challengeId, filename, language);
       }
+
+      dispatchEvent("file-change", filename, content, file.autoreload);
     },
 
     addFile(filename: string) {

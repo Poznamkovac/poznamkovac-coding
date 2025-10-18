@@ -26,12 +26,8 @@ export function validateQuizAnswer(userAnswer: string | string[], config: QuizAn
       return { correct: false, score: 0 };
     }
 
-    const correctOptionIds = config.options.filter((opt) => opt.correct).map((opt) => opt.id);
-    const sortedUserAnswer = [...userAnswer].sort();
-    const sortedCorrect = [...correctOptionIds].sort();
-
-    const correct =
-      sortedUserAnswer.length === sortedCorrect.length && sortedUserAnswer.every((id, index) => id === sortedCorrect[index]);
+    const correctOptionIds = new Set(config.options.filter((opt) => opt.correct).map((opt) => opt.id));
+    const correct = userAnswer.length === correctOptionIds.size && userAnswer.every((id) => correctOptionIds.has(id));
 
     return { correct, score: correct ? 1 : 0 };
   }
@@ -41,13 +37,10 @@ export function validateQuizAnswer(userAnswer: string | string[], config: QuizAn
       return { correct: false, score: 0 };
     }
 
-    const normalizedUser = normalizeString(userAnswer, config.caseSensitive ?? true, config.diacriticSensitive ?? true);
-
-    const normalizedCorrect = normalizeString(
-      config.correctAnswer,
-      config.caseSensitive ?? true,
-      config.diacriticSensitive ?? true,
-    );
+    const caseSensitive = config.caseSensitive ?? true;
+    const diacriticSensitive = config.diacriticSensitive ?? true;
+    const normalizedUser = normalizeString(userAnswer, caseSensitive, diacriticSensitive);
+    const normalizedCorrect = normalizeString(config.correctAnswer, caseSensitive, diacriticSensitive);
 
     const correct = normalizedUser === normalizedCorrect;
     return { correct, score: correct ? 1 : 0 };

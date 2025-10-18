@@ -1,8 +1,9 @@
 <script lang="ts">
 import { useI18n } from "vue-i18n";
-import { defineComponent, computed } from "vue";
+import { defineComponent } from "vue";
 import { getLocalizedPath } from "../i18n";
-import type { Course, LanguageCode } from "../types";
+import { useLanguage } from "../composables/useLanguage";
+import type { Course } from "../types";
 import { Color } from "@kurkle/color";
 
 export default defineComponent({
@@ -17,16 +18,7 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n();
-
-    const effectiveLanguage = computed<LanguageCode>({
-      get() {
-        const stored = localStorage.getItem("language") as LanguageCode | null;
-        return stored || "auto";
-      },
-      set(value: LanguageCode) {
-        localStorage.setItem("language", value);
-      },
-    });
+    const effectiveLanguage = useLanguage();
 
     return {
       t,
@@ -60,20 +52,11 @@ export default defineComponent({
     textColor(): string {
       if (!this.course.color) return "#ffffff";
 
-      try {
-        const color = new Color(this.course.color);
-        const rgb = color.rgb;
+      const color = new Color(this.course.color);
+      const { r, g, b } = color.rgb;
+      const luminance = 0.2126 * (r / 255) + 0.7152 * (g / 255) + 0.0722 * (b / 255);
 
-        const r = rgb.r / 255;
-        const g = rgb.g / 255;
-        const b = rgb.b / 255;
-
-        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-        return luminance > 0.5 ? "#000000" : "#ffffff";
-      } catch {
-        return "#ffffff";
-      }
+      return luminance > 0.5 ? "#000000" : "#ffffff";
     },
   },
 

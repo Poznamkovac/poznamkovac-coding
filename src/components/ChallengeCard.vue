@@ -28,10 +28,7 @@ export default defineComponent({
 
   computed: {
     scorePercentage(): number {
-      if (this.challenge.currentScore !== undefined && this.challenge.maxScore > 0) {
-        return Math.round((this.challenge.currentScore / this.challenge.maxScore) * 100);
-      }
-      return 0;
+      return this.challenge.maxScore > 0 ? Math.round(((this.challenge.currentScore ?? 0) / this.challenge.maxScore) * 100) : 0;
     },
 
     isCompleted(): boolean {

@@ -31,10 +31,6 @@ export default defineComponent({
     };
   },
 
-  data() {
-    return {};
-  },
-
   computed: {
     pathSegments(): string[] {
       return getPathSegments(this.$route);
@@ -48,15 +44,12 @@ export default defineComponent({
       return getCoursePath(this.$route);
     },
 
-    // Proxy challenge composable properties
     challengeData() {
-      if (!this.challenge) return null;
-      return this.challenge.challengeData.value;
+      return this.challenge?.challengeData.value ?? null;
     },
 
     isLoading(): boolean {
-      if (!this.challenge) return true;
-      return this.challenge.isLoading.value;
+      return !this.challenge || this.challenge.isLoading.value;
     },
   },
 
@@ -81,9 +74,7 @@ export default defineComponent({
 
   methods: {
     async loadChallenge() {
-      if (this.challenge) {
-        await this.challenge.loadChallenge();
-      }
+      await this.challenge?.loadChallenge();
     },
 
     goToNextChallenge() {
@@ -117,25 +108,21 @@ export default defineComponent({
           @next-challenge="goToNextChallenge"
         />
 
-        <!-- Code Challenge -->
-        <div v-else-if="challengeData.type === 'code'">
-          <CodeChallenge
-            :challenge-data="challengeData"
-            :course-path="coursePath"
-            :challenge-id="challengeId"
-            :language="language"
-          />
-        </div>
+        <CodeChallenge
+          v-else-if="challengeData.type === 'code'"
+          :challenge-data="challengeData"
+          :course-path="coursePath"
+          :challenge-id="challengeId"
+          :language="language"
+        />
 
-        <!-- Notebook Challenge -->
-        <div v-else-if="challengeData.type === 'notebook'">
-          <NotebookChallenge
-            :challenge-data="challengeData"
-            :course-path="coursePath"
-            :challenge-id="challengeId"
-            :language="language"
-          />
-        </div>
+        <NotebookChallenge
+          v-else-if="challengeData.type === 'notebook'"
+          :challenge-data="challengeData"
+          :course-path="coursePath"
+          :challenge-id="challengeId"
+          :language="language"
+        />
       </div>
 
       <div v-else class="max-w-2xl mx-auto">

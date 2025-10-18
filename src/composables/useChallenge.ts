@@ -22,36 +22,43 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
   const challengeData = ref<ChallengeData | null>(null);
   const isLoading = ref(false);
 
+  const extractTitle = (markdown: string): [string, string] => {
+    const lines = markdown.split("\n");
+    if (lines[0]?.startsWith("# ")) {
+      return [lines[0].substring(2).trim(), lines.slice(1).join("\n").trim()];
+    }
+    return [fallbackTitle, markdown];
+  };
+
   const loadChallenge = async () => {
     isLoading.value = true;
 
     try {
       const lang = language.value === "auto" ? "sk" : language.value;
-      const metadataPath = `/${lang}/data/${coursePath.value}/${challengeId.value}/metadata.json`;
-      const assignmentMdPath = `/${lang}/data/${coursePath.value}/${challengeId.value}/assignment.md`;
+      const basePath = `/${lang}/data/${coursePath.value}/${challengeId.value}`;
 
-      const metadataResponse = await fetch(metadataPath);
+      const [metadataResponse, assignmentMdResponse] = await Promise.all([
+        fetch(`${basePath}/metadata.json`),
+        fetch(`${basePath}/assignment.md`),
+      ]);
+
       if (!metadataResponse.ok || !metadataResponse.headers.get("content-type")?.includes("application/json")) {
         throw new Error("Challenge not found");
       }
 
-      const metadata = await metadataResponse.json();
-
-      const assignmentMdResponse = await fetch(assignmentMdPath);
       if (!assignmentMdResponse.ok) {
         throw new Error("Assignment content not found");
       }
 
-      const assignmentMarkdown = await assignmentMdResponse.text();
+      const [metadata, assignmentMarkdown] = await Promise.all([metadataResponse.json(), assignmentMdResponse.text()]);
 
       if (metadata.type === "notebook") {
         const { cells, markdownSections } = await parseNotebookMarkdown(assignmentMarkdown);
-        const lines = assignmentMarkdown.split("\n");
-        const title = lines[0]?.startsWith("# ") ? lines[0].substring(2).trim() : metadata.title || fallbackTitle;
+        const [title] = extractTitle(assignmentMarkdown);
 
         challengeData.value = {
           type: "notebook",
-          title,
+          title: title || metadata.title,
           maxScore: metadata.maxScore,
           language: metadata.language || "python",
           cells,
@@ -59,10 +66,7 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
           imageUrl: metadata.imageUrl,
         };
       } else {
-        const lines = assignmentMarkdown.split("\n");
-        const hasTitle = lines[0]?.startsWith("# ");
-        const title = hasTitle ? lines[0].substring(2).trim() : fallbackTitle;
-        const content = hasTitle ? lines.slice(1).join("\n").trim() : assignmentMarkdown;
+        const [title, content] = extractTitle(assignmentMarkdown);
 
         challengeData.value = {
           ...metadata,

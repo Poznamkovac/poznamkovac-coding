@@ -34,6 +34,13 @@ export async function fetchTestPy(coursePath: string, challengeId: string, langu
   return isHtml ? null : text;
 }
 
+const createErrorResult = (maxScore: number, error: string): TestResult => ({
+  score: 0,
+  maxScore,
+  passed: false,
+  error,
+});
+
 export async function runTests(
   language: string,
   files: Record<string, string>,
@@ -46,21 +53,14 @@ export async function runTests(
     const runner = await codeRunnerRegistry.getOrInitializeRunner(language);
 
     if (!runner) {
-      return {
-        score: 0,
-        maxScore,
-        passed: false,
-        error: `No runner found for language: ${language}`,
-      };
+      return createErrorResult(maxScore, `No runner found for language: ${language}`);
     }
 
     let result: ExecutionResult;
 
-    // For Python tests, execute them differently
     if (testLanguage === "python" && testContent) {
       result = await runner.execute(files, mainFile);
 
-      // Run Python tests
       const context = {
         language: "python",
         pyodide: (runner as any).pyodide,
@@ -68,14 +68,12 @@ export async function runTests(
         stderr: result.error || "",
       };
 
-      const testCases = await executeTest(testContent, "python", context);
-      result.testCases = testCases;
+      result.testCases = await executeTest(testContent, "python", context);
     } else {
-      // For JS tests or no tests, use the old method
       result = await runner.execute(files, mainFile, testContent);
     }
 
-    const hasError = result.error && result.error.trim().length > 0;
+    const hasError = (result.error?.trim().length ?? 0) > 0;
     const testCases = result.testCases || [];
     const allTestsPassed = testCases.length > 0 && testCases.every((tc) => tc.passed);
     const passed = !hasError && (!testCases.length || allTestsPassed);
@@ -91,12 +89,7 @@ export async function runTests(
     };
   } catch (error: any) {
     console.error("[TestRunner] Runner error:", error);
-    return {
-      score: 0,
-      maxScore,
-      passed: false,
-      error: error.message || String(error),
-    };
+    return createErrorResult(maxScore, error.message || String(error));
   }
 }
 
@@ -135,13 +128,6 @@ export async function executeTestJS(testJSCode: string, context: any): Promise<T
   }
 }
 
-/**
- * Execute test code in the appropriate language (Python or JavaScript)
- * @param testCode - Test code to execute
- * @param testLanguage - Language of the test code ('python' or 'javascript')
- * @param context - Execution context
- * @returns Array of test case results
- */
 export async function executeTest(testCode: string, testLanguage: string, context: any): Promise<TestCaseResult[]> {
   if (testLanguage === "python") {
     // Execute Python test
