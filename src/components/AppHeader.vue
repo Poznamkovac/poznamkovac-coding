@@ -51,7 +51,9 @@ export default defineComponent({
     <div class="container mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-4 cursor-pointer" @click="goHome">
         <img src="https://poznamkovac.eu/resources/assets/logo.svg" alt="Logo" class="h-8 w-8" />
-        <h1 class="text-xl font-bold text-white">{{ t("app.title") }}</h1>
+        <h1 class="text-xl font-bold text-white">
+          {{ t("app.title") }}
+        </h1>
       </div>
 
       <div class="flex items-center gap-2">

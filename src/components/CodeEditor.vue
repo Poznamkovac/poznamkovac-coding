@@ -212,7 +212,7 @@ export default defineComponent({
 
 <template>
   <div class="code-editor">
-    <div ref="editorContainer" class="editor-container"></div>
+    <div ref="editorContainer" class="editor-container" />
   </div>
 </template>
 

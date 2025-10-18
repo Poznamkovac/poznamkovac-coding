@@ -80,12 +80,12 @@ export default defineComponent({
         <div class="flex gap-4 justify-center">
           <button
             v-if="parentPath !== '/'"
-            @click="goBack"
             class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
+            @click="goBack"
           >
             {{ t("challenge.goBack", { path: parentPath }) }}
           </button>
-          <button @click="goHome" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">
+          <button class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition" @click="goHome">
             {{ t("home.courses") }}
           </button>
         </div>

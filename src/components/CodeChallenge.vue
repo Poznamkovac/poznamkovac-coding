@@ -413,20 +413,20 @@ export default defineComponent({
 <template>
   <div class="code-challenge">
     <div class="actions-bar">
-      <button @click="runCodeAndTests" :disabled="isRunning || isTesting" class="btn btn-primary">
+      <button :disabled="isRunning || isTesting" class="btn btn-primary" @click="runCodeAndTests">
         <span class="btn-icon">{{ isRunning || isTesting ? "⏳" : "▶️" }}</span>
         {{ isRunning || isTesting ? t("challenge.running") : t("challenge.runCode") }}
       </button>
-      <button @click="resetFileSystem" class="btn btn-secondary" :title="t('challenge.resetConfirm')">
+      <button class="btn btn-secondary" :title="t('challenge.resetConfirm')" @click="resetFileSystem">
         <span class="btn-icon">↻</span>
         {{ t("challenge.reset") }}
       </button>
-      <button v-if="canShowSolution" @click="showSolution" class="btn btn-warning">
+      <button v-if="canShowSolution" class="btn btn-warning" @click="showSolution">
         <span class="btn-icon">💡</span>
         {{ t("challenge.showSolution") }}
       </button>
       <label v-if="hasAutoReloadFiles" class="auto-reload-toggle">
-        <input type="checkbox" v-model="autoReloadEnabled" />
+        <input v-model="autoReloadEnabled" type="checkbox" />
         <span>{{ t("challenge.autoReload") }}</span>
       </label>
     </div>
@@ -459,9 +459,9 @@ export default defineComponent({
             <div v-if="isRunning || isTesting" class="editor-busy-overlay">
               <div class="busy-indicator">
                 <div class="busy-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                  <span />
+                  <span />
+                  <span />
                 </div>
                 <p>{{ isRunning ? t("challenge.running") : t("challenge.testing") }}</p>
               </div>
@@ -470,7 +470,7 @@ export default defineComponent({
         </div>
       </div>
 
-      <div class="resize-handle" @mousedown="startResize"></div>
+      <div class="resize-handle" @mousedown="startResize" />
 
       <div class="preview-panel" :style="{ width: `${100 - splitPosition}%` }">
         <div class="output-container">
@@ -478,11 +478,13 @@ export default defineComponent({
           <div v-if="showPlaceholder" class="preview-placeholder" @click="runCodeAndTests">
             <div class="placeholder-icon">▶</div>
             <p>{{ t("challenge.previewPlaceholder") }}</p>
-            <button class="placeholder-button">{{ t("challenge.runCode") }}</button>
+            <button class="placeholder-button">
+              {{ t("challenge.runCode") }}
+            </button>
           </div>
           <!-- Preview -->
           <div v-if="previewType === 'html'" class="preview-html">
-            <iframe :srcdoc="previewContent" sandbox="allow-scripts"></iframe>
+            <iframe :srcdoc="previewContent" sandbox="allow-scripts" />
           </div>
           <pre v-else-if="previewType === 'text'" class="preview-text">{{ previewContent }}</pre>
 
@@ -515,7 +517,9 @@ export default defineComponent({
                   <span class="test-case-icon">{{ testCase.passed ? "✓" : "✗" }}</span>
                   <span class="test-case-name">{{ testCase.name }}</span>
                 </div>
-                <div v-if="testCase.error" class="test-case-error">{{ testCase.error }}</div>
+                <div v-if="testCase.error" class="test-case-error">
+                  {{ testCase.error }}
+                </div>
               </div>
             </div>
 

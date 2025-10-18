@@ -154,8 +154,8 @@ export default defineComponent({
         <template v-for="(crumb, index) in breadcrumbs" :key="index">
           <button
             v-if="index < breadcrumbs.length - 1"
-            @click="navigateTo(crumb.path)"
             class="text-blue-400 hover:text-blue-300 transition-colors"
+            @click="navigateTo(crumb.path)"
           >
             {{ crumb.text }}
           </button>
@@ -164,7 +164,9 @@ export default defineComponent({
         </template>
       </nav>
 
-      <h2 class="text-3xl font-bold text-white mb-8">{{ courseTitle }}</h2>
+      <h2 class="text-3xl font-bold text-white mb-8">
+        {{ courseTitle }}
+      </h2>
 
       <div v-if="isLoading" class="text-center text-gray-400 py-12">
         {{ t("common.loading") }}
@@ -172,14 +174,18 @@ export default defineComponent({
 
       <div v-else>
         <div v-if="subcourses.length > 0" class="mb-8">
-          <h3 class="text-xl font-semibold text-white mb-4">{{ t("course.subcourses") }}</h3>
+          <h3 class="text-xl font-semibold text-white mb-4">
+            {{ t("course.subcourses") }}
+          </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <CourseCard v-for="course in subcourses" :key="course.slug" :course="course" />
           </div>
         </div>
 
         <div v-if="challenges.length > 0">
-          <h3 class="text-xl font-semibold text-white mb-4">{{ t("course.challenges") }}</h3>
+          <h3 class="text-xl font-semibold text-white mb-4">
+            {{ t("course.challenges") }}
+          </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <ChallengeCard v-for="challenge in challenges" :key="challenge.id" :challenge="challenge" :course-path="coursePath" />
           </div>

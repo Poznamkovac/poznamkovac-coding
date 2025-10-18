@@ -8,7 +8,7 @@
     "build": "npm run generate-course-index && vue-tsc -b && vite build",
     "generate-course-index": "node scripts/generate-course-index.js",
     "lint": "eslint .",
-    "preview": "vite preview",
+    "preview": "npm run generate-course-index && vite preview",
     "format": "bunx prettier --write ."
   },
   "dependencies": {

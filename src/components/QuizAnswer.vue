@@ -80,8 +80,8 @@ export default defineComponent({
           :value="option.id"
           :checked="isChecked(option.id)"
           :disabled="disabled"
-          @change="handleRadioChange(option.id)"
           class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+          @change="handleRadioChange(option.id)"
         />
         <span class="text-gray-200">{{ option.text }}</span>
       </label>
@@ -99,8 +99,8 @@ export default defineComponent({
           :value="option.id"
           :checked="isChecked(option.id)"
           :disabled="disabled"
-          @change="handleCheckboxChange(option.id)"
           class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+          @change="handleCheckboxChange(option.id)"
         />
         <span class="text-gray-200">{{ option.text }}</span>
       </label>
@@ -111,9 +111,9 @@ export default defineComponent({
         type="text"
         :value="typeof localValue === 'string' ? localValue : ''"
         :disabled="disabled"
-        @input="handleInputChange"
         class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
         placeholder="Zadajte odpoveď..."
+        @input="handleInputChange"
       />
       <div v-if="!config.caseSensitive || !config.diacriticSensitive" class="text-sm text-gray-500">
         <span v-if="!config.caseSensitive">Ignoruje veľkosť písmen</span>

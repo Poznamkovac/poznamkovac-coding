@@ -207,7 +207,7 @@ export class SQLiteRunner implements CodeRunner {
 
       let textOutput = "";
       let hasError = false;
-      let allResults: any[] = [];
+      const allResults: any[] = [];
       const queryResults: Array<{ query: string; result: any; error?: string; time: string }> = [];
 
       if (files["schema.sql"]) {

@@ -89,7 +89,9 @@ export default defineComponent({
         <h3 class="text-xl font-semibold text-red-400">Nesprávne</h3>
       </div>
       <p class="text-gray-300">Skúste to znova. (Pokus {{ attemptCount }}/3)</p>
-      <p v-if="feedbackMessage" class="text-gray-300 mt-2">{{ feedbackMessage }}</p>
+      <p v-if="feedbackMessage" class="text-gray-300 mt-2">
+        {{ feedbackMessage }}
+      </p>
     </div>
 
     <div v-if="isCorrect" class="bg-[#1a1a1a] border border-green-600 rounded-lg p-6">
@@ -98,7 +100,9 @@ export default defineComponent({
         <h3 class="text-xl font-semibold text-green-400">Správne!</h3>
       </div>
       <p class="text-gray-300">Získali ste {{ challengeData.maxScore }} bodov.</p>
-      <p v-if="feedbackMessage" class="text-gray-300 mt-2">{{ feedbackMessage }}</p>
+      <p v-if="feedbackMessage" class="text-gray-300 mt-2">
+        {{ feedbackMessage }}
+      </p>
     </div>
 
     <div v-if="showCorrectAnswer && !isCorrect" class="bg-[#1a1a1a] border border-yellow-600 rounded-lg p-6">
@@ -117,23 +121,23 @@ export default defineComponent({
 
     <div class="flex gap-4">
       <button
-        @click="checkAnswer"
         class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)"
+        @click="checkAnswer"
       >
         Skontrolovať odpoveď
       </button>
       <button
         v-if="attemptCount >= 3 && !isCorrect && !showCorrectAnswer"
-        @click="revealAnswer"
         class="px-6 py-3 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg transition"
+        @click="revealAnswer"
       >
         Zobraziť správnu odpoveď
       </button>
       <button
         v-if="isCorrect || showCorrectAnswer"
-        @click="goToNextChallenge"
         class="px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg transition"
+        @click="goToNextChallenge"
       >
         Ďalšia úloha →
       </button>

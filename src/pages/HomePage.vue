@@ -75,7 +75,9 @@ export default defineComponent({
 <template>
   <DefaultLayout>
     <div class="container mx-auto px-4 py-8">
-      <h2 class="text-3xl font-bold text-white mb-8">{{ t("home.courses") }}</h2>
+      <h2 class="text-3xl font-bold text-white mb-8">
+        {{ t("home.courses") }}
+      </h2>
 
       <div v-if="isLoading" class="text-center text-gray-400 py-12">Loading courses...</div>
 

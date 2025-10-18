@@ -92,11 +92,15 @@ export default defineComponent({
       <div v-if="isLoading" class="text-center text-gray-400 py-12">Loading challenge...</div>
 
       <div v-else-if="challengeData">
-        <h2 class="text-3xl font-bold text-white mb-6">{{ challengeData.title }}</h2>
+        <h2 class="text-3xl font-bold text-white mb-6">
+          {{ challengeData.title }}
+        </h2>
 
         <div v-if="challengeData.type !== 'notebook'" class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6">
-          <h3 class="text-xl font-semibold text-white mb-4">{{ t("challenge.assignment") }}</h3>
-          <div class="markdown-content" v-html="challengeData.assignment"></div>
+          <h3 class="text-xl font-semibold text-white mb-4">
+            {{ t("challenge.assignment") }}
+          </h3>
+          <div class="markdown-content" v-html="challengeData.assignment" />
         </div>
 
         <QuizChallenge
@@ -128,8 +132,12 @@ export default defineComponent({
       <div v-else class="max-w-2xl mx-auto">
         <div class="bg-[#1a1a1a] border border-red-900/50 rounded-lg p-8 text-center">
           <div class="text-6xl mb-4">😕</div>
-          <h2 class="text-2xl font-bold text-white mb-3">{{ t("challenge.notFound") }}</h2>
-          <p class="text-gray-400 mb-6">{{ t("challenge.notFoundMessage") }}</p>
+          <h2 class="text-2xl font-bold text-white mb-3">
+            {{ t("challenge.notFound") }}
+          </h2>
+          <p class="text-gray-400 mb-6">
+            {{ t("challenge.notFoundMessage") }}
+          </p>
         </div>
       </div>
     </div>

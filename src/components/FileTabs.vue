@@ -127,14 +127,14 @@ export default defineComponent({
         <button
           v-if="!file.readonly && file.removable !== false"
           class="tab-remove"
-          @click="removeFile(file.filename, $event)"
           title="Odstrániť súbor"
+          @click="removeFile(file.filename, $event)"
         >
           ×
         </button>
       </button>
 
-      <button class="tab tab-add" @click="showAddFileDialog" title="Pridať súbor">+</button>
+      <button class="tab tab-add" title="Pridať súbor" @click="showAddFileDialog">+</button>
     </div>
 
     <div v-if="showAddDialog" class="add-dialog-overlay" @click="closeAddDialog">
@@ -150,8 +150,8 @@ export default defineComponent({
           @keyup.esc="closeAddDialog"
         />
         <div class="flex gap-2">
-          <button @click="addFile" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition">Pridať</button>
-          <button @click="closeAddDialog" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition">
+          <button class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition" @click="addFile">Pridať</button>
+          <button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition" @click="closeAddDialog">
             Zrušiť
           </button>
         </div>

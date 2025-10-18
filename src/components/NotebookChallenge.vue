@@ -423,15 +423,15 @@ export default defineComponent({
 <template>
   <div class="notebook-challenge">
     <div class="actions-bar">
-      <button @click="runAllCells" :disabled="isRunning || isRunningAll" class="btn btn-primary">
+      <button :disabled="isRunning || isRunningAll" class="btn btn-primary" @click="runAllCells">
         <span class="btn-icon">{{ isRunning || isRunningAll ? "⏳" : "▶️" }}</span>
         {{ isRunning || isRunningAll ? t("challenge.running") : "Run All Cells" }}
       </button>
-      <button @click="runTests" :disabled="isRunningTests || isRunning" class="btn btn-success">
+      <button :disabled="isRunningTests || isRunning" class="btn btn-success" @click="runTests">
         <span class="btn-icon">{{ isRunningTests ? "⏳" : "✓" }}</span>
         {{ isRunningTests ? "Running Tests..." : "Run Tests" }}
       </button>
-      <button @click="resetEnvironment" class="btn btn-secondary">
+      <button class="btn btn-secondary" @click="resetEnvironment">
         <span class="btn-icon">↻</span>
         {{ t("challenge.reset") }}
       </button>
@@ -451,7 +451,7 @@ export default defineComponent({
     <div class="notebook-container">
       <template v-for="(cell, index) in visibleCells" :key="cell.id">
         <!-- Markdown section before cell -->
-        <div v-if="markdownSections[index]" class="markdown-section" v-html="markdownSections[index]"></div>
+        <div v-if="markdownSections[index]" class="markdown-section" v-html="markdownSections[index]" />
 
         <!-- Cell -->
         <div
@@ -478,15 +478,15 @@ export default defineComponent({
                 @blur="handleCellBlur"
               />
               <!-- Syntax highlighted code for unfocused cells -->
-              <pre v-else class="cell-code-highlight" v-html="getCodeWithLineNumbers(cell.code)"></pre>
+              <pre v-else class="cell-code-highlight" v-html="getCodeWithLineNumbers(cell.code)" />
             </div>
             <div v-if="!cell.readonly" class="cell-actions">
-              <button @click.stop="runCell(cell.id)" :disabled="isRunning" class="cell-run-btn" title="Run cell">▶</button>
+              <button :disabled="isRunning" class="cell-run-btn" title="Run cell" @click.stop="runCell(cell.id)">▶</button>
               <button
-                @click.stop="runCellTests(cell.id)"
                 :disabled="isRunningTests || isRunning"
                 class="cell-test-btn"
                 title="Test cell"
+                @click.stop="runCellTests(cell.id)"
               >
                 ✓
               </button>
@@ -507,14 +507,14 @@ export default defineComponent({
                   :key="cell.output"
                   :srcdoc="getWebCellHTML(index)"
                   class="web-cell-output-iframe"
-                ></iframe>
+                />
                 <!-- HTML output (for dataframes/SQLite) -->
                 <iframe
                   v-else-if="cell.output.includes('<table')"
                   :srcdoc="cell.output"
                   sandbox="allow-scripts"
                   class="cell-output-iframe"
-                ></iframe>
+                />
                 <!-- Text output -->
                 <pre v-else>{{ cell.output }}</pre>
               </div>
@@ -522,7 +522,7 @@ export default defineComponent({
           </div>
 
           <!-- Matplotlib plot target (always present for Python cells) -->
-          <div v-if="runnerLanguage === 'python'" :id="`plot-target-${cell.id}`" class="plot-target"></div>
+          <div v-if="runnerLanguage === 'python'" :id="`plot-target-${cell.id}`" class="plot-target" />
 
           <!-- Test Results for this cell -->
           <div v-if="getCellTestResults(cell.id)" class="cell-test-results">
@@ -538,18 +538,16 @@ export default defineComponent({
             >
               <span class="test-case-icon">{{ testCase.passed ? "✓" : "✗" }}</span>
               <span class="test-case-name">{{ testCase.name }}</span>
-              <div v-if="testCase.error" class="test-case-error">{{ testCase.error }}</div>
+              <div v-if="testCase.error" class="test-case-error">
+                {{ testCase.error }}
+              </div>
             </div>
           </div>
         </div>
       </template>
 
       <!-- Trailing markdown section -->
-      <div
-        v-if="markdownSections[visibleCells.length]"
-        class="markdown-section"
-        v-html="markdownSections[visibleCells.length]"
-      ></div>
+      <div v-if="markdownSections[visibleCells.length]" class="markdown-section" v-html="markdownSections[visibleCells.length]" />
     </div>
   </div>
 </template>

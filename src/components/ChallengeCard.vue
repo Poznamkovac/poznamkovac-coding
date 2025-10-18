@@ -51,7 +51,9 @@ export default defineComponent({
     @click="handleClick"
   >
     <div class="flex items-start justify-between mb-2">
-      <h3 class="text-lg font-semibold text-white">{{ challenge.title }}</h3>
+      <h3 class="text-lg font-semibold text-white">
+        {{ challenge.title }}
+      </h3>
       <span v-if="isCompleted" class="text-green-500 text-xl">✓</span>
     </div>
     <div class="flex items-center gap-2 text-sm text-gray-400">
