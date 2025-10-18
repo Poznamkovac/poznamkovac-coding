@@ -52,6 +52,7 @@ export default defineComponent({
       requirementsTxt: null as string | null,
       isRunningTests: false,
       testResults: null as any,
+      virtualFiles: {} as Record<string, string>, // Files to load into virtual FS
     };
   },
 
@@ -73,6 +74,7 @@ export default defineComponent({
       await this.loadRequirementsTxt();
     }
 
+    await this.loadVirtualFiles();
     await this.loadCellsFromStorage();
   },
 
@@ -87,6 +89,30 @@ export default defineComponent({
           this.requirementsTxt = text;
         }
       } catch {}
+    },
+
+    async loadVirtualFiles() {
+      // Load files specified in metadata.json into virtual FS
+      if (!this.challengeData.files || this.challengeData.files.length === 0) {
+        return;
+      }
+
+      try {
+        const lang = this.language === "auto" ? "sk" : this.language;
+
+        await Promise.all(
+          this.challengeData.files.map(async (filename) => {
+            const filePath = `/${lang}/data/${this.coursePath}/${this.challengeId}/files/${filename}`;
+            const content = await fetchTextAsset(filePath);
+
+            if (content !== null) {
+              this.virtualFiles[filename] = content;
+            }
+          }),
+        );
+      } catch (error) {
+        console.error("Error loading virtual files:", error);
+      }
     },
 
     async loadCellsFromStorage() {
@@ -154,7 +180,7 @@ export default defineComponent({
     getCellHeight(code: string): string {
       const lineCount = code.split("\n").length;
       // add extra height to prevent scrollbar when Monaco editor is focused
-      return `${Math.max(60, lineCount * 19 + 10)}px`;
+      return `${Math.max(60, lineCount * 21)}px`;
     },
 
     async runCell(cellId: string) {
@@ -223,6 +249,11 @@ export default defineComponent({
           files["requirements.txt"] = this.requirementsTxt;
         }
 
+        // Add virtual files to the files object (for Python, SQLite, etc.)
+        for (const [filename, content] of Object.entries(this.virtualFiles)) {
+          files[filename] = content;
+        }
+
         const result = await runner.execute(files, "main", undefined, {
           skipCleanup: true,
           plotTargetId,
@@ -247,9 +278,15 @@ export default defineComponent({
 
       this.hasExecutedMustExecute = false;
 
-      for (const cell of this.cells) {
-        cell.output = undefined;
-        cell.error = undefined;
+      // Reset cells to original state and clear storage
+      for (let i = 0; i < this.cells.length; i++) {
+        const originalCell = this.challengeData.cells[i];
+        this.cells[i].code = originalCell.code;
+        this.cells[i].output = undefined;
+        this.cells[i].error = undefined;
+
+        // Clear saved code from storage
+        await storageService.deleteEditorCode(this.coursePath, this.challengeId, this.cells[i].id, this.language);
       }
 
       const runner = await codeRunnerRegistry.getOrInitializeRunner(this.runnerLanguage);
@@ -694,7 +731,7 @@ export default defineComponent({
 .cell-code-highlight {
   font-family: "Consolas", "Monaco", monospace;
   font-size: 14px;
-  line-height: 19px; /* Match Monaco line height */
+  line-height: 21px; /* Increased line height for better vertical spacing */
   padding: 0;
   margin: 0;
   color: #d4d4d4;
@@ -706,7 +743,7 @@ export default defineComponent({
 .cell-code-highlight :deep(.line-number) {
   display: inline-block;
   width: 50px;
-  padding-right: 10px;
+  padding-right: 16px; /* Increased horizontal spacing between line numbers and code */
   text-align: right;
   color: #858585;
   background: #1e1e1e;
@@ -930,10 +967,79 @@ export default defineComponent({
 /* Import highlight.js VS Code Dark+ theme */
 @import "highlight.js/styles/vs2015.css";
 
-/* Override to match Monaco more closely */
+/* Override to match Monaco VS Code Dark+ theme more closely */
 .notebook-cell .hljs {
   background: transparent;
   color: #d4d4d4;
   padding: 0;
+}
+
+/* Python/JavaScript function calls - match Monaco's light blue */
+.notebook-cell .hljs-built_in,
+.notebook-cell .hljs-title.function_ {
+  color: #dcdcaa; /* Yellow for functions like in Monaco */
+}
+
+/* Python function definitions */
+.notebook-cell .hljs-title.function {
+  color: #dcdcaa; /* Yellow for function definitions */
+}
+
+/* Keywords (def, class, import, return, etc.) - match Monaco's purple/blue */
+.notebook-cell .hljs-keyword {
+  color: #c586c0; /* Purple for keywords */
+}
+
+/* Strings - match Monaco's orange/brown */
+.notebook-cell .hljs-string {
+  color: #ce9178;
+}
+
+/* Numbers - match Monaco's light green */
+.notebook-cell .hljs-number {
+  color: #b5cea8;
+}
+
+/* Comments - match Monaco's green */
+.notebook-cell .hljs-comment {
+  color: #6a9955;
+  font-style: italic;
+}
+
+/* Variables and parameters */
+.notebook-cell .hljs-params,
+.notebook-cell .hljs-variable {
+  color: #9cdcfe; /* Light blue */
+}
+
+/* Class names */
+.notebook-cell .hljs-title.class_,
+.notebook-cell .hljs-class .hljs-title {
+  color: #4ec9b0; /* Cyan/teal for classes */
+}
+
+/* Operators */
+.notebook-cell .hljs-operator {
+  color: #d4d4d4;
+}
+
+/* Brackets - use different colors for bracket pairs like Monaco */
+.notebook-cell .hljs-punctuation {
+  color: #d4d4d4;
+}
+
+/* Decorators (@) */
+.notebook-cell .hljs-meta {
+  color: #c586c0;
+}
+
+/* Boolean values (True, False, None) */
+.notebook-cell .hljs-literal {
+  color: #569cd6; /* Blue for literals */
+}
+
+/* SQL specific */
+.notebook-cell .hljs-type {
+  color: #4ec9b0;
 }
 </style>

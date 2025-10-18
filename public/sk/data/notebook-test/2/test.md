@@ -50,8 +50,8 @@ else:
             results.append((True, "DataFrame columns", ""))
 
         # Check number of rows
-        if len(df) != 4:
-            results.append((False, "DataFrame rows", f"Should have 4 rows, got {len(df)}"))
+        if len(df) != 5:
+            results.append((False, "DataFrame rows", f"Should have 5 rows, got {len(df)}"))
         else:
             results.append((True, "DataFrame rows", ""))
 ```
@@ -69,15 +69,15 @@ else:
     if not isinstance(high_scorers, pd.DataFrame):
         results.append((False, "Filtered DataFrame type", "high_scorers should be a DataFrame"))
     else:
-        # Should have 3 people with score > 80: Alice (85), Bob (92), David (95)
+        # Should have 3 people with score > 40
         if len(high_scorers) != 3:
             results.append((False, "Filter result count", f"Should have 3 high scorers, got {len(high_scorers)}"))
         else:
             results.append((True, "Filter result count", ""))
 
-        # Check all scores are > 80
-        if not all(high_scorers['Score'] > 80):
-            results.append((False, "Filter condition", "All scores should be > 80"))
+        # Check all scores are > 40
+        if not all(high_scorers['Score'] > 40):
+            results.append((False, "Filter condition", "All scores should be > 40"))
         else:
             results.append((True, "Filter condition", ""))
 ```

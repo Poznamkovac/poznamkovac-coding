@@ -2,5 +2,6 @@
   "type": "notebook",
   "maxScore": 10,
   "language": "python",
-  "title": "Python Notebook - Data Science"
+  "title": "Python Notebook - Data Science",
+  "files": ["data.csv"]
 }

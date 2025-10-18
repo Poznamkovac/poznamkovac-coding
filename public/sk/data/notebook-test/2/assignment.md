@@ -10,7 +10,7 @@ First, let's import the necessary libraries:
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-print("Libraries imported successfully!")
+
 ```
 
 ## NumPy Arrays
@@ -23,8 +23,7 @@ arr = np.array([1, 2, 3, 4, 5])
 print(f"Array: {arr}")
 print(f"Mean: {arr.mean()}")
 
-# Use np.sum() instead of arr.sum() - Pyodide has issues with .sum() method
-total = np.sum(arr)
+total = arr.sum()
 print(f"Sum: {total}")
 arr
 ```
@@ -35,12 +34,7 @@ Work with tabular data using Pandas:
 
 ```
 # Create a DataFrame
-data = {
-    'Name': ['Alice', 'Bob', 'Charlie', 'David'],
-    'Age': [25, 30, 35, 28],
-    'Score': [85, 92, 78, 95]
-}
-df = pd.DataFrame(data)
+df = pd.read_csv('data.csv')
 print("DataFrame created:")
 df
 ```
@@ -48,9 +42,9 @@ df
 Try filtering the DataFrame:
 
 ```
-# Filter people with score > 80
-high_scorers = df[df['Score'] > 80]
-print("High scorers (Score > 80):")
+# Filter people with score > 40
+high_scorers = df[df['Score'] > 40]
+print("High scorers (Score > 40):")
 high_scorers
 ```
 

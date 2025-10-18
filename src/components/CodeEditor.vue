@@ -147,6 +147,11 @@ export default defineComponent({
         formatOnPaste: true,
         formatOnType: true,
         overviewRulerLanes: 0,
+        scrollbar: {
+          vertical: "hidden",
+          horizontal: "hidden",
+          handleMouseWheel: false, // Don't capture scroll events
+        },
       });
 
       if (modelChangeListener) {

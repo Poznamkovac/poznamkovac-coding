@@ -62,6 +62,7 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
           language: metadata.language || "python",
           cells,
           markdownSections,
+          files: metadata.files,
           imageUrl: metadata.imageUrl,
         };
       } else {

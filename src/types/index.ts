@@ -89,6 +89,7 @@ export interface NotebookChallengeData {
   language: "python" | "web" | "sqlite";
   cells: NotebookCell[];
   markdownSections: string[];
+  files?: string[]; // Optional array of filenames to load into virtual FS
   imageUrl?: string;
 }
 
