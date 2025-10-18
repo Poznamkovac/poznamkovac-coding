@@ -263,7 +263,7 @@ export default defineComponent({
         if (cell && !cell.hidden) {
           const element = document.getElementById(`cell-${cell.id}`);
           if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
           }
         }
       }
@@ -764,8 +764,8 @@ export default defineComponent({
           // Check if this cell should reveal the next one
           const hasTests = this.cellsWithTests.has(cell.id);
           const isSuccessful = hasTests
-            ? (!cell.error && cellTestsPassed(i)) // Cell with tests: check if tests passed
-            : (!cell.error && cell.output !== undefined); // Cell without tests: check if executed successfully
+            ? !cell.error && cellTestsPassed(i) // Cell with tests: check if tests passed
+            : !cell.error && cell.output !== undefined; // Cell without tests: check if executed successfully
 
           if (isSuccessful) {
             const nextNonHiddenIndex = this.findNextNonHiddenCellIndex(i);
@@ -928,97 +928,97 @@ export default defineComponent({
 
           <!-- Cell -->
           <div
-          :id="`cell-${cell.id}`"
-          class="notebook-cell"
-          :class="{
-            focused: focusedCellId === cell.id,
-            readonly: cell.readonly,
-            'has-output': cell.output || cell.error,
-            'reveal-animation': newlyRevealedCells.has(index),
-          }"
-          @click="handleCellClick(cell.id)"
-        >
-          <!-- Cell input -->
-          <div class="cell-input">
-            <div class="cell-prompt">In [{{ index + 1 }}]:</div>
-            <div class="cell-code" :style="{ height: getCellHeight(cell.code) }">
-              <!-- Read-only indicator -->
-              <div v-if="cell.readonly" class="readonly-indicator">{{ t("challenge.readonly") }}</div>
-              <!-- Monaco editor for focused cell -->
-              <CodeEditor
-                v-if="focusedCellId === cell.id"
-                :content="cell.code"
-                :filename="`${cell.id}.${runnerLanguage === 'python' ? 'py' : runnerLanguage === 'sqlite' ? 'sql' : 'html'}`"
-                :readonly="cell.readonly"
-                :challenge-key="`${coursePath}/${challengeId}/${cell.id}`"
-                @update:content="(newCode) => handleCellUpdate(cell.id, newCode)"
-                @blur="handleCellBlur"
-              />
-              <!-- Syntax highlighted code for unfocused cells -->
-              <pre v-else class="cell-code-highlight" v-html="getCodeWithLineNumbers(cell.code)" />
+            :id="`cell-${cell.id}`"
+            class="notebook-cell"
+            :class="{
+              focused: focusedCellId === cell.id,
+              readonly: cell.readonly,
+              'has-output': cell.output || cell.error,
+              'reveal-animation': newlyRevealedCells.has(index),
+            }"
+            @click="handleCellClick(cell.id)"
+          >
+            <!-- Cell input -->
+            <div class="cell-input">
+              <div class="cell-prompt">In [{{ index + 1 }}]:</div>
+              <div class="cell-code" :style="{ height: getCellHeight(cell.code) }">
+                <!-- Read-only indicator -->
+                <div v-if="cell.readonly" class="readonly-indicator">{{ t("challenge.readonly") }}</div>
+                <!-- Monaco editor for focused cell -->
+                <CodeEditor
+                  v-if="focusedCellId === cell.id"
+                  :content="cell.code"
+                  :filename="`${cell.id}.${runnerLanguage === 'python' ? 'py' : runnerLanguage === 'sqlite' ? 'sql' : 'html'}`"
+                  :readonly="cell.readonly"
+                  :challenge-key="`${coursePath}/${challengeId}/${cell.id}`"
+                  @update:content="(newCode) => handleCellUpdate(cell.id, newCode)"
+                  @blur="handleCellBlur"
+                />
+                <!-- Syntax highlighted code for unfocused cells -->
+                <pre v-else class="cell-code-highlight" v-html="getCodeWithLineNumbers(cell.code)" />
+              </div>
+              <div class="cell-actions">
+                <button
+                  v-if="!cell.readonly && cellsWithTests.has(cell.id)"
+                  :disabled="isRunningTests || isRunning"
+                  class="cell-test-btn"
+                  title="Test cell"
+                  @click.stop="runCellTests(cell.id)"
+                >
+                  ✓
+                </button>
+                <button :disabled="isRunning" class="cell-run-btn" title="Run cell" @click.stop="runCell(cell.id)">▶</button>
+              </div>
             </div>
-            <div class="cell-actions">
-              <button
-                v-if="!cell.readonly && cellsWithTests.has(cell.id)"
-                :disabled="isRunningTests || isRunning"
-                class="cell-test-btn"
-                title="Test cell"
-                @click.stop="runCellTests(cell.id)"
+
+            <!-- Cell output -->
+            <div v-if="cell.output || cell.error" class="cell-output">
+              <div class="cell-prompt">Out [{{ index + 1 }}]:</div>
+              <div class="cell-result">
+                <div v-if="cell.error" class="cell-error">
+                  <pre>{{ cell.error }}</pre>
+                </div>
+                <div v-else-if="cell.output" class="cell-output-content">
+                  <!-- Web cell output - simple iframe with cell's HTML -->
+                  <iframe
+                    v-if="runnerLanguage === 'web'"
+                    :key="cell.output"
+                    :srcdoc="getWebCellHTML(index)"
+                    class="web-cell-output-iframe"
+                  />
+                  <!-- HTML output (for dataframes/SQLite) -->
+                  <iframe
+                    v-else-if="cell.output.includes('<table')"
+                    :srcdoc="cell.output"
+                    sandbox="allow-scripts"
+                    class="cell-output-iframe"
+                  />
+                  <!-- Text output -->
+                  <pre v-else>{{ cell.output }}</pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Test Results for this cell -->
+            <div v-if="getCellTestResults(cell.id)" class="cell-test-results">
+              <div class="test-results-header">
+                <span class="test-icon">{{ getCellTestResults(cell.id).passed ? "✅" : "❌" }}</span>
+                <span>{{ t("challenge.cellTests") }}</span>
+              </div>
+              <div
+                v-for="(testCase, tcIndex) in getCellTestResults(cell.id).testCases"
+                :key="tcIndex"
+                class="test-case"
+                :class="{ passed: testCase.passed, failed: !testCase.passed }"
               >
-                ✓
-              </button>
-              <button :disabled="isRunning" class="cell-run-btn" title="Run cell" @click.stop="runCell(cell.id)">▶</button>
-            </div>
-          </div>
-
-          <!-- Cell output -->
-          <div v-if="cell.output || cell.error" class="cell-output">
-            <div class="cell-prompt">Out [{{ index + 1 }}]:</div>
-            <div class="cell-result">
-              <div v-if="cell.error" class="cell-error">
-                <pre>{{ cell.error }}</pre>
-              </div>
-              <div v-else-if="cell.output" class="cell-output-content">
-                <!-- Web cell output - simple iframe with cell's HTML -->
-                <iframe
-                  v-if="runnerLanguage === 'web'"
-                  :key="cell.output"
-                  :srcdoc="getWebCellHTML(index)"
-                  class="web-cell-output-iframe"
-                />
-                <!-- HTML output (for dataframes/SQLite) -->
-                <iframe
-                  v-else-if="cell.output.includes('<table')"
-                  :srcdoc="cell.output"
-                  sandbox="allow-scripts"
-                  class="cell-output-iframe"
-                />
-                <!-- Text output -->
-                <pre v-else>{{ cell.output }}</pre>
+                <span class="test-case-icon">{{ testCase.passed ? "✓" : "✗" }}</span>
+                <span class="test-case-name">{{ testCase.name }}</span>
+                <div v-if="testCase.error" class="test-case-error">
+                  {{ testCase.error }}
+                </div>
               </div>
             </div>
           </div>
-
-          <!-- Test Results for this cell -->
-          <div v-if="getCellTestResults(cell.id)" class="cell-test-results">
-            <div class="test-results-header">
-              <span class="test-icon">{{ getCellTestResults(cell.id).passed ? "✅" : "❌" }}</span>
-              <span>{{ t("challenge.cellTests") }}</span>
-            </div>
-            <div
-              v-for="(testCase, tcIndex) in getCellTestResults(cell.id).testCases"
-              :key="tcIndex"
-              class="test-case"
-              :class="{ passed: testCase.passed, failed: !testCase.passed }"
-            >
-              <span class="test-case-icon">{{ testCase.passed ? "✓" : "✗" }}</span>
-              <span class="test-case-name">{{ testCase.name }}</span>
-              <div v-if="testCase.error" class="test-case-error">
-                {{ testCase.error }}
-              </div>
-            </div>
-          </div>
-        </div>
 
           <!-- Matplotlib plot target - must exist even for unrevealed cells (for rendering during tests) -->
           <div v-if="runnerLanguage === 'python'" :id="`plot-target-${cell.id}`" class="plot-target" />

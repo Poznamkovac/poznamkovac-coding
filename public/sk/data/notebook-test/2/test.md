@@ -30,6 +30,7 @@ else:
 # cell 2 test not present
 
 ```python
+
 ```
 
 # Test for Cell 3 (Filter DataFrame)
