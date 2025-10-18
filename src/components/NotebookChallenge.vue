@@ -522,8 +522,9 @@ export default defineComponent({
               <!-- Syntax highlighted code for unfocused cells -->
               <pre v-else class="cell-code-highlight" v-html="getCodeWithLineNumbers(cell.code)" />
             </div>
-            <div v-if="!cell.readonly" class="cell-actions">
+            <div class="cell-actions">
               <button
+                v-if="!cell.readonly"
                 :disabled="isRunningTests || isRunning"
                 class="cell-test-btn"
                 title="Test cell"
