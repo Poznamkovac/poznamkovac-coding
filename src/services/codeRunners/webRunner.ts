@@ -14,8 +14,6 @@ export class WebRunner implements CodeRunner {
   private processHTML(html: string, files: Record<string, string>): string {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
-
-    // CSS link tags
     const linkTags = doc.querySelectorAll('link[rel="stylesheet"]');
     linkTags.forEach((linkTag) => {
       const href = linkTag.getAttribute("href");
@@ -54,7 +52,6 @@ export class WebRunner implements CodeRunner {
    * Check if a path is relative (not absolute URL)
    */
   private isRelativePath(path: string): boolean {
-    // Relative paths don't start with:
     // - http:// or https://
     // - //
     // - /

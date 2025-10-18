@@ -1,4 +1,5 @@
 import { storageService } from "./storage";
+import { fetchTextAsset } from "../utils/fetchAsset";
 import type { ChallengeFile } from "../types";
 export interface VirtualFile extends ChallengeFile {
   content: string;
@@ -51,8 +52,8 @@ export async function createVirtualFileSystem(
 
       if (!content && fileConfig) {
         try {
-          const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/files/${filename}`);
-          if (response.ok) content = await response.text();
+          const text = await fetchTextAsset(`/${language}/data/${coursePath}/${challengeId}/files/${filename}`);
+          if (text) content = text;
         } catch (error) {
           console.warn("error fetching file", filename, error);
         }
@@ -201,14 +202,13 @@ export async function createVirtualFileSystem(
         allFiles.map(async (fileConfig) => {
           let content = "";
           try {
-            let response = await fetch(`/${language}/data/${coursePath}/${challengeId}/files/${fileConfig.filename}`);
-
-            if (!response.ok) {
-              response = await fetch(`/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`);
+            let text = await fetchTextAsset(`/${language}/data/${coursePath}/${challengeId}/files/${fileConfig.filename}`);
+            if (!text) {
+              text = await fetchTextAsset(`/${language}/data/${coursePath}/${challengeId}/${fileConfig.filename}`);
             }
 
-            if (response.ok) {
-              content = await response.text();
+            if (text) {
+              content = text;
             }
           } catch {}
 
@@ -235,9 +235,10 @@ export async function createVirtualFileSystem(
 
         const loadPromises = allFiles.map(async (fileConfig) => {
           try {
-            const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/solution/${fileConfig.filename}`);
-            if (response.ok) {
-              const content = await response.text();
+            const content = await fetchTextAsset(
+              `/${language}/data/${coursePath}/${challengeId}/solution/${fileConfig.filename}`,
+            );
+            if (content) {
               solutionFiles.set(fileConfig.filename, content);
             }
           } catch {}

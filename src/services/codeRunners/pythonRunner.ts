@@ -42,26 +42,18 @@ export class PythonRunner implements CodeRunner {
     }
 
     try {
-      // Clear previous modules to ensure clean state (unless skipCleanup for notebooks)
       if (!options?.skipCleanup) {
         await this.cleanup();
       }
-
-      // Remove old matplotlib plots from DOM
       const oldPlots = document.querySelectorAll('body > div[style*="display: inline-block"]');
       oldPlots.forEach((plot) => {
-        // Check if this is actually a matplotlib plot by looking for canvas or toolbar
         if (plot.querySelector(".mpl-canvas, .mpl-toolbar")) {
           plot.remove();
         }
       });
-
-      // Write all files to Pyodide filesystem
       for (const [filename, content] of Object.entries(files)) {
         this.pyodide.FS.writeFile(filename, content);
       }
-
-      // Check for requirements.txt and install packages
       const requirements: string[] = [];
       if (files["requirements.txt"]) {
         const reqLines = files["requirements.txt"]
@@ -72,12 +64,9 @@ export class PythonRunner implements CodeRunner {
         requirements.push(...reqLines);
 
         if (requirements.length > 0) {
-          // Load packages specified in requirements.txt
           await this.pyodide.loadPackage(requirements);
         }
       }
-
-      // Capture stdout and stderr
       let stdout = "";
       let stderr = "";
 
@@ -92,8 +81,6 @@ export class PythonRunner implements CodeRunner {
           stderr += msg + "\n";
         },
       });
-
-      // Execute main file
       const mainContent = files[mainFile];
       if (!mainContent) {
         return {
@@ -101,11 +88,8 @@ export class PythonRunner implements CodeRunner {
           error: `Main file '${mainFile}' not found`,
         };
       }
-
-      // Suppress warnings if matplotlib is loaded
       const hasMatplotlib = requirements.includes("matplotlib");
       if (hasMatplotlib) {
-        // Set target container for plots if provided
         if (options?.plotTargetId) {
           const targetElement = document.getElementById(options.plotTargetId);
           if (targetElement) {
@@ -126,8 +110,6 @@ plt.rcParams['figure.figsize'] = [8, 5]
 plt.rcParams['figure.dpi'] = 100
         `);
       }
-
-      // Close all previous matplotlib figures before running (for notebooks with skipCleanup)
       if (hasMatplotlib && options?.skipCleanup) {
         await this.pyodide.runPythonAsync(`
 import matplotlib.pyplot as plt
@@ -135,7 +117,17 @@ plt.close('all')
         `);
       }
 
-      await this.pyodide.runPythonAsync(mainContent);
+      // execute code and capture last expression value
+      const result = await this.pyodide.runPythonAsync(mainContent);
+
+      // if there's a non-None result, add it to output
+      let output = stdout.trim();
+      if (result !== undefined && result !== null) {
+        const resultStr = String(result);
+        if (resultStr !== "None") {
+          output = output ? `${output}\n${resultStr}` : resultStr;
+        }
+      }
 
       // check if we need to execute tests
       let testCases;
@@ -153,7 +145,7 @@ plt.close('all')
 
       return {
         success: !stderr,
-        output: stdout.trim(),
+        output,
         error: stderr.trim() || undefined,
         testContext: { pyodide: this.pyodide },
         testCases,
@@ -221,7 +213,6 @@ for module_name in user_modules:
     }
 
     try {
-      // Inject context values into Python globals
       this.pyodide.globals.set(
         "context",
         this.pyodide.toPy({
@@ -230,8 +221,6 @@ for module_name in user_modules:
           stderr: context.stderr || "",
         }),
       );
-
-      // Wrap test code in a function that returns results
       const wrappedTestCode = `
 import sys
 from io import StringIO
@@ -248,8 +237,6 @@ results
       `;
 
       const results = this.pyodide.runPython(wrappedTestCode);
-
-      // Convert Python list to JS array of TestCaseResult
       const testCases: TestCaseResult[] = [];
       for (let i = 0; i < results.length; i++) {
         const [passed, name, error] = results[i];

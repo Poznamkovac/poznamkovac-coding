@@ -3,8 +3,6 @@
 ```javascript
 async function test(context) {
   const results = [];
-
-  // For web cells, we check the DOM context
   const dom = context.dom;
   if (!dom) {
     results.push({
@@ -14,8 +12,6 @@ async function test(context) {
     });
     return results;
   }
-
-  // Check if container div exists
   const container = dom.getElementById("container");
   if (!container) {
     results.push({
@@ -28,8 +24,6 @@ async function test(context) {
       name: "Container element",
       passed: true,
     });
-
-    // Check for h1
     const h1 = container.querySelector("h1");
     if (!h1 || h1.textContent !== "Hello Web!") {
       results.push({
@@ -43,8 +37,6 @@ async function test(context) {
         passed: true,
       });
     }
-
-    // Check for paragraph
     const p = container.querySelector("p");
     if (!p) {
       results.push({
@@ -70,8 +62,6 @@ async function test(context) {
 async function test(context) {
   const results = [];
   const dom = context.dom;
-
-  // Check if styled-box exists
   const styledBox = dom.getElementById("styled-box");
   if (!styledBox) {
     results.push({
@@ -86,8 +76,6 @@ async function test(context) {
     name: "Styled box element",
     passed: true,
   });
-
-  // Check if style element exists
   const styles = dom.querySelectorAll("style");
   if (styles.length === 0) {
     results.push({
@@ -112,8 +100,6 @@ async function test(context) {
 async function test(context) {
   const results = [];
   const dom = context.dom;
-
-  // Check if button exists
   const button = dom.getElementById("myButton");
   if (!button) {
     results.push({
@@ -127,8 +113,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check if output div exists
   const output = dom.getElementById("output");
   if (!output) {
     results.push({
@@ -142,8 +126,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check if handleClick function exists
   if (typeof context.window.handleClick !== "function") {
     results.push({
       name: "handleClick function",
@@ -167,8 +149,6 @@ async function test(context) {
 async function test(context) {
   const results = [];
   const dom = context.dom;
-
-  // Check if stats ul exists
   const stats = dom.getElementById("stats");
   if (!stats) {
     results.push({
@@ -182,8 +162,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check if totalClicks span exists
   const totalClicks = dom.getElementById("totalClicks");
   if (!totalClicks) {
     results.push({
@@ -197,8 +175,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check if clickCount variable is accessible
   if (typeof context.window.clickCount === "undefined") {
     results.push({
       name: "Shared clickCount variable",

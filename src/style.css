@@ -122,4 +122,93 @@ code {
   .markdown-content em {
     @apply italic;
   }
+
+  /* Markdown sections in notebooks - reuse markdown-content styles */
+  .markdown-section h1 {
+    @apply text-3xl font-bold text-white mb-4 mt-6;
+  }
+
+  .markdown-section h2 {
+    @apply text-2xl font-semibold text-white mb-3 mt-5;
+  }
+
+  .markdown-section h3 {
+    @apply text-xl font-semibold text-white mb-2 mt-4;
+  }
+
+  .markdown-section h4 {
+    @apply text-lg font-semibold text-white mb-2 mt-3;
+  }
+
+  .markdown-section p {
+    @apply mb-4 text-gray-300;
+  }
+
+  .markdown-section a {
+    @apply text-blue-400 hover:text-blue-300 underline transition-colors;
+  }
+
+  .markdown-section ul {
+    @apply list-disc list-inside mb-4 text-gray-300;
+  }
+
+  .markdown-section ol {
+    @apply list-decimal list-inside mb-4 text-gray-300;
+  }
+
+  .markdown-section li {
+    @apply mb-1;
+  }
+
+  .markdown-section pre {
+    @apply bg-[#1a1a1a] border border-gray-700 rounded p-4 mb-4 overflow-x-auto;
+  }
+
+  .markdown-section pre code {
+    @apply bg-transparent border-0 p-0;
+  }
+
+  .markdown-section code {
+    @apply font-mono bg-[#1a1a1a] text-gray-300 px-2 py-1 rounded border border-gray-700;
+  }
+
+  .markdown-section blockquote {
+    @apply border-l-4 border-gray-600 pl-4 italic text-gray-400 mb-4;
+  }
+
+  .markdown-section table {
+    @apply w-full border-collapse mb-4 text-left;
+  }
+
+  .markdown-section thead {
+    @apply bg-[#1a1a1a] border-b-2 border-gray-700;
+  }
+
+  .markdown-section th {
+    @apply px-4 py-2 font-semibold text-white;
+  }
+
+  .markdown-section td {
+    @apply px-4 py-2 border-b border-gray-800 text-gray-300;
+  }
+
+  .markdown-section tbody tr:hover {
+    @apply bg-[#1a1a1a]/50;
+  }
+
+  .markdown-section hr {
+    @apply border-0 border-t border-gray-700 my-6;
+  }
+
+  .markdown-section img {
+    @apply max-w-full h-auto rounded border border-gray-700 mb-4;
+  }
+
+  .markdown-section strong {
+    @apply font-bold text-white;
+  }
+
+  .markdown-section em {
+    @apply italic;
+  }
 }

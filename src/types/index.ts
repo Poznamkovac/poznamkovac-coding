@@ -88,7 +88,7 @@ export interface NotebookChallengeData {
   maxScore: number;
   language: "python" | "web" | "sqlite";
   cells: NotebookCell[];
-  markdownSections: string[]; // Rendered markdown sections between/around cells
+  markdownSections: string[];
   imageUrl?: string;
 }
 

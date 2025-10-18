@@ -2,10 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="app-entry" content="true" />
     <title>Redirecting...</title>
     <script>
-      // GitHub Pages SPA redirect
-      // Encode the path in a URL parameter
       const path = location.pathname + location.search + location.hash;
       location.replace(location.origin + "/index.html?redirect=" + encodeURIComponent(path));
     </script>

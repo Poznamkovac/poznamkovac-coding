@@ -146,7 +146,7 @@ export default defineComponent({
         autoClosingQuotes: "always",
         formatOnPaste: true,
         formatOnType: true,
-        overviewRulerLanes: 0, // Hide the overview ruler on the right
+        overviewRulerLanes: 0,
       });
 
       if (modelChangeListener) {

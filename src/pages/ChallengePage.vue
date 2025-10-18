@@ -163,8 +163,8 @@ export default defineComponent({
             :class="{ 'bg-green-600 hover:bg-green-600': embedCopied }"
             @click="copyEmbedCode"
           >
-            <span v-if="embedCopied">✓ Skopírované!</span>
-            <span v-else>📋 Kopírovať embed kód</span>
+            <span v-if="embedCopied">✓ {{ t("challenge.embedCopied") }}</span>
+            <span v-else>📋 {{ t("challenge.copyEmbedCode") }}</span>
           </button>
         </div>
 

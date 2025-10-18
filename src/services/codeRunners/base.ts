@@ -9,13 +9,13 @@ export interface ExecutionResult {
   output?: string;
   error?: string;
   htmlContent?: string;
-  testContext?: any; // Context object for test execution (e.g., pyodide instance, database, DOM)
-  testCases?: TestCaseResult[]; // Test case results if test.js was executed
+  testContext?: any;
+  testCases?: TestCaseResult[];
 }
 
 export interface ExecutionOptions {
-  skipCleanup?: boolean; // For notebooks to preserve environment between cells
-  plotTargetId?: string; // ID of DOM element where matplotlib plots should be rendered
+  skipCleanup?: boolean;
+  plotTargetId?: string;
 }
 
 export interface CodeRunner {

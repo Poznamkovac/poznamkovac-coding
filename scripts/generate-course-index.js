@@ -32,8 +32,6 @@ function scanChallenges(dir) {
       const challengeDir = path.join(dir, entry.name);
       const metadataPath = path.join(challengeDir, "metadata.json");
       const assignmentMdPath = path.join(challengeDir, "assignment.md");
-
-      // Require both metadata.json and assignment.md
       if (!fs.existsSync(metadataPath) || !fs.existsSync(assignmentMdPath)) {
         console.warn(`Warning: Challenge ${entry.name} is missing metadata.json or assignment.md`);
         continue;
@@ -41,8 +39,6 @@ function scanChallenges(dir) {
 
       try {
         const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf-8"));
-
-        // Extract title from assignment.md (first h1 line)
         const assignmentContent = fs.readFileSync(assignmentMdPath, "utf-8");
         const firstLine = assignmentContent.split("\n")[0];
         let title = `Challenge ${entry.name}`;
@@ -63,8 +59,6 @@ function scanChallenges(dir) {
       }
     }
   }
-
-  // Sort by numeric ID
   challenges.sort((a, b) => parseInt(a.id) - parseInt(b.id));
   return challenges;
 }
@@ -77,10 +71,7 @@ function scanChallenges(dir) {
  */
 function scanDirectory(dir, relativePath = "") {
   const courseJsonPath = path.join(dir, "course.json");
-
-  // Check if this directory contains challenges
   if (hasChallenges(dir)) {
-    // This is a course with challenges
     let courseData = {};
     if (fs.existsSync(courseJsonPath)) {
       try {
@@ -108,8 +99,6 @@ function scanDirectory(dir, relativePath = "") {
       subcourses: [],
     };
   }
-
-  // Otherwise, scan subdirectories for subcourses
   const subcourses = [];
   const entries = fs.readdirSync(dir, { withFileTypes: true });
 
@@ -124,8 +113,6 @@ function scanDirectory(dir, relativePath = "") {
       }
     }
   }
-
-  // If we found subcourses, return a category
   if (subcourses.length > 0) {
     const totalChallenges = subcourses.reduce((sum, course) => {
       return sum + course.challengeCount + (course.subcourses?.reduce((s, c) => s + c.challengeCount, 0) || 0);
@@ -165,8 +152,6 @@ function scanDirectory(dir, relativePath = "") {
  */
 function generateCourseIndex() {
   const index = {};
-
-  // Scan each language directory
   const languages = ["sk", "en"];
 
   for (const lang of languages) {
@@ -193,8 +178,6 @@ function generateCourseIndex() {
 
     index[lang] = courses;
   }
-
-  // Write the index file
   fs.writeFileSync(outputFile, JSON.stringify(index, null, 2));
   console.log(`✓ Generated course index at ${outputFile}`);
   console.log(`  Found ${Object.keys(index).length} languages`);

@@ -5,6 +5,7 @@ import DefaultLayout from "../layouts/DefaultLayout.vue";
 import CourseCard from "../components/CourseCard.vue";
 import { hashStringToColor } from "../utils";
 import { useLanguage } from "../composables/useLanguage";
+import { fetchJsonAsset } from "../utils/fetchAsset";
 import type { Course } from "../types";
 
 export default defineComponent({
@@ -46,12 +47,11 @@ export default defineComponent({
     async loadCourses() {
       this.isLoading = true;
       try {
-        const response = await fetch("/index.json");
-        if (!response.ok) {
+        const courseIndex = await fetchJsonAsset("/index.json");
+        if (!courseIndex) {
           throw new Error("Failed to load course index");
         }
 
-        const courseIndex = await response.json();
         const lang = this.language === "auto" ? "sk" : this.language;
         const coursesData = courseIndex[lang] || [];
 

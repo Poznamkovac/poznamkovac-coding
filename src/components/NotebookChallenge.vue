@@ -6,6 +6,7 @@ import { highlightCode } from "../utils/syntaxHighlight";
 import { codeRunnerRegistry } from "../services/codeRunners";
 import { storageService } from "../services/storage";
 import { useDebouncedSave } from "../composables/useDebouncedSave";
+import { fetchTextAsset } from "../utils/fetchAsset";
 import type { NotebookChallengeData, NotebookCell } from "../types";
 
 export default defineComponent({
@@ -80,17 +81,9 @@ export default defineComponent({
       try {
         const lang = this.language === "auto" ? "sk" : this.language;
         const requirementsPath = `/${lang}/data/${this.coursePath}/${this.challengeId}/requirements.txt`;
-        const response = await fetch(requirementsPath);
+        const text = await fetchTextAsset(requirementsPath, "text/plain");
 
-        if (!response.ok) return;
-
-        const contentType = response.headers.get("content-type");
-        if (contentType?.includes("text/html")) return;
-
-        const text = await response.text();
-        const isHtml = text.trim().toLowerCase().startsWith("<!doctype html>") || text.trim().toLowerCase().startsWith("<html");
-
-        if (!isHtml) {
+        if (text) {
           this.requirementsTxt = text;
         }
       } catch {}
@@ -160,7 +153,8 @@ export default defineComponent({
 
     getCellHeight(code: string): string {
       const lineCount = code.split("\n").length;
-      return `${Math.max(60, lineCount * 19)}px`;
+      // add extra height to prevent scrollbar when Monaco editor is focused
+      return `${Math.max(60, lineCount * 19 + 10)}px`;
     },
 
     async runCell(cellId: string) {
@@ -184,8 +178,6 @@ export default defineComponent({
         if (!runner) {
           throw new Error(`No runner available for ${this.runnerLanguage}`);
         }
-
-        // Execute mustExecute cells first if not yet executed
         if (!this.hasExecutedMustExecute) {
           const mustExecuteCells = this.cells.filter((c) => c.mustExecute);
           for (const cell of mustExecuteCells) {
@@ -193,8 +185,6 @@ export default defineComponent({
           }
           this.hasExecutedMustExecute = true;
         }
-
-        // Execute requested cells
         for (const cellId of cellIds) {
           const cell = this.cells.find((c) => c.id === cellId);
           if (cell && !cell.mustExecute) {
@@ -316,11 +306,25 @@ export default defineComponent({
           const result = await runner.execute(files, "main.sql", undefined, { skipCleanup: true });
           return result.testContext || {};
         } else {
+          // collect stdout from all executed cells for Python
+          let combinedStdout = "";
+          let combinedStderr = "";
+
+          for (let i = 0; i <= cellIndex; i++) {
+            const cell = this.cells[i];
+            if (cell.output) {
+              combinedStdout += cell.output + "\n";
+            }
+            if (cell.error) {
+              combinedStderr += cell.error + "\n";
+            }
+          }
+
           return {
             language: "python",
             pyodide: (runner as any).pyodide,
-            stdout: "",
-            stderr: "",
+            stdout: combinedStdout.trim(),
+            stderr: combinedStderr.trim(),
           };
         }
       };
@@ -348,6 +352,9 @@ export default defineComponent({
 
         this.testResults = results;
         this.$emit("score-update", results.score);
+        if (results.passed && results.score > 0) {
+          await storageService.setChallengeScore(this.coursePath, this.challengeId, results.score, this.language as "sk" | "en");
+        }
       } catch (error: any) {
         console.error("Test execution error:", error);
         alert(`Test error: ${error.message}`);
@@ -372,8 +379,6 @@ export default defineComponent({
       try {
         const { runNotebookTests } = await import("../services/testRunner");
         const executeCellsUpTo = await this.createExecuteCellsUpToFunction();
-
-        // Pass all cells and specify which cell to test
         const results = await runNotebookTests(
           this.cells,
           this.runnerLanguage,
@@ -384,8 +389,6 @@ export default defineComponent({
           executeCellsUpTo,
           cellIndex,
         );
-
-        // Update test results for this specific cell
         if (!this.testResults) {
           this.testResults = {
             score: 0,
@@ -425,11 +428,11 @@ export default defineComponent({
     <div class="actions-bar">
       <button :disabled="isRunning || isRunningAll" class="btn btn-primary" @click="runAllCells">
         <span class="btn-icon">{{ isRunning || isRunningAll ? "⏳" : "▶️" }}</span>
-        {{ isRunning || isRunningAll ? t("challenge.running") : "Run All Cells" }}
+        {{ isRunning || isRunningAll ? t("challenge.running") : t("challenge.runAllCells") }}
       </button>
       <button :disabled="isRunningTests || isRunning" class="btn btn-success" @click="runTests">
         <span class="btn-icon">{{ isRunningTests ? "⏳" : "✓" }}</span>
-        {{ isRunningTests ? "Running Tests..." : "Run Tests" }}
+        {{ isRunningTests ? t("challenge.runningTests") : t("challenge.runTests") }}
       </button>
       <button class="btn btn-secondary" @click="resetEnvironment">
         <span class="btn-icon">↻</span>
@@ -442,9 +445,9 @@ export default defineComponent({
       <div class="test-summary-header">
         <span class="test-icon">{{ testResults.passed ? "✅" : "❌" }}</span>
         <span class="test-summary-text">
-          {{ testResults.passed ? "All tests passed!" : "Some tests failed" }}
+          {{ testResults.passed ? t("challenge.allTestsPassed") : t("challenge.someTestsFailed") }}
         </span>
-        <span class="test-score">Score: {{ testResults.score }} / {{ testResults.maxScore }}</span>
+        <span class="test-score">{{ t("challenge.score") }}: {{ testResults.score }} / {{ testResults.maxScore }}</span>
       </div>
     </div>
 
@@ -467,6 +470,8 @@ export default defineComponent({
           <div class="cell-input">
             <div class="cell-prompt">In [{{ index + 1 }}]:</div>
             <div class="cell-code" :style="{ height: getCellHeight(cell.code) }">
+              <!-- Read-only indicator -->
+              <div v-if="cell.readonly" class="readonly-indicator">{{ t("challenge.readonly") }}</div>
               <!-- Monaco editor for focused cell -->
               <CodeEditor
                 v-if="focusedCellId === cell.id"
@@ -481,7 +486,6 @@ export default defineComponent({
               <pre v-else class="cell-code-highlight" v-html="getCodeWithLineNumbers(cell.code)" />
             </div>
             <div v-if="!cell.readonly" class="cell-actions">
-              <button :disabled="isRunning" class="cell-run-btn" title="Run cell" @click.stop="runCell(cell.id)">▶</button>
               <button
                 :disabled="isRunningTests || isRunning"
                 class="cell-test-btn"
@@ -490,6 +494,7 @@ export default defineComponent({
               >
                 ✓
               </button>
+              <button :disabled="isRunning" class="cell-run-btn" title="Run cell" @click.stop="runCell(cell.id)">▶</button>
             </div>
           </div>
 
@@ -528,7 +533,7 @@ export default defineComponent({
           <div v-if="getCellTestResults(cell.id)" class="cell-test-results">
             <div class="test-results-header">
               <span class="test-icon">{{ getCellTestResults(cell.id).passed ? "✅" : "❌" }}</span>
-              <span>Cell Tests</span>
+              <span>{{ t("challenge.cellTests") }}</span>
             </div>
             <div
               v-for="(testCase, tcIndex) in getCellTestResults(cell.id).testCases"
@@ -668,7 +673,22 @@ export default defineComponent({
 .cell-code {
   flex: 1;
   position: relative;
-  /* Height is set dynamically via inline style */
+  /* height is set dynamically via inline style */
+}
+
+.readonly-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(156, 163, 175, 0.3);
+  color: #9ca3af;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  z-index: 10;
+  pointer-events: none;
+  user-select: none;
 }
 
 .cell-code-highlight {

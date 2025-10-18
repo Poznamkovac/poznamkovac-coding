@@ -15,8 +15,6 @@ async function test(context) {
   }
 
   const result = sqlite.results[0];
-
-  // Check if we got columns
   if (!result.columns || result.columns.length === 0) {
     results.push({
       name: "Query columns",
@@ -25,8 +23,6 @@ async function test(context) {
     });
     return results;
   }
-
-  // Check for expected columns (should have all columns from students table)
   const expectedColumns = ["id", "name", "age", "grade", "major"];
   const hasAllColumns = expectedColumns.every((col) => result.columns.includes(col));
 
@@ -42,8 +38,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check number of rows (should be 5 students)
   if (result.rows.length !== 5) {
     results.push({
       name: "Row count",
@@ -78,8 +72,6 @@ async function test(context) {
   }
 
   const result = sqlite.results[0];
-
-  // Check columns
   const expectedColumns = ["name", "grade", "major"];
   if (JSON.stringify(result.columns) !== JSON.stringify(expectedColumns)) {
     results.push({
@@ -93,8 +85,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check number of rows (should be 2: Charlie 3.9, Alice 3.8)
   if (result.rows.length !== 2) {
     results.push({
       name: "Filtered row count",
@@ -107,8 +97,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check if all grades are > 3.7
   const gradeIndex = result.columns.indexOf("grade");
   const allAbove37 = result.rows.every((row) => row[gradeIndex] > 3.7);
 
@@ -124,8 +112,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check ordering (should be DESC by grade)
   if (result.rows.length >= 2) {
     const grades = result.rows.map((row) => row[gradeIndex]);
     const isSorted = grades.every((grade, i) => i === 0 || grades[i - 1] >= grade);
@@ -165,8 +151,6 @@ async function test(context) {
   }
 
   const result = sqlite.results[0];
-
-  // Check columns
   const expectedColumns = ["major", "student_count", "avg_grade"];
   if (JSON.stringify(result.columns) !== JSON.stringify(expectedColumns)) {
     results.push({
@@ -180,8 +164,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check number of groups (should be 3: CS, Math, Physics)
   if (result.rows.length !== 3) {
     results.push({
       name: "GROUP BY result count",
@@ -194,12 +176,8 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check if COUNT is used correctly
   const countIndex = result.columns.indexOf("student_count");
   const majorIndex = result.columns.indexOf("major");
-
-  // Computer Science and Mathematics should have 2 students each
   const csRow = result.rows.find((row) => row[majorIndex] === "Computer Science");
   const mathRow = result.rows.find((row) => row[majorIndex] === "Mathematics");
 
@@ -237,8 +215,6 @@ async function test(context) {
   }
 
   const result = sqlite.results[0];
-
-  // Check columns
   const expectedColumns = ["name", "age", "grade"];
   if (JSON.stringify(result.columns) !== JSON.stringify(expectedColumns)) {
     results.push({
@@ -252,8 +228,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Should return 2 students: Alice (3.8) and Diana (3.7) - but Diana has 3.7 which is >= 3.7
   if (result.rows.length !== 2) {
     results.push({
       name: "Filtered row count",
@@ -266,8 +240,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check if grades are >= 3.7
   const gradeIndex = result.columns.indexOf("grade");
   const allAbove37 = result.rows.every((row) => row[gradeIndex] >= 3.7);
 
@@ -305,8 +277,6 @@ async function test(context) {
   }
 
   const result = sqlite.results[0];
-
-  // Check columns
   const expectedColumns = ["total_students", "average_age", "average_grade", "lowest_grade", "highest_grade"];
   if (JSON.stringify(result.columns) !== JSON.stringify(expectedColumns)) {
     results.push({
@@ -320,8 +290,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Should return 1 row with statistics
   if (result.rows.length !== 1) {
     results.push({
       name: "Result row count",
@@ -335,8 +303,6 @@ async function test(context) {
   const totalIndex = result.columns.indexOf("total_students");
   const minIndex = result.columns.indexOf("lowest_grade");
   const maxIndex = result.columns.indexOf("highest_grade");
-
-  // Check total students
   if (stats[totalIndex] !== 5) {
     results.push({
       name: "COUNT(*) - total students",
@@ -349,8 +315,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Check MIN and MAX
   if (stats[minIndex] !== 3.5) {
     results.push({
       name: "MIN(grade)",

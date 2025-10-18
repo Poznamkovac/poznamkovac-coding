@@ -32,8 +32,6 @@ async function test(context) {
   ];
 
   const testCases = [];
-
-  // Test 1: Check columns
   if (JSON.stringify(result.columns) !== JSON.stringify(expectedColumns)) {
     testCases.push({
       name: "Kontrola stĺpcov",
@@ -46,8 +44,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Test 2: Check number of rows
   if (result.rows.length !== expectedRows.length) {
     testCases.push({
       name: "Kontrola počtu riadkov",
@@ -61,8 +57,6 @@ async function test(context) {
       passed: true,
     });
   }
-
-  // Test 3: Check row values and order
   let orderCorrect = true;
   for (let i = 0; i < expectedRows.length; i++) {
     const expected = expectedRows[i];
@@ -70,7 +64,6 @@ async function test(context) {
 
     if (JSON.stringify(actual) !== JSON.stringify(expected)) {
       orderCorrect = false;
-      // Check if it's just an ordering issue
       const actualSorted = [...result.rows].sort((a, b) => b[2] - a[2]);
       if (JSON.stringify(actualSorted) === JSON.stringify(expectedRows)) {
         testCases.push({

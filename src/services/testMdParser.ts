@@ -1,3 +1,5 @@
+import { fetchTextAsset } from "../utils/fetchAsset";
+
 export interface CellTest {
   cellIndex: number;
   testCode: string;
@@ -35,14 +37,5 @@ export function parseTestMd(testMdContent: string, editableCellIndices: number[]
 }
 
 export async function fetchTestMd(coursePath: string, challengeId: string, language: string): Promise<string | null> {
-  try {
-    const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/test.md`);
-    const contentType = response.headers.get("content-type");
-    const isMarkdown = contentType?.includes("markdown") || contentType?.includes("text/plain");
-
-    if (response.ok && isMarkdown) {
-      return await response.text();
-    }
-  } catch {}
-  return null;
+  return await fetchTextAsset(`/${language}/data/${coursePath}/${challengeId}/test.md`);
 }

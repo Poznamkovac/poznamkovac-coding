@@ -8,6 +8,7 @@ import { titleCase, hashStringToColor } from "../utils";
 import { getPathSegments } from "../utils/route";
 import { useLanguage } from "../composables/useLanguage";
 import { useBreadcrumbs } from "../composables/useBreadcrumbs";
+import { fetchJsonAsset } from "../utils/fetchAsset";
 import type { Course, Challenge } from "../types";
 import { storageService } from "../services/storage";
 
@@ -75,32 +76,24 @@ export default defineComponent({
       try {
         this.subcourses = [];
         this.challenges = [];
-
-        // Load from index.json for better performance
-        const response = await fetch("/index.json");
-        if (!response.ok) {
+        const courseIndex = await fetchJsonAsset("/index.json");
+        if (!courseIndex) {
           throw new Error("Failed to load course index");
         }
 
-        const courseIndex = await response.json();
         const lang = this.language === "auto" ? "sk" : this.language;
         const courses = courseIndex[lang] || [];
-
-        // Find the course by path
         const course = this.findCourseByPath(courses, this.coursePath);
 
         if (course) {
-          // Load subcourses if any
           if (course.subcourses && course.subcourses.length > 0) {
             this.subcourses = course.subcourses.map((sub: any) => ({
-              slug: sub.path, // Use full path instead of just slug
+              slug: sub.path,
               title: sub.title,
               color: hashStringToColor(sub.slug),
               challengeCount: sub.challengeCount,
             }));
           }
-
-          // Load challenges if any
           if (course.challenges && course.challenges.length > 0) {
             this.challenges = await Promise.all(
               course.challenges.map(async (challenge: any) => {
@@ -129,8 +122,6 @@ export default defineComponent({
         if (course.path === targetPath) {
           return course;
         }
-
-        // Check subcourses recursively
         if (course.subcourses && course.subcourses.length > 0) {
           const found = this.findCourseByPath(course.subcourses, targetPath);
           if (found) return found;

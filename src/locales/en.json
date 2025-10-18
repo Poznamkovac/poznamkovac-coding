@@ -43,7 +43,16 @@
     "noTestFile": "No test file found in challenge",
     "showSolution": "Show Solution",
     "solutionConfirm": "This will overwrite your current files with the reference solution. Do you want to continue?",
-    "solutionNotAvailable": "Solution is not available for this challenge."
+    "solutionNotAvailable": "Solution is not available for this challenge.",
+    "readonly": "Read-only",
+    "runAllCells": "Run All Cells",
+    "runTests": "Run Tests",
+    "runningTests": "Running Tests...",
+    "allTestsPassed": "All tests passed!",
+    "someTestsFailed": "Some tests failed",
+    "cellTests": "Cell Tests",
+    "embedCopied": "Copied!",
+    "copyEmbedCode": "Copy embed code"
   },
   "common": {
     "loading": "Loading...",

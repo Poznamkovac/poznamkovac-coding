@@ -83,12 +83,7 @@ Create a dynamic list that uses the shared clickCount variable:
   </ul>
 </div>
 
-<script>
-  // Update the stats using the shared clickCount variable
-  document.getElementById('totalClicks').textContent = clickCount;
-
-  // Set up an interval to update every second
-  setInterval(() => {
+<script>  document.getElementById('totalClicks').textContent = clickCount;  setInterval(() => {
     document.getElementById('totalClicks').textContent = clickCount;
   }, 100);
 </script>

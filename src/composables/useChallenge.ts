@@ -2,6 +2,7 @@ import { ref, Ref, ComputedRef } from "vue";
 import { marked } from "marked";
 import type { ChallengeData, LanguageCode } from "../types";
 import { parseNotebookMarkdown } from "../utils/notebookParser";
+import { fetchJsonAsset, fetchTextAsset } from "../utils/fetchAsset";
 
 export interface UseChallengeOptions {
   coursePath: Ref<string> | ComputedRef<string>;
@@ -37,20 +38,18 @@ export function useChallenge(options: UseChallengeOptions): UseChallengeReturn {
       const lang = language.value === "auto" ? "sk" : language.value;
       const basePath = `/${lang}/data/${coursePath.value}/${challengeId.value}`;
 
-      const [metadataResponse, assignmentMdResponse] = await Promise.all([
-        fetch(`${basePath}/metadata.json`),
-        fetch(`${basePath}/assignment.md`),
+      const [metadata, assignmentMarkdown] = await Promise.all([
+        fetchJsonAsset(`${basePath}/metadata.json`),
+        fetchTextAsset(`${basePath}/assignment.md`),
       ]);
 
-      if (!metadataResponse.ok || !metadataResponse.headers.get("content-type")?.includes("application/json")) {
+      if (!metadata) {
         throw new Error("Challenge not found");
       }
 
-      if (!assignmentMdResponse.ok) {
+      if (!assignmentMarkdown) {
         throw new Error("Assignment content not found");
       }
-
-      const [metadata, assignmentMarkdown] = await Promise.all([metadataResponse.json(), assignmentMdResponse.text()]);
 
       if (metadata.type === "notebook") {
         const { cells, markdownSections } = await parseNotebookMarkdown(assignmentMarkdown);

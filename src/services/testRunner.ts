@@ -1,6 +1,7 @@
 import { codeRunnerRegistry, type ExecutionResult, type TestCaseResult } from "./codeRunners";
 import type { NotebookCell } from "../types";
 import { parseTestMd, fetchTestMd } from "./testMdParser";
+import { fetchTextAsset } from "../utils/fetchAsset";
 
 export interface TestResult {
   score: number;
@@ -13,25 +14,11 @@ export interface TestResult {
 }
 
 export async function fetchTestJS(coursePath: string, challengeId: string, language: string): Promise<string | null> {
-  const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/test.js`);
-  const contentType = response.headers.get("content-type");
-  const isJavaScript = contentType?.includes("javascript") || contentType?.includes("text/plain");
-
-  return response.ok && isJavaScript ? await response.text() : null;
+  return await fetchTextAsset(`/${language}/data/${coursePath}/${challengeId}/test.js`);
 }
 
 export async function fetchTestPy(coursePath: string, challengeId: string, language: string): Promise<string | null> {
-  const response = await fetch(`/${language}/data/${coursePath}/${challengeId}/test.py`);
-  const contentType = response.headers.get("content-type");
-
-  if (!response.ok || contentType?.includes("text/html")) {
-    return null;
-  }
-
-  const text = await response.text();
-  const isHtml = text.trim().toLowerCase().startsWith("<!doctype html>") || text.trim().toLowerCase().startsWith("<html");
-
-  return isHtml ? null : text;
+  return await fetchTextAsset(`/${language}/data/${coursePath}/${challengeId}/test.py`);
 }
 
 const createErrorResult = (maxScore: number, error: string): TestResult => ({
@@ -130,7 +117,6 @@ export async function executeTestJS(testJSCode: string, context: any): Promise<T
 
 export async function executeTest(testCode: string, testLanguage: string, context: any): Promise<TestCaseResult[]> {
   if (testLanguage === "python") {
-    // Execute Python test
     if (!context.pyodide) {
       return [
         {
@@ -143,10 +129,9 @@ export async function executeTest(testCode: string, testLanguage: string, contex
 
     const { PythonRunner } = await import("./codeRunners/pythonRunner");
     const runner = new PythonRunner();
-    runner["pyodide"] = context.pyodide; // Access private field for test execution
+    runner["pyodide"] = context.pyodide;
     return await runner.executePythonTest(testCode, context);
   } else {
-    // Execute JavaScript test
     return await executeTestJS(testCode, context);
   }
 }
@@ -188,7 +173,6 @@ export async function runNotebookTests(
   specificCellIndex?: number,
 ): Promise<NotebookTestResult> {
   try {
-    // Fetch test.md file
     const testMdContent = await fetchTestMd(coursePath, challengeId, uiLanguage);
     if (!testMdContent) {
       return {
@@ -211,13 +195,9 @@ export async function runNotebookTests(
         ],
       };
     }
-
-    // Get indices of editable cells only
     const editableCellIndices = cells
       .map((cell, index) => (!cell.readonly && !cell.hidden ? index : -1))
       .filter((index) => index !== -1);
-
-    // Parse test.md to get test code for each editable cell
     const cellTests = parseTestMd(testMdContent, editableCellIndices, language);
 
     if (cellTests.length === 0) {
@@ -241,22 +221,14 @@ export async function runNotebookTests(
         ],
       };
     }
-
-    // Run tests for each cell
     const cellResults: NotebookCellTestResult[] = [];
     let totalPassed = 0;
-
-    // Filter tests to only run for specific cell if specified
     const testsToRun =
       specificCellIndex !== undefined ? cellTests.filter((test) => test.cellIndex === specificCellIndex) : cellTests;
 
     for (const cellTest of testsToRun) {
       const cell = cells[cellTest.cellIndex];
-
-      // Execute all cells up to and including this cell
       const context = await executeCellsUpTo(cellTest.cellIndex);
-
-      // Execute the test for this cell
       const testCases = await executeTest(cellTest.testCode, cellTest.language, context);
 
       const allTestsPassed = testCases.every((tc) => tc.passed);
@@ -272,8 +244,6 @@ export async function runNotebookTests(
         totalPassed++;
       }
     }
-
-    // Calculate score (equal weight for each tested cell)
     const scorePerCell = maxScore / cellTests.length;
     const score = Math.round(totalPassed * scorePerCell);
     const allPassed = totalPassed === cellTests.length;

@@ -186,11 +186,9 @@ export class SQLiteRunner implements CodeRunner {
     }
 
     try {
-      // For notebooks, reuse the database; for code challenges, create fresh database
       const isNotebook = _options?.skipCleanup === true;
 
       if (!isNotebook && this.db) {
-        // Clean up existing database for code challenges
         this.db.close();
         this.db = null;
       }
@@ -304,8 +302,6 @@ export class SQLiteRunner implements CodeRunner {
 
         testCases = await executeTestJS(testJS, context);
       }
-
-      // Collect all error messages
       const errorMessages = queryResults
         .filter((qr) => qr.error)
         .map((qr) => `Query: ${qr.query.substring(0, 50)}...\nError: ${qr.error}`)
