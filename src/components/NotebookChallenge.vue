@@ -940,10 +940,10 @@ export default defineComponent({
           >
             <!-- Cell input -->
             <div class="cell-input">
+              <!-- Read-only indicator -->
+              <div v-if="cell.readonly" class="readonly-indicator">{{ t("challenge.readonly") }}</div>
               <div class="cell-prompt">In [{{ index + 1 }}]:</div>
               <div class="cell-code" :style="{ height: getCellHeight(cell.code) }">
-                <!-- Read-only indicator -->
-                <div v-if="cell.readonly" class="readonly-indicator">{{ t("challenge.readonly") }}</div>
                 <!-- Monaco editor for focused cell -->
                 <CodeEditor
                   v-if="focusedCellId === cell.id"
@@ -1171,8 +1171,8 @@ export default defineComponent({
 
 .readonly-indicator {
   position: absolute;
-  top: -8px;
-  left: -64px;
+  top: -10px;
+  left: 10px;
   background: rgb(156, 163, 175);
   color: black;
   padding: 2px 8px;

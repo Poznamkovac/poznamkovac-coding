@@ -632,9 +632,7 @@ export default defineComponent({
 }
 
 .editor-wrapper {
-  position: relative;
   flex: 1;
-  overflow: hidden;
 }
 
 .editor-busy-overlay {
@@ -1019,7 +1017,7 @@ export default defineComponent({
   }
 
   .ide-container {
-    min-height: 400px;
+    height: 500px;
   }
 
   .preview-panel {
