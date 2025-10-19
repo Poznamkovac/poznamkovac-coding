@@ -1165,6 +1165,7 @@ export default defineComponent({
 .cell-code {
   flex: 1;
   position: relative;
+  overflow: hidden;
   /* height is set dynamically via inline style */
 }
 
