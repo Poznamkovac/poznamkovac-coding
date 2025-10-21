@@ -1,8 +1,8 @@
 {
   "type": "notebook",
-  "progressive": true,
+  "progressive": false,
   "maxScore": 10,
   "language": "python",
-  "title": "Python Notebook - Data Science",
-  "files": ["data.csv"]
+  "title": "Získavanie dát zo zdrojov",
+  "files": ["students.csv"]
 }

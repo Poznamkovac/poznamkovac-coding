@@ -1,0 +1,8 @@
+{
+  "type": "notebook",
+  "progressive": false,
+  "maxScore": 10,
+  "language": "python",
+  "title": "Analýza reziduálnych hodnôt a transformácia dát",
+  "files": ["experiment_data.csv"]
+}

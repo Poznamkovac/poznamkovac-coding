@@ -1,99 +1,129 @@
-# Web Development Notebook
+# Početnosti a popisné charakteristiky
 
-Build interactive web components step by step.
+Naučte sa vypočítavať početnosti, miery centrálnej tendencie a miery variability pomocou pandas a numpy.
 
-## Basic HTML
+## Setup
 
-Create a simple HTML structure:
-
-```
-<div id="container">
-  <h1>Hello Web!</h1>
-  <p>This is a paragraph.</p>
-</div>
-```
-
-## Add Styling
-
-Style the elements with CSS:
-
-```
-<style>
-  #styled-box {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    margin: 10px 0;
-  }
-</style>
-
-<div id="styled-box">
-  <h2>Styled Box</h2>
-  <p>Beautiful gradient background!</p>
-</div>
-```
-
-## Interactive Button
-
-Add JavaScript functionality:
+Najprv importujme potrebné knižnice:
 
 ```[readonly,mustExecute]
-<script>
-  let clickCount = 0;
-</script>
+import numpy as np
+import pandas as pd
+from scipy import stats
 ```
 
-Now create an interactive button:
+## Načítanie a preskúmanie dát
+
+Načítajte dataset s meraniami:
 
 ```
-<button id="myButton" onclick="handleClick()" style="
-  padding: 10px 20px;
-  font-size: 16px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-">
-  Click me!
-</button>
-
-<div id="output" style="margin-top: 10px; font-size: 18px;"></div>
-
-<script>
-  function handleClick() {
-    clickCount++;
-    document.getElementById('output').innerHTML =
-      `Button clicked ${clickCount} time(s)!`;
-  }
-</script>
+# Načítajte dáta
+data = pd.read_csv('measurements.csv')
+print("Dataset:")
+print(data.head(10))
+data
 ```
 
-## Dynamic List
+## Početnosti a frekvencie
 
-Create a dynamic list that uses the shared clickCount variable:
+Vypočítajte početnosti pre kategorické premenné:
 
 ```
-<div style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px;">
-  <h3>Click Statistics</h3>
-  <ul id="stats">
-    <li>Total clicks: <span id="totalClicks">0</span></li>
-  </ul>
-</div>
+# Vypočítajte početnosti pre kategóriu
+category_counts = data['Category'].value_counts()
+print("Početnosti kategórií:")
+print(category_counts)
 
-<script>  document.getElementById('totalClicks').textContent = clickCount;  setInterval(() => {
-    document.getElementById('totalClicks').textContent = clickCount;
-  }, 100);
-</script>
+# Vypočítajte relatívne frekvencie (percentá)
+category_freq = data['Category'].value_counts(normalize=True) * 100
+print("\nRelatívne frekvencie (%):")
+print(category_freq.round(2))
+category_counts
 ```
 
-## Summary
+## Miery centrálnej tendencie
 
-You've created:
+Vypočítajte priemer, medián a modus:
 
-- HTML structure
-- CSS styling
-- Interactive JavaScript elements
-- Shared variables between cells
+```
+# Výber numerických dát
+values = data['Value']
+
+# Priemer (aritmetický priemer)
+mean_value = values.mean()
+print(f"Priemer: {mean_value:.2f}")
+
+# Medián (stredná hodnota)
+median_value = values.median()
+print(f"Medián: {median_value:.2f}")
+
+# Modus (najčastejšia hodnota)
+mode_result = stats.mode(values, keepdims=True)
+mode_value = mode_result.mode[0]
+print(f"Modus: {mode_value:.2f}")
+
+# Uložte výsledky
+central_tendency = {
+    'mean': mean_value,
+    'median': median_value,
+    'mode': mode_value
+}
+central_tendency
+```
+
+## Miery variability
+
+Vypočítajte rozptyl, smerodajnú odchýlku a kvartily:
+
+```
+# Rozptyl
+variance = values.var()
+print(f"Rozptyl: {variance:.2f}")
+
+# Smerodajná odchýlka
+std_dev = values.std()
+print(f"Smerodajná odchýlka: {std_dev:.2f}")
+
+# Kvartily
+q1 = values.quantile(0.25)
+q2 = values.quantile(0.50)  # medián
+q3 = values.quantile(0.75)
+
+print(f"\nKvartily:")
+print(f"Q1 (25%): {q1:.2f}")
+print(f"Q2 (50%): {q2:.2f}")
+print(f"Q3 (75%): {q3:.2f}")
+
+# Interkvartilovné rozpätie
+iqr = q3 - q1
+print(f"IQR: {iqr:.2f}")
+
+variability = {
+    'variance': variance,
+    'std': std_dev,
+    'iqr': iqr
+}
+variability
+```
+
+## Popisné štatistiky podľa skupín
+
+Vypočítajte popisné štatistiky pre každú kategóriu:
+
+```
+# Zoskupenie podľa kategórie
+grouped_stats = data.groupby('Category')['Value'].describe()
+print("Popisné štatistiky podľa kategórie:")
+grouped_stats
+```
+
+## Zhrnutie
+
+Naučili ste sa:
+- Vypočítavať početnosti a frekvencie
+- Určovať miery centrálnej tendencie (priemer, medián, modus)
+- Vypočítavať miery variability (rozptyl, smerodajná odchýlka, IQR)
+- Analyzovať dáta podľa skupín
+- Interpretovať popisné štatistiky
+
+Tieto základné charakteristiky sú kľúčové pre exploračnú analýzu dát!

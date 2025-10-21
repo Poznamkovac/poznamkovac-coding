@@ -1,51 +1,91 @@
-# Test for Cell 1 (Calculate circle area)
+# Test for Cell 1 (Create NumPy array)
 
 ```python
-# Test that the radius and area variables are defined correctly
+import numpy as np
+
 results = []
 
-# Check if radius is defined
-if 'radius' not in dir():
-    results.append((False, "Variable 'radius' check", "Variable 'radius' should be defined"))
-elif radius != 5:
-    results.append((False, "Variable 'radius' check", f"radius should be 5, got {radius}"))
+# Check if arr is defined
+if 'arr' not in dir():
+    results.append((False, "Array creation", "Variable 'arr' should be defined"))
 else:
-    results.append((True, "Variable 'radius' check", ""))
+    # Check if it's the correct array
+    expected_arr = np.array([1, 2, 3, 4, 5])
+    if not isinstance(arr, np.ndarray):
+        results.append((False, "Array type", "arr should be a NumPy array"))
+    elif not np.array_equal(arr, expected_arr):
+        results.append((False, "Array values", f"arr should be [1, 2, 3, 4, 5], got {arr.tolist()}"))
+    else:
+        results.append((True, "Array creation and values", ""))
 
-# Check if area is defined and calculated correctly
-expected_area = 3.141592653589793 * 25  # math.pi * 5^2
-if 'area' not in dir():
-    results.append((False, "Variable 'area' check", "Variable 'area' should be defined"))
-elif abs(area - expected_area) > 0.01:
-    results.append((False, "Area calculation check", f"area should be approximately {expected_area:.2f}, got {area:.2f}"))
+# Check if total variable is defined
+if 'total' not in dir():
+    results.append((False, "Sum calculation", "Variable 'total' should be defined"))
+elif total != 15:
+    results.append((False, "Sum calculation", f"total should be 15, got {total}"))
 else:
-    results.append((True, "Area calculation check", ""))
+    results.append((True, "Sum calculation", ""))
 ```
 
-# Test for Cell 2 (Print numbers)
+# cell 2 test not present
 
 ```python
-# Test that the loop ran correctly by checking the output
+
+```
+
+# Test for Cell 3 (Filter DataFrame)
+
+```python
 results = []
 
-# Check if the output contains the expected text
-expected_lines = ["Number: 0", "Number: 1", "Number: 2", "Number: 3", "Number: 4"]
-output_lines = context['stdout'].strip().split('\n')
-
-# Filter out the greeting and area output from previous cells
-relevant_output = [line for line in output_lines if line.startswith("Number:")]
-
-if len(relevant_output) != 5:
-    results.append((False, "Loop output check", f"Expected 5 lines with 'Number:', got {len(relevant_output)}"))
+# Check if high_scorers is defined
+if 'high_scorers' not in dir():
+    results.append((False, "Filtered DataFrame", "Variable 'high_scorers' should be defined"))
 else:
-    all_match = True
-    for i, expected in enumerate(expected_lines):
-        if i >= len(relevant_output) or relevant_output[i] != expected:
-            all_match = False
-            break
-
-    if all_match:
-        results.append((True, "Loop output check", ""))
+    # Check if filtering is correct
+    if not isinstance(high_scorers, pd.DataFrame):
+        results.append((False, "Filtered DataFrame type", "high_scorers should be a DataFrame"))
     else:
-        results.append((False, "Loop output check", "Output lines don't match expected format"))
+        # Should have 3 people with score > 40
+        if len(high_scorers) != 3:
+            results.append((False, "Filter result count", f"Should have 3 high scorers, got {len(high_scorers)}"))
+        else:
+            results.append((True, "Filter result count", ""))
+
+        # Check all scores are > 40
+        if not all(high_scorers['Score'] > 40):
+            results.append((False, "Filter condition", "All scores should be > 40"))
+        else:
+            results.append((True, "Filter condition", ""))
+```
+
+# Test for Cell 4 (Matplotlib plot)
+
+```python
+import matplotlib.pyplot as plt
+
+results = []
+
+# Check if x and y variables are defined
+if 'x' not in dir() or 'y' not in dir():
+    results.append((False, "Plot data", "Variables 'x' and 'y' should be defined"))
+else:
+    # Check if x is linspace from 0 to 10
+    if len(x) < 50:
+        results.append((False, "X data", f"x should have at least 50 points, got {len(x)}"))
+    else:
+        results.append((True, "X data points", ""))
+
+    # Check if y is sine of x
+    expected_y = np.sin(x)
+    if not np.allclose(y, expected_y, rtol=0.01):
+        results.append((False, "Y data", "y should be sin(x)"))
+    else:
+        results.append((True, "Y data (sine wave)", ""))
+
+# Check if a plot was created
+if len(plt.get_fignums()) == 0:
+    results.append((False, "Plot creation", "No plot was created"))
+else:
+    results.append((True, "Plot creation", ""))
 ```

@@ -1,6 +1,8 @@
 {
   "type": "notebook",
+  "progressive": false,
   "maxScore": 10,
-  "language": "web",
-  "title": "Web Notebook - HTML/CSS/JS"
+  "language": "python",
+  "title": "Početnosti a popisné charakteristiky",
+  "files": ["measurements.csv"]
 }

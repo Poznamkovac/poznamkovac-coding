@@ -1,92 +1,129 @@
-# SQLite Database Notebook
+# Vizualizácia dát
 
-Learn SQL by working with a sample database.
+Naučte sa vytvárať rôzne typy grafov a vizualizácií pomocou matplotlib a seaborn.
 
-## Setup Database
+## Setup
 
-Create a sample database with student records:
+Najprv importujme potrebné knižnice:
 
 ```[readonly,mustExecute]
-CREATE TABLE students (
-  id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL,
-  age INTEGER,
-  grade REAL,
-  major TEXT
-);
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-INSERT INTO students (name, age, grade, major) VALUES
-  ('Alice Johnson', 20, 3.8, 'Computer Science'),
-  ('Bob Smith', 22, 3.5, 'Mathematics'),
-  ('Charlie Brown', 21, 3.9, 'Physics'),
-  ('Diana Prince', 23, 3.7, 'Computer Science'),
-  ('Eve Wilson', 20, 3.6, 'Mathematics');
-
-SELECT 'Database created successfully!' AS message;
+# Nastavenie štýlu pre seaborn
+sns.set_style("whitegrid")
 ```
 
-## Basic SELECT
+## Načítanie dát
 
-Retrieve all students:
-
-```
-SELECT * FROM students;
-```
-
-## Filtering Data
-
-Find students with grade above 3.7:
+Načítajte dataset s ekonomickými ukazovateľmi:
 
 ```
-SELECT name, grade, major
-FROM students
-WHERE grade > 3.7
-ORDER BY grade DESC;
+# Načítajte dáta
+data = pd.read_csv('economic_data.csv')
+print("Dataset:")
+print(data.head())
+data
 ```
 
-## Aggregation
+## Histogram a rozloženie dát
 
-Count students by major:
-
-```
-SELECT major, COUNT(*) as student_count, AVG(grade) as avg_grade
-FROM students
-GROUP BY major
-ORDER BY student_count DESC;
-```
-
-## Advanced Query
-
-Find Computer Science students with high grades:
+Vytvorte histogram na zobrazenie rozloženia hodnôt:
 
 ```
-SELECT name, age, grade
-FROM students
-WHERE major = 'Computer Science'
-  AND grade >= 3.7
-ORDER BY grade DESC;
+# Vytvorte histogram pre GDP
+plt.figure(figsize=(10, 6))
+plt.hist(data['GDP'], bins=15, edgecolor='black', alpha=0.7)
+plt.title('Rozloženie GDP')
+plt.xlabel('GDP (miliardy USD)')
+plt.ylabel('Početnosť')
+plt.grid(True, alpha=0.3)
+plt.show()
 ```
 
-## Statistics
+## Krabicový diagram (boxplot)
 
-Calculate overall statistics:
+Použijte boxplot na identifikáciu odľahlých hodnôt:
 
 ```
-SELECT
-  COUNT(*) as total_students,
-  AVG(age) as average_age,
-  AVG(grade) as average_grade,
-  MIN(grade) as lowest_grade,
-  MAX(grade) as highest_grade
-FROM students;
+# Vytvorte boxplot pre GDP podľa regiónov
+plt.figure(figsize=(10, 6))
+sns.boxplot(data=data, x='Region', y='GDP')
+plt.title('GDP podľa regiónov')
+plt.xlabel('Región')
+plt.ylabel('GDP (miliardy USD)')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
 ```
 
-## Summary
+## Bodový graf (scatter plot)
 
-You've learned:
+Vizualizujte vzťah medzi dvoma premennými:
 
-- Creating tables and inserting data
-- SELECT queries with filtering
-- Aggregation with GROUP BY
-- Ordering and filtering results
-- Statistical functions
+```
+# Vytvorte scatter plot GDP vs Population
+plt.figure(figsize=(10, 6))
+plt.scatter(data['Population'], data['GDP'], alpha=0.6, s=100)
+plt.title('Vzťah medzi populáciou a GDP')
+plt.xlabel('Populácia (milióny)')
+plt.ylabel('GDP (miliardy USD)')
+plt.grid(True, alpha=0.3)
+
+# Pridajte trend line
+z = np.polyfit(data['Population'], data['GDP'], 1)
+p = np.poly1d(z)
+plt.plot(data['Population'], p(data['Population']), "r--", alpha=0.8, linewidth=2)
+plt.show()
+```
+
+## Stĺpcový graf s chybovými úsečkami
+
+Porovnajte priemery medzi skupinami:
+
+```
+# Vypočítajte priemery a smerodajné odchýlky pre regióny
+region_stats = data.groupby('Region')['GDP'].agg(['mean', 'std']).reset_index()
+
+# Vytvorte stĺpcový graf
+plt.figure(figsize=(10, 6))
+plt.bar(region_stats['Region'], region_stats['mean'],
+        yerr=region_stats['std'], capsize=5, alpha=0.7, edgecolor='black')
+plt.title('Priemerné GDP podľa regiónov')
+plt.xlabel('Región')
+plt.ylabel('Priemerné GDP (miliardy USD)')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+```
+
+## Heatmapa korelácií
+
+Vytvorte korelačnú maticu:
+
+```
+# Vypočítajte korelačnú maticu pre numerické stĺpce
+correlation_matrix = data[['GDP', 'Population', 'Unemployment', 'Inflation']].corr()
+
+# Vytvorte heatmapu
+plt.figure(figsize=(8, 6))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0,
+            square=True, linewidths=1, fmt='.2f')
+plt.title('Korelačná matica ekonomických ukazovateľov')
+plt.tight_layout()
+plt.show()
+```
+
+## Zhrnutie
+
+Naučili ste sa:
+- Vytvárať histogramy pre zobrazenie rozloženia dát
+- Používať boxploty na identifikáciu odľahlých hodnôt
+- Vytvárať scatter ploty na vizualizáciu vzťahov
+- Vytvárať stĺpcové grafy s chybovými úsečkami
+- Vytvárať heatmapy korelačných matíc
+- Používať matplotlib a seaborn pre profesionálne vizualizácie
+
+Vizualizácia je kľúčová pre pochopenie a komunikáciu insights z dát!

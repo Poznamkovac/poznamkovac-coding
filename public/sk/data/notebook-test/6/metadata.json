@@ -3,6 +3,6 @@
   "progressive": false,
   "maxScore": 10,
   "language": "python",
-  "title": "Vizualizácia dát",
-  "files": ["economic_data.csv"]
+  "title": "Viacrozmerné prieskumné techniky",
+  "files": ["multidimensional_data.csv"]
 }

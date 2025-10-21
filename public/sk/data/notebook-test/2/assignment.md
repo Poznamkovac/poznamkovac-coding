@@ -1,78 +1,87 @@
-# Python Data Science Notebook
+# Získavanie dát zo zdrojov
 
-Learn how to work with NumPy, Pandas, and Matplotlib in this interactive notebook.
+Naučte sa načítavať a spracovávať dáta z rôznych formátov pomocou knižníc pandas, numpy a scipy.
 
 ## Setup
 
-First, let's import the necessary libraries:
+Najprv importujme potrebné knižnice:
 
 ```[readonly,mustExecute]
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
+from scipy import stats
 ```
 
-## NumPy Arrays
+## Načítanie CSV súboru
 
-Create and manipulate NumPy arrays:
-
-```
-# Create a NumPy array
-arr = np.array([1, 2, 3, 4, 5])
-print(f"Array: {arr}")
-print(f"Mean: {arr.mean()}")
-
-total = arr.sum()
-print(f"Sum: {total}")
-arr
-```
-
-## Pandas DataFrame
-
-Work with tabular data using Pandas:
+Načítajte dáta zo súboru CSV a preskúmajte ich štruktúru:
 
 ```
-# Create a DataFrame
-df = pd.read_csv('data.csv')
-print("DataFrame created:")
-df
+# Načítajte dáta z CSV súboru
+data = pd.read_csv('students.csv')
+print("Prvých 5 riadkov:")
+print(data.head())
+print(f"\nPočet riadkov a stĺpcov: {data.shape}")
+data
 ```
 
-Try filtering the DataFrame:
+## Základné informácie o dátach
+
+Zistite základné informácie o datasete:
 
 ```
-# Filter people with score > 40
-high_scorers = df[df['Score'] > 40]
-print("High scorers (Score > 40):")
-high_scorers
+# Zobrazte informácie o stĺpcoch a typoch dát
+print("Informácie o datasete:")
+print(data.info())
+
+# Zobrazte popisné štatistiky
+summary = data.describe()
+print("\nPopisné štatistiky:")
+summary
 ```
 
-## Matplotlib Visualization
+## Práca s chýbajúcimi hodnotami
 
-Create a simple plot:
+Identifikujte a spracujte chýbajúce hodnoty:
 
 ```
-# Create sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x)
+# Zistite počet chýbajúcich hodnôt v každom stĺpci
+missing_values = data.isnull().sum()
+print("Chýbajúce hodnoty:")
+print(missing_values)
 
-# Create plot (figsize is set to reasonable defaults)
-plt.figure()
-plt.plot(x, y, 'b-', linewidth=2)
-plt.title('Sine Wave')
-plt.xlabel('X axis')
-plt.ylabel('Y axis')
-plt.grid(True)
-plt.show()
+# Odstráňte riadky s chýbajúcimi hodnotami
+data_clean = data.dropna()
+print(f"\nPočet riadkov po odstránení chýbajúcich hodnôt: {len(data_clean)}")
+data_clean
 ```
 
-## Summary
+## Vytvorenie nových stĺpcov
 
-You've learned the basics of:
+Pridajte vypočítané stĺpce do datasetu:
 
-- NumPy arrays and operations
-- Pandas DataFrames
-- Matplotlib plotting
+```
+# Vypočítajte priemernú známku pre každého študenta
+data_clean['average_score'] = data_clean[['Math', 'Physics', 'Chemistry']].mean(axis=1)
 
-Try experimenting with different data and visualizations!
+# Vytvorte kategóriu výkonu
+data_clean['performance'] = pd.cut(
+    data_clean['average_score'],
+    bins=[0, 60, 80, 100],
+    labels=['Nedostatočný', 'Dobrý', 'Výborný']
+)
+
+print("Dataset s novými stĺpcami:")
+data_clean
+```
+
+## Zhrnutie
+
+Naučili ste sa:
+- Načítavať CSV súbory pomocou pandas
+- Analyzovať základné informácie o datasete
+- Identifikovať a spracovávať chýbajúce hodnoty
+- Vytvárať nové vypočítané stĺpce
+- Kategorizovať dáta pomocou binov
+
+Skúste experimentovať s rôznymi metódami spracovania dát!

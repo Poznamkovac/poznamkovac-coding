@@ -1,45 +1,77 @@
-# Python Notebook Test
+# Úvod do dátovej analýzy prostredníctvom modulu pandas
 
-This is a test notebook assignment to verify the notebook implementation.
+Naučte sa pracovať s knižnicami NumPy, Pandas a Matplotlib v tomto interaktívnom notebooku.
 
-## Introduction
+## Setup
 
-Welcome to the **Python notebook**! You can execute cells and see the output below each cell.
+Najprv importujme potrebné knižnice:
 
 ```[readonly,mustExecute]
-# This cell is read-only and must execute first
-import math
-greeting = "Hello from Python!"
-print(greeting)
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 ```
 
-Now you can use the `greeting` variable and `math` module in your own code.
+## NumPy polia
 
-## Your Turn
-
-Try calculating something using the math module:
+Vytvorte a manipulujte s NumPy poľami:
 
 ```
-# Calculate the area of a circle with radius 5
-radius = 5
-area = math.pi * radius ** 2
-print(f"Area of circle: {area}")
-area
+# Vytvorte NumPy pole
+arr = np.array([1, 2, 3, 4, 5])
+print(f"Pole: {arr}")
+print(f"Priemer: {arr.mean()}")
+
+total = arr.sum()
+print(f"Súčet: {total}")
+arr
 ```
 
-Great! You can also create more complex outputs:
+## Pandas DataFrame
+
+Pracujte s tabuľkovými dátami pomocou Pandas:
 
 ```
-# Let's print some numbers
-for i in range(5):
-    print(f"Number: {i}")
+# Vytvorte DataFrame
+df = pd.read_csv('data.csv')
+print("DataFrame vytvorený:")
+df
 ```
 
-## Summary
+Vyskúšajte filtrovanie DataFrame:
 
-This demonstrates the basic notebook functionality with:
+```
+# Filtrujte ľudí so skóre > 40
+high_scorers = df[df['Score'] > 40]
+print("Vysoké skóre (Score > 40):")
+high_scorers
+```
 
-- Read-only cells that must execute
-- Editable cells
-- Markdown sections between cells
-- Persistent variables across cells
+## Matplotlib vizualizácia
+
+Vytvorte jednoduchý graf:
+
+```
+# Vytvorte vzorové dáta
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+# Vytvorte graf
+plt.figure()
+plt.plot(x, y, 'b-', linewidth=2)
+plt.title('Sínusová vlna')
+plt.xlabel('Os X')
+plt.ylabel('Os Y')
+plt.grid(True)
+plt.show()
+```
+
+## Zhrnutie
+
+Naučili ste sa základy:
+
+- NumPy polí a operácií
+- Pandas DataFrames
+- Matplotlib grafov
+
+Skúste experimentovať s rôznymi dátami a vizualizáciami!

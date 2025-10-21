@@ -1,6 +1,8 @@
 {
   "type": "notebook",
+  "progressive": false,
   "maxScore": 10,
   "language": "python",
-  "title": "Python Notebook Test"
+  "title": "Úvod do dátovej analýzy prostredníctvom modulu pandas",
+  "files": ["data.csv"]
 }

@@ -1,346 +1,115 @@
-# Test for Cell 1 (Basic SELECT - all students)
+# Test for Cell 1 (Load data)
 
-```javascript
-async function test(context) {
-  const results = [];
-  const sqlite = context.sqlite;
+```python
+import pandas as pd
 
-  if (!sqlite || !sqlite.results || sqlite.results.length === 0) {
-    results.push({
-      name: "Query execution",
-      passed: false,
-      error: "No query results found",
-    });
-    return results;
-  }
+results = []
 
-  const result = sqlite.results[0];
-  if (!result.columns || result.columns.length === 0) {
-    results.push({
-      name: "Query columns",
-      passed: false,
-      error: "No columns returned",
-    });
-    return results;
-  }
-  const expectedColumns = ["id", "name", "age", "grade", "major"];
-  const hasAllColumns = expectedColumns.every((col) => result.columns.includes(col));
-
-  if (!hasAllColumns) {
-    results.push({
-      name: "Column check",
-      passed: false,
-      error: `Expected columns: ${expectedColumns.join(", ")}, got: ${result.columns.join(", ")}`,
-    });
-  } else {
-    results.push({
-      name: "Column check",
-      passed: true,
-    });
-  }
-  if (result.rows.length !== 5) {
-    results.push({
-      name: "Row count",
-      passed: false,
-      error: `Expected 5 students, got ${result.rows.length}`,
-    });
-  } else {
-    results.push({
-      name: "Row count",
-      passed: true,
-    });
-  }
-
-  return results;
-}
+# Check if data is defined
+if 'data' not in dir():
+    results.append((False, "Data loading", "Variable 'data' should be defined"))
+else:
+    if not isinstance(data, pd.DataFrame):
+        results.append((False, "Data type", "data should be a DataFrame"))
+    elif len(data) != 25:
+        results.append((False, "Data rows", f"Should have 25 rows, got {len(data)}"))
+    else:
+        results.append((True, "Data loaded correctly", ""))
 ```
 
-# Test for Cell 2 (Filtering - grade > 3.7)
+# Test for Cell 2 (Histogram)
 
-```javascript
-async function test(context) {
-  const results = [];
-  const sqlite = context.sqlite;
+```python
+import matplotlib.pyplot as plt
 
-  if (!sqlite || !sqlite.results || sqlite.results.length === 0) {
-    results.push({
-      name: "Query execution",
-      passed: false,
-      error: "No query results found",
-    });
-    return results;
-  }
+results = []
 
-  const result = sqlite.results[0];
-  const expectedColumns = ["name", "grade", "major"];
-  if (JSON.stringify(result.columns) !== JSON.stringify(expectedColumns)) {
-    results.push({
-      name: "Column check",
-      passed: false,
-      error: `Expected columns: ${expectedColumns.join(", ")}, got: ${result.columns.join(", ")}`,
-    });
-  } else {
-    results.push({
-      name: "Column check",
-      passed: true,
-    });
-  }
-  if (result.rows.length !== 2) {
-    results.push({
-      name: "Filtered row count",
-      passed: false,
-      error: `Expected 2 students with grade > 3.7, got ${result.rows.length}`,
-    });
-  } else {
-    results.push({
-      name: "Filtered row count",
-      passed: true,
-    });
-  }
-  const gradeIndex = result.columns.indexOf("grade");
-  const allAbove37 = result.rows.every((row) => row[gradeIndex] > 3.7);
-
-  if (!allAbove37) {
-    results.push({
-      name: "Grade filter condition",
-      passed: false,
-      error: "Not all returned students have grade > 3.7",
-    });
-  } else {
-    results.push({
-      name: "Grade filter condition",
-      passed: true,
-    });
-  }
-  if (result.rows.length >= 2) {
-    const grades = result.rows.map((row) => row[gradeIndex]);
-    const isSorted = grades.every((grade, i) => i === 0 || grades[i - 1] >= grade);
-
-    if (!isSorted) {
-      results.push({
-        name: "ORDER BY grade DESC",
-        passed: false,
-        error: "Results are not ordered by grade in descending order",
-      });
-    } else {
-      results.push({
-        name: "ORDER BY grade DESC",
-        passed: true,
-      });
-    }
-  }
-
-  return results;
-}
+# Check if a plot was created
+if len(plt.get_fignums()) == 0:
+    results.append((False, "Histogram creation", "No histogram was created"))
+else:
+    results.append((True, "Histogram created", ""))
 ```
 
-# Test for Cell 3 (Aggregation - GROUP BY major)
+# Test for Cell 3 (Boxplot)
 
-```javascript
-async function test(context) {
-  const results = [];
-  const sqlite = context.sqlite;
+```python
+results = []
 
-  if (!sqlite || !sqlite.results || sqlite.results.length === 0) {
-    results.push({
-      name: "Query execution",
-      passed: false,
-      error: "No query results found",
-    });
-    return results;
-  }
-
-  const result = sqlite.results[0];
-  const expectedColumns = ["major", "student_count", "avg_grade"];
-  if (JSON.stringify(result.columns) !== JSON.stringify(expectedColumns)) {
-    results.push({
-      name: "Column check",
-      passed: false,
-      error: `Expected columns: ${expectedColumns.join(", ")}, got: ${result.columns.join(", ")}`,
-    });
-  } else {
-    results.push({
-      name: "Column check",
-      passed: true,
-    });
-  }
-  if (result.rows.length !== 3) {
-    results.push({
-      name: "GROUP BY result count",
-      passed: false,
-      error: `Expected 3 major groups, got ${result.rows.length}`,
-    });
-  } else {
-    results.push({
-      name: "GROUP BY result count",
-      passed: true,
-    });
-  }
-  const countIndex = result.columns.indexOf("student_count");
-  const majorIndex = result.columns.indexOf("major");
-  const csRow = result.rows.find((row) => row[majorIndex] === "Computer Science");
-  const mathRow = result.rows.find((row) => row[majorIndex] === "Mathematics");
-
-  if (csRow && csRow[countIndex] === 2 && mathRow && mathRow[countIndex] === 2) {
-    results.push({
-      name: "COUNT aggregation",
-      passed: true,
-    });
-  } else {
-    results.push({
-      name: "COUNT aggregation",
-      passed: false,
-      error: "COUNT aggregation is not correct",
-    });
-  }
-
-  return results;
-}
+# Check if a plot exists
+if len(plt.get_fignums()) == 0:
+    results.append((False, "Boxplot creation", "No boxplot was created"))
+else:
+    results.append((True, "Boxplot created", ""))
 ```
 
-# Test for Cell 4 (Advanced Query - CS students with grade >= 3.7)
+# Test for Cell 4 (Scatter plot)
 
-```javascript
-async function test(context) {
-  const results = [];
-  const sqlite = context.sqlite;
+```python
+results = []
 
-  if (!sqlite || !sqlite.results || sqlite.results.length === 0) {
-    results.push({
-      name: "Query execution",
-      passed: false,
-      error: "No query results found",
-    });
-    return results;
-  }
-
-  const result = sqlite.results[0];
-  const expectedColumns = ["name", "age", "grade"];
-  if (JSON.stringify(result.columns) !== JSON.stringify(expectedColumns)) {
-    results.push({
-      name: "Column check",
-      passed: false,
-      error: `Expected columns: ${expectedColumns.join(", ")}, got: ${result.columns.join(", ")}`,
-    });
-  } else {
-    results.push({
-      name: "Column check",
-      passed: true,
-    });
-  }
-  if (result.rows.length !== 2) {
-    results.push({
-      name: "Filtered row count",
-      passed: false,
-      error: `Expected 2 CS students with grade >= 3.7, got ${result.rows.length}`,
-    });
-  } else {
-    results.push({
-      name: "Filtered row count",
-      passed: true,
-    });
-  }
-  const gradeIndex = result.columns.indexOf("grade");
-  const allAbove37 = result.rows.every((row) => row[gradeIndex] >= 3.7);
-
-  if (!allAbove37) {
-    results.push({
-      name: "Grade filter (>= 3.7)",
-      passed: false,
-      error: "Not all students have grade >= 3.7",
-    });
-  } else {
-    results.push({
-      name: "Grade filter (>= 3.7)",
-      passed: true,
-    });
-  }
-
-  return results;
-}
+# Check if a plot exists
+if len(plt.get_fignums()) == 0:
+    results.append((False, "Scatter plot creation", "No scatter plot was created"))
+else:
+    # Check if z and p are defined (for trend line)
+    if 'z' not in dir() or 'p' not in dir():
+        results.append((False, "Trend line", "Trend line variables should be defined"))
+    else:
+        results.append((True, "Scatter plot with trend line", ""))
 ```
 
-# Test for Cell 5 (Statistics)
+# Test for Cell 5 (Bar chart)
 
-```javascript
-async function test(context) {
-  const results = [];
-  const sqlite = context.sqlite;
+```python
+results = []
 
-  if (!sqlite || !sqlite.results || sqlite.results.length === 0) {
-    results.push({
-      name: "Query execution",
-      passed: false,
-      error: "No query results found",
-    });
-    return results;
-  }
+# Check if region_stats is defined
+if 'region_stats' not in dir():
+    results.append((False, "Region statistics", "Variable 'region_stats' should be defined"))
+else:
+    if not isinstance(region_stats, pd.DataFrame):
+        results.append((False, "Stats type", "region_stats should be a DataFrame"))
+    elif 'mean' not in region_stats.columns or 'std' not in region_stats.columns:
+        results.append((False, "Stats columns", "Should have 'mean' and 'std' columns"))
+    else:
+        results.append((True, "Regional statistics calculated", ""))
 
-  const result = sqlite.results[0];
-  const expectedColumns = ["total_students", "average_age", "average_grade", "lowest_grade", "highest_grade"];
-  if (JSON.stringify(result.columns) !== JSON.stringify(expectedColumns)) {
-    results.push({
-      name: "Column check",
-      passed: false,
-      error: `Expected columns: ${expectedColumns.join(", ")}, got: ${result.columns.join(", ")}`,
-    });
-  } else {
-    results.push({
-      name: "Column check",
-      passed: true,
-    });
-  }
-  if (result.rows.length !== 1) {
-    results.push({
-      name: "Result row count",
-      passed: false,
-      error: `Expected 1 row of statistics, got ${result.rows.length}`,
-    });
-    return results;
-  }
+# Check if a plot exists
+if len(plt.get_fignums()) == 0:
+    results.append((False, "Bar chart creation", "No bar chart was created"))
+else:
+    results.append((True, "Bar chart created", ""))
+```
 
-  const stats = result.rows[0];
-  const totalIndex = result.columns.indexOf("total_students");
-  const minIndex = result.columns.indexOf("lowest_grade");
-  const maxIndex = result.columns.indexOf("highest_grade");
-  if (stats[totalIndex] !== 5) {
-    results.push({
-      name: "COUNT(*) - total students",
-      passed: false,
-      error: `Expected 5 total students, got ${stats[totalIndex]}`,
-    });
-  } else {
-    results.push({
-      name: "COUNT(*) - total students",
-      passed: true,
-    });
-  }
-  if (stats[minIndex] !== 3.5) {
-    results.push({
-      name: "MIN(grade)",
-      passed: false,
-      error: `Expected lowest grade 3.5, got ${stats[minIndex]}`,
-    });
-  } else {
-    results.push({
-      name: "MIN(grade)",
-      passed: true,
-    });
-  }
+# Test for Cell 6 (Heatmap)
 
-  if (stats[maxIndex] !== 3.9) {
-    results.push({
-      name: "MAX(grade)",
-      passed: false,
-      error: `Expected highest grade 3.9, got ${stats[maxIndex]}`,
-    });
-  } else {
-    results.push({
-      name: "MAX(grade)",
-      passed: true,
-    });
-  }
+```python
+results = []
 
-  return results;
-}
+# Check if correlation_matrix is defined
+if 'correlation_matrix' not in dir():
+    results.append((False, "Correlation matrix", "Variable 'correlation_matrix' should be defined"))
+else:
+    if not isinstance(correlation_matrix, pd.DataFrame):
+        results.append((False, "Matrix type", "correlation_matrix should be a DataFrame"))
+    else:
+        # Check if it's a square matrix
+        if correlation_matrix.shape[0] != correlation_matrix.shape[1]:
+            results.append((False, "Matrix shape", "Correlation matrix should be square"))
+        else:
+            results.append((True, "Correlation matrix calculated", ""))
+
+        # Check if diagonal values are 1 (correlation with itself)
+        import numpy as np
+        if not np.allclose(np.diag(correlation_matrix), 1.0):
+            results.append((False, "Diagonal values", "Diagonal should be 1"))
+        else:
+            results.append((True, "Correlation matrix valid", ""))
+
+# Check if heatmap was created
+if len(plt.get_fignums()) == 0:
+    results.append((False, "Heatmap creation", "No heatmap was created"))
+else:
+    results.append((True, "Heatmap created", ""))
 ```
