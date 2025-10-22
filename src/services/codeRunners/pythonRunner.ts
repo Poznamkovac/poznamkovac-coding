@@ -33,7 +33,7 @@ export class PythonRunner implements CodeRunner {
     files: Record<string, string>,
     mainFile: string,
     testJS?: string,
-    options?: { skipCleanup?: boolean; plotTargetId?: string },
+    options?: { skipCleanup?: boolean; plotTargetId?: string }
   ): Promise<ExecutionResult> {
     if (!this.pyodide) {
       return {
@@ -110,16 +110,15 @@ export class PythonRunner implements CodeRunner {
         requirements.push(...reqLines);
       }
 
-      const hasMatplotlib = requirements.includes("matplotlib");
-      if (hasMatplotlib) {
-        if (options?.plotTargetId) {
-          const targetElement = document.getElementById(options.plotTargetId);
-          if (targetElement) {
-            (document as any).pyodideMplTarget = targetElement;
-          }
+      // Set the target element BEFORE importing matplotlib
+      if (options?.plotTargetId) {
+        const targetElement = document.getElementById(options.plotTargetId);
+        if (targetElement) {
+          (document as any).pyodideMplTarget = targetElement;
         }
+      }
 
-        this.pyodide.runPython(`
+      await this.pyodide.runPythonAsync(`
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -131,13 +130,19 @@ import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = [8, 5]
 plt.rcParams['figure.dpi'] = 100
         `);
+
+      // Reset target and clean up old plots before each execution
+      if (options?.plotTargetId) {
+        const targetElement = document.getElementById(options.plotTargetId);
+        if (targetElement) {
+          (document as any).pyodideMplTarget = targetElement;
+        }
       }
-      if (hasMatplotlib && options?.skipCleanup) {
-        this.pyodide.runPython(`
+
+      this.pyodide.runPython(`
 import matplotlib.pyplot as plt
 plt.close('all')
         `);
-      }
 
       // execute code and capture last expression value
       const result = await this.pyodide.runPythonAsync(mainContent);
@@ -241,7 +246,7 @@ for module_name in user_modules:
           language: context.language || "python",
           stdout: context.stdout || "",
           stderr: context.stderr || "",
-        }),
+        })
       );
       const wrappedTestCode = `
 import sys
