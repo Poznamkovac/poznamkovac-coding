@@ -194,6 +194,7 @@ transformed_data
 ## Zhrnutie
 
 Naučili ste sa:
+
 - Identifikovať odľahlé hodnoty pomocou Z-score a IQR metódy
 - Vytvárať lineárne regresné modely a vypočítavať reziduá
 - Analyzovať reziduá pomocou rezidual plots

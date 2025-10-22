@@ -129,7 +129,7 @@ export default defineComponent({
     async loadRequirementsTxt() {
       try {
         const lang = this.language === "auto" ? "sk" : this.language;
-        const requirementsPath = `/${lang}/data/${this.coursePath}/${this.challengeId}/requirements.txt`;
+        const requirementsPath = `/${lang}/data/${this.coursePath}/${this.challengeId}/micropip.txt`;
         const text = await fetchTextAsset(requirementsPath, "text/plain");
 
         if (text) {
@@ -492,7 +492,7 @@ export default defineComponent({
         const files: Record<string, string> = { main: cell.code };
 
         if (this.runnerLanguage === "python" && this.requirementsTxt) {
-          files["requirements.txt"] = this.requirementsTxt;
+          files["micropip.txt"] = this.requirementsTxt;
         }
 
         // Add virtual files to the files object (for Python, SQLite, etc.)

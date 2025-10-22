@@ -120,6 +120,7 @@ grouped_stats
 ## Zhrnutie
 
 Naučili ste sa:
+
 - Vypočítavať početnosti a frekvencie
 - Určovať miery centrálnej tendencie (priemer, medián, modus)
 - Vypočítavať miery variability (rozptyl, smerodajná odchýlka, IQR)

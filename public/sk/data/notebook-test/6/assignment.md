@@ -195,6 +195,7 @@ print(f"Hierarchické zhlukovanie vytvorené pre {sample_size} vzoriek")
 ## Zhrnutie
 
 Naučili ste sa:
+
 - Analyzovať korelácie medzi viacerými premennými
 - Aplikovať PCA pre redukciu dimenzionality
 - Interpretovať vysvetlený rozptyl hlavných komponentov

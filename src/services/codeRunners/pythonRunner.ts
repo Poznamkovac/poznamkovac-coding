@@ -6,6 +6,7 @@ export class PythonRunner implements CodeRunner {
   private pyodide: PyodideInterface | null = null;
   private initPromise: Promise<void> | null = null;
   private initialized = false;
+  private requirementsInstalled = false;
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -44,6 +45,7 @@ export class PythonRunner implements CodeRunner {
     try {
       if (!options?.skipCleanup) {
         await this.cleanup();
+        this.requirementsInstalled = false;
       }
       const oldPlots = document.querySelectorAll('body > div[style*="display: inline-block"]');
       oldPlots.forEach((plot) => {
@@ -54,26 +56,31 @@ export class PythonRunner implements CodeRunner {
       for (const [filename, content] of Object.entries(files)) {
         this.pyodide.FS.writeFile(filename, content);
       }
-      const requirements: string[] = [];
-      if (files["requirements.txt"]) {
-        const reqLines = files["requirements.txt"]
+
+      // Install packages from micropip.txt only once (for non-bundled packages like seaborn)
+      if (!this.requirementsInstalled && files["micropip.txt"]) {
+        const reqLines = files["micropip.txt"]
           .split("\n")
           .map((line) => line.trim())
           .filter((line) => line && !line.startsWith("#"));
 
-        requirements.push(...reqLines);
-
-        if (requirements.length > 0) {
+        if (reqLines.length > 0) {
           await this.pyodide.loadPackage("micropip");
           const micropip = this.pyodide.pyimport("micropip");
-          await micropip.install(requirements)
+          await micropip.install(reqLines, { verbose: false });
         }
+
+        this.requirementsInstalled = true;
       }
       let stdout = "";
       let stderr = "";
 
       this.pyodide.setStdout({
         batched: (msg) => {
+          // filter out micropip noise
+          if (msg === "No new packages to load" || msg.endsWith(" already loaded from default channel")) {
+            return;
+          }
           stdout += msg + "\n";
         },
       });
@@ -90,6 +97,19 @@ export class PythonRunner implements CodeRunner {
           error: `Main file '${mainFile}' not found`,
         };
       }
+
+      // load packages from imports in the code before each run
+      await this.pyodide.loadPackagesFromImports(mainContent);
+
+      const requirements: string[] = [];
+      if (files["micropip.txt"]) {
+        const reqLines = files["micropip.txt"]
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line && !line.startsWith("#"));
+        requirements.push(...reqLines);
+      }
+
       const hasMatplotlib = requirements.includes("matplotlib");
       if (hasMatplotlib) {
         if (options?.plotTargetId) {
@@ -99,7 +119,7 @@ export class PythonRunner implements CodeRunner {
           }
         }
 
-        await this.pyodide.runPythonAsync(`
+        this.pyodide.runPython(`
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -113,7 +133,7 @@ plt.rcParams['figure.dpi'] = 100
         `);
       }
       if (hasMatplotlib && options?.skipCleanup) {
-        await this.pyodide.runPythonAsync(`
+        this.pyodide.runPython(`
 import matplotlib.pyplot as plt
 plt.close('all')
         `);
@@ -160,7 +180,7 @@ plt.close('all')
     }
   }
 
-  cleanup(): void {
+  async cleanup(): Promise<void> {
     if (!this.pyodide) return;
 
     try {
@@ -227,18 +247,15 @@ for module_name in user_modules:
 import sys
 from io import StringIO
 
-# Test code
+# test code
 ${testCode}
 
-# Return results as list of tuples: (passed, name, error)
-# Test code should populate a 'results' variable
 if 'results' not in dir():
     results = [(False, "Test execution", "Test code must define a 'results' variable with test results")]
 
-results
-      `;
+results`;
 
-      const results = this.pyodide.runPython(wrappedTestCode);
+      const results = await this.pyodide.runPythonAsync(wrappedTestCode);
       const testCases: TestCaseResult[] = [];
       for (let i = 0; i < results.length; i++) {
         const [passed, name, error] = results[i];

@@ -119,6 +119,7 @@ plt.show()
 ## Zhrnutie
 
 Naučili ste sa:
+
 - Vytvárať histogramy pre zobrazenie rozloženia dát
 - Používať boxploty na identifikáciu odľahlých hodnôt
 - Vytvárať scatter ploty na vizualizáciu vzťahov

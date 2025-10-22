@@ -78,6 +78,7 @@ data_clean
 ## Zhrnutie
 
 Naučili ste sa:
+
 - Načítavať CSV súbory pomocou pandas
 - Analyzovať základné informácie o datasete
 - Identifikovať a spracovávať chýbajúce hodnoty
