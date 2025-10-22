@@ -64,7 +64,9 @@ export class PythonRunner implements CodeRunner {
         requirements.push(...reqLines);
 
         if (requirements.length > 0) {
-          await this.pyodide.loadPackage(requirements);
+          await this.pyodide.loadPackage("micropip");
+          const micropip = this.pyodide.pyimport("micropip");
+          await micropip.install(requirements)
         }
       }
       let stdout = "";
