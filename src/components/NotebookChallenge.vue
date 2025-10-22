@@ -68,6 +68,10 @@ export default defineComponent({
       return this.challengeData.progressive === true;
     },
 
+    isAnyCodeRunning(): boolean {
+      return this.isRunning || this.isRunningAll || this.isRunningTests;
+    },
+
     visibleCells(): NotebookCell[] {
       return this.cells.filter((cell) => !cell.hidden);
     },
@@ -890,11 +894,11 @@ export default defineComponent({
 <template>
   <div class="notebook-challenge">
     <div class="actions-bar">
-      <button :disabled="isRunning || isRunningAll" class="btn btn-primary" @click="runAllCells">
+      <button :disabled="isAnyCodeRunning" class="btn btn-primary" @click="runAllCells">
         <span class="btn-icon">{{ isRunning || isRunningAll ? "⏳" : "▶️" }}</span>
         {{ isRunning || isRunningAll ? t("challenge.running") : t("challenge.runAllCells") }}
       </button>
-      <button v-if="cellsWithTests.size > 0" :disabled="isRunningTests || isRunning" class="btn btn-success" @click="runTests">
+      <button v-if="cellsWithTests.size > 0" :disabled="isAnyCodeRunning" class="btn btn-success" @click="runTests">
         <span class="btn-icon">{{ isRunningTests ? "⏳" : "✓" }}</span>
         {{ isRunningTests ? t("challenge.runningTests") : t("challenge.runTests") }}
       </button>
@@ -960,14 +964,14 @@ export default defineComponent({
               <div class="cell-actions">
                 <button
                   v-if="!cell.readonly && cellsWithTests.has(cell.id)"
-                  :disabled="isRunningTests || isRunning"
+                  :disabled="isAnyCodeRunning"
                   class="cell-test-btn"
                   title="Test cell"
                   @click.stop="runCellTests(cell.id)"
                 >
                   ✓
                 </button>
-                <button :disabled="isRunning" class="cell-run-btn" title="Run cell" @click.stop="runCell(cell.id)">▶</button>
+                <button :disabled="isAnyCodeRunning" class="cell-run-btn" title="Run cell" @click.stop="runCell(cell.id)">▶</button>
               </div>
             </div>
 

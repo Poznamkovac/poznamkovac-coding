@@ -22,7 +22,7 @@ arr = np.array([1, 2, 3, 4, 5])
 print(f"Pole: {arr}")
 print(f"Priemer: {arr.mean()}")
 
-total = arr.sum()
+total = np.sum(arr)
 print(f"Súčet: {total}")
 arr
 ```
