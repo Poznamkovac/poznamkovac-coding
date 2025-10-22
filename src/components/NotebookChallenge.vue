@@ -129,7 +129,7 @@ export default defineComponent({
     async loadRequirementsTxt() {
       try {
         const lang = this.language === "auto" ? "sk" : this.language;
-        const requirementsPath = `/${lang}/data/${this.coursePath}/${this.challengeId}/micropip.txt`;
+        const requirementsPath = `/${lang}/data/${this.coursePath}/${this.challengeId}/requirements.txt`;
         const text = await fetchTextAsset(requirementsPath, "text/plain");
 
         if (text) {
@@ -155,7 +155,7 @@ export default defineComponent({
             if (content !== null) {
               this.virtualFiles[filename] = content;
             }
-          }),
+          })
         );
       } catch (error) {
         console.error("Error loading virtual files:", error);
@@ -492,7 +492,7 @@ export default defineComponent({
         const files: Record<string, string> = { main: cell.code };
 
         if (this.runnerLanguage === "python" && this.requirementsTxt) {
-          files["micropip.txt"] = this.requirementsTxt;
+          files["requirements.txt"] = this.requirementsTxt;
         }
 
         // Add virtual files to the files object (for Python, SQLite, etc.)
@@ -583,7 +583,7 @@ export default defineComponent({
           const parser = new DOMParser();
           const doc = parser.parseFromString(
             `<!DOCTYPE html><html><head></head><body>${combinedHTML}</body></html>`,
-            "text/html",
+            "text/html"
           );
 
           return {
@@ -653,7 +653,7 @@ export default defineComponent({
         this.challengeId,
         this.language,
         this.challengeData.maxScore,
-        executeCellsUpTo,
+        executeCellsUpTo
       );
 
       this.testResults = results;
@@ -843,7 +843,7 @@ export default defineComponent({
           this.language,
           this.challengeData.maxScore,
           executeCellsUpTo,
-          cellIndex,
+          cellIndex
         );
         if (!this.testResults) {
           this.testResults = {

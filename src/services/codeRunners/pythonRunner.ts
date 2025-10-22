@@ -57,9 +57,9 @@ export class PythonRunner implements CodeRunner {
         this.pyodide.FS.writeFile(filename, content);
       }
 
-      // Install packages from micropip.txt only once (for non-bundled packages like seaborn)
-      if (!this.requirementsInstalled && files["micropip.txt"]) {
-        const reqLines = files["micropip.txt"]
+      // Install packages from requirements.txt only once (for non-bundled packages like seaborn)
+      if (!this.requirementsInstalled && files["requirements.txt"]) {
+        const reqLines = files["requirements.txt"]
           .split("\n")
           .map((line) => line.trim())
           .filter((line) => line && !line.startsWith("#"));
@@ -102,15 +102,15 @@ export class PythonRunner implements CodeRunner {
       await this.pyodide.loadPackagesFromImports(mainContent);
 
       const requirements: string[] = [];
-      if (files["micropip.txt"]) {
-        const reqLines = files["micropip.txt"]
+      if (files["requirements.txt"]) {
+        const reqLines = files["requirements.txt"]
           .split("\n")
           .map((line) => line.trim())
           .filter((line) => line && !line.startsWith("#"));
         requirements.push(...reqLines);
       }
 
-      // Set the target element BEFORE importing matplotlib
+      // set the target element BEFORE importing matplotlib
       if (options?.plotTargetId) {
         const targetElement = document.getElementById(options.plotTargetId);
         if (targetElement) {
