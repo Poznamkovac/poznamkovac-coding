@@ -57,9 +57,9 @@ export class PythonRunner implements CodeRunner {
         this.pyodide.FS.writeFile(filename, content);
       }
 
-      // Install packages from requirements.txt only once (for non-bundled packages like seaborn)
-      if (!this.requirementsInstalled && files["requirements.txt"]) {
-        const reqLines = files["requirements.txt"]
+      // Install packages from micropip.txt only once (for non-bundled packages like seaborn)
+      if (!this.requirementsInstalled && files["micropip.txt"]) {
+        const reqLines = files["micropip.txt"]
           .split("\n")
           .map((line) => line.trim())
           .filter((line) => line && !line.startsWith("#"));
@@ -102,8 +102,8 @@ export class PythonRunner implements CodeRunner {
       await this.pyodide.loadPackagesFromImports(mainContent);
 
       const requirements: string[] = [];
-      if (files["requirements.txt"]) {
-        const reqLines = files["requirements.txt"]
+      if (files["micropip.txt"]) {
+        const reqLines = files["micropip.txt"]
           .split("\n")
           .map((line) => line.trim())
           .filter((line) => line && !line.startsWith("#"));
