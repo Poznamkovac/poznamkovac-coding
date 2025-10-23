@@ -60,7 +60,7 @@ class StorageService {
   async getChallengeScore(coursePath: string, challengeId: string, language: "sk" | "en"): Promise<number> {
     const key = this.makeChallengeKey(coursePath, challengeId, "score", language);
     const score = await this.getValue(key);
-    return typeof score === "number" ? score : Number(score) || 0;
+    return Number(score) || 0;
   }
 
   async setChallengeScore(coursePath: string, challengeId: string, score: number, language: "sk" | "en"): Promise<void> {
@@ -129,7 +129,7 @@ class StorageService {
   async getFailedAttempts(coursePath: string, challengeId: string): Promise<number> {
     const key = this.makeChallengeKey(coursePath, challengeId, "failed_attempts");
     const attempts = await this.getValue(key);
-    return typeof attempts === "number" ? attempts : Number(attempts) || 0;
+    return Number(attempts) || 0;
   }
 
   async incrementFailedAttempts(coursePath: string, challengeId: string): Promise<number> {
@@ -148,10 +148,7 @@ class StorageService {
   async getMaxSuccessfulCellIndex(coursePath: string, challengeId: string, language?: string): Promise<number> {
     const key = this.makeChallengeKey(coursePath, challengeId, "max_successful_cell", language);
     const index = await this.getValue(key);
-    if (index === null || index === undefined) {
-      return -1;
-    }
-    return typeof index === "number" ? index : Number(index);
+    return index === null || index === undefined ? -1 : Number(index);
   }
 
   async setMaxSuccessfulCellIndex(coursePath: string, challengeId: string, cellIndex: number, language?: string): Promise<void> {

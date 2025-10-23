@@ -57,11 +57,7 @@ export async function parseNotebookMarkdown(markdownContent: string): Promise<Pa
     }
   }
 
-  if (currentMarkdown.trim()) {
-    markdownSections.push(await marked.parse(currentMarkdown));
-  } else if (cells.length > 0) {
-    markdownSections.push("");
-  }
+  markdownSections.push(currentMarkdown.trim() ? await marked.parse(currentMarkdown) : "");
 
   return { cells, markdownSections };
 }

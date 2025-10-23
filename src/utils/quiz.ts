@@ -2,15 +2,8 @@ import type { QuizAnswerConfig } from "../types";
 
 export function normalizeString(str: string, caseSensitive: boolean, diacriticSensitive: boolean): string {
   let result = str.trim();
-
-  if (!caseSensitive) {
-    result = result.toLowerCase();
-  }
-
-  if (!diacriticSensitive) {
-    result = result.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  }
-
+  if (!caseSensitive) result = result.toLowerCase();
+  if (!diacriticSensitive) result = result.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return result;
 }
 

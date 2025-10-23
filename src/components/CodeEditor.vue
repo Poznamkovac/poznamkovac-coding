@@ -100,24 +100,19 @@ export default defineComponent({
       const container = this.$refs.editorContainer as HTMLElement;
       if (!container) return;
 
-      if (sharedEditor && currentChallengeKey !== this.challengeKey) {
-        sharedEditor.dispose();
-        sharedEditor = null;
-        currentContainer = null;
-        currentChallengeKey = this.challengeKey;
-        this.createEditor(container, this.content);
-      } else if (sharedEditor && currentContainer !== container) {
-        if (currentContainer && sharedEditor) {
+      const shouldRecreate =
+        !sharedEditor ||
+        currentChallengeKey !== this.challengeKey ||
+        (currentContainer && currentContainer !== container);
+
+      if (shouldRecreate) {
+        if (sharedEditor) {
+          sharedEditor.dispose();
+          sharedEditor = null;
+        }
+        if (currentContainer) {
           currentContainer.innerHTML = "";
         }
-
-        const currentModel = sharedEditor.getModel();
-        const currentValue = currentModel?.getValue() || "";
-        sharedEditor.dispose();
-        sharedEditor = null;
-
-        this.createEditor(container, currentValue);
-      } else if (!sharedEditor) {
         currentChallengeKey = this.challengeKey;
         this.createEditor(container, this.content);
       } else {
@@ -150,7 +145,6 @@ export default defineComponent({
         scrollbar: {
           vertical: "hidden",
           horizontal: "hidden",
-          handleMouseWheel: false, // Don't capture scroll events
         },
       });
 

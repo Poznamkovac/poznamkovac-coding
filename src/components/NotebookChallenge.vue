@@ -119,13 +119,13 @@ export default defineComponent({
     this.cells = JSON.parse(JSON.stringify(this.challengeData.cells));
     this.markdownSections = [...this.challengeData.markdownSections];
 
-    if (this.runnerLanguage === "python") {
-      await this.loadRequirementsTxt();
-    }
+    await Promise.all([
+      this.runnerLanguage === "python" ? this.loadRequirementsTxt() : Promise.resolve(),
+      this.loadVirtualFiles(),
+      this.loadCellsFromStorage(),
+      this.loadCellsWithTests(),
+    ]);
 
-    await this.loadVirtualFiles();
-    await this.loadCellsFromStorage();
-    await this.loadCellsWithTests();
     await this.initializeProgressiveMode();
   },
 
@@ -248,28 +248,10 @@ export default defineComponent({
           }
         }
 
-        // Wait for DOM update, then scroll to the last revealed cell and remove animation class
-        await this.$nextTick();
-        this.scrollToLastRevealed();
-
         // Remove animation class after animation completes
         setTimeout(() => {
           this.newlyRevealedCells.clear();
         }, 600); // Match animation duration
-      }
-    },
-
-    scrollToLastRevealed() {
-      // Find the last non-hidden cell that was revealed
-      const lastRevealedIndex = this.maxRevealedCellIndex;
-      if (lastRevealedIndex >= 0 && lastRevealedIndex < this.cells.length) {
-        const cell = this.cells[lastRevealedIndex];
-        if (cell && !cell.hidden) {
-          const element = document.getElementById(`cell-${cell.id}`);
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-        }
       }
     },
 
@@ -363,6 +345,21 @@ export default defineComponent({
       await this.executeCells([cellId]);
     },
 
+    async executeMustExecuteCells(runner: any): Promise<boolean> {
+      if (this.hasExecutedMustExecute) return true;
+
+      const mustExecuteCells = this.cells.filter((c) => c.mustExecute);
+      for (const cell of mustExecuteCells) {
+        await this.executeCell(runner, cell);
+        if (cell.error) {
+          console.warn("MustExecute cell failed, stopping execution");
+          return false;
+        }
+      }
+      this.hasExecutedMustExecute = true;
+      return true;
+    },
+
     async runAllCells() {
       this.isRunningAll = true;
       try {
@@ -371,19 +368,8 @@ export default defineComponent({
           throw new Error(`No runner available for ${this.runnerLanguage}`);
         }
 
-        // Execute mustExecute cells first
-        if (!this.hasExecutedMustExecute) {
-          const mustExecuteCells = this.cells.filter((c) => c.mustExecute);
-          for (const cell of mustExecuteCells) {
-            await this.executeCell(runner, cell);
-            // Check if mustExecute cell failed
-            if (cell.error) {
-              console.warn("MustExecute cell failed, stopping execution");
-              return;
-            }
-          }
-          this.hasExecutedMustExecute = true;
-        }
+        const shouldContinue = await this.executeMustExecuteCells(runner);
+        if (!shouldContinue) return;
 
         // In progressive mode, only execute currently revealed cells and DON'T reveal new ones
         // In non-progressive mode, execute all cells
@@ -553,6 +539,49 @@ export default defineComponent({
       }
     },
 
+    createWebContext(cellIndex: number) {
+      const combinedHTML = this.cells
+        .slice(0, cellIndex + 1)
+        .filter((cell) => cell.output)
+        .map((cell) => cell.code)
+        .join("\n");
+
+      const doc = new DOMParser().parseFromString(
+        `<!DOCTYPE html><html><head></head><body>${combinedHTML}</body></html>`,
+        "text/html",
+      );
+
+      return { language: "web", dom: doc, window };
+    },
+
+    async createSqliteContext(runner: any, cellIndex: number) {
+      const targetCell = this.cells[cellIndex];
+      const files: Record<string, string> = { "main.sql": targetCell.code };
+      const result = await runner.execute(files, "main.sql", undefined, { skipCleanup: true });
+      return result.testContext || {};
+    },
+
+    createPythonContext(runner: any, cellIndex: number) {
+      const combinedStdout = this.cells
+        .slice(0, cellIndex + 1)
+        .filter((cell) => cell.output)
+        .map((cell) => cell.output)
+        .join("\n");
+
+      const combinedStderr = this.cells
+        .slice(0, cellIndex + 1)
+        .filter((cell) => cell.error)
+        .map((cell) => cell.error)
+        .join("\n");
+
+      return {
+        language: "python",
+        pyodide: (runner as any).pyodide,
+        stdout: combinedStdout.trim(),
+        stderr: combinedStderr.trim(),
+      };
+    },
+
     async createExecuteCellsUpToFunction() {
       const runner = await codeRunnerRegistry.getOrInitializeRunner(this.runnerLanguage);
       if (!runner) {
@@ -560,13 +589,7 @@ export default defineComponent({
       }
 
       return async (cellIndex: number) => {
-        if (!this.hasExecutedMustExecute) {
-          const mustExecuteCells = this.cells.filter((c) => c.mustExecute);
-          for (const cell of mustExecuteCells) {
-            await this.executeCell(runner, cell);
-          }
-          this.hasExecutedMustExecute = true;
-        }
+        await this.executeMustExecuteCells(runner);
 
         for (let i = 0; i <= cellIndex; i++) {
           const cell = this.cells[i];
@@ -576,51 +599,11 @@ export default defineComponent({
         }
 
         if (this.runnerLanguage === "web") {
-          let combinedHTML = "";
-          for (let i = 0; i <= cellIndex; i++) {
-            const cell = this.cells[i];
-            if (cell.output) {
-              combinedHTML += cell.code + "\n";
-            }
-          }
-
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(
-            `<!DOCTYPE html><html><head></head><body>${combinedHTML}</body></html>`,
-            "text/html"
-          );
-
-          return {
-            language: "web",
-            dom: doc,
-            window: window,
-          };
+          return this.createWebContext(cellIndex);
         } else if (this.runnerLanguage === "sqlite") {
-          const targetCell = this.cells[cellIndex];
-          const files: Record<string, string> = { "main.sql": targetCell.code };
-          const result = await runner.execute(files, "main.sql", undefined, { skipCleanup: true });
-          return result.testContext || {};
+          return await this.createSqliteContext(runner, cellIndex);
         } else {
-          // collect stdout from all executed cells for Python
-          let combinedStdout = "";
-          let combinedStderr = "";
-
-          for (let i = 0; i <= cellIndex; i++) {
-            const cell = this.cells[i];
-            if (cell.output) {
-              combinedStdout += cell.output + "\n";
-            }
-            if (cell.error) {
-              combinedStderr += cell.error + "\n";
-            }
-          }
-
-          return {
-            language: "python",
-            pyodide: (runner as any).pyodide,
-            stdout: combinedStdout.trim(),
-            stderr: combinedStderr.trim(),
-          };
+          return this.createPythonContext(runner, cellIndex);
         }
       };
     },
@@ -794,10 +777,6 @@ export default defineComponent({
               this.newlyRevealedCells.add(i);
             }
           }
-
-          // Wait for DOM update, then scroll to the last revealed cell
-          await this.$nextTick();
-          this.scrollToLastRevealed();
 
           // Remove animation class after animation completes
           setTimeout(() => {

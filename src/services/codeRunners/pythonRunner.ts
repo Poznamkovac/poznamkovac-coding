@@ -50,17 +50,15 @@ export class PythonRunner implements CodeRunner {
         await this.cleanup();
         this.requirementsInstalled = false;
       }
-      const oldPlots = document.querySelectorAll('body > div[style*="display: inline-block"]');
-      oldPlots.forEach((plot) => {
-        if (plot.querySelector(".mpl-canvas, .mpl-toolbar")) {
-          plot.remove();
-        }
-      });
+
+      const plotContainer = options?.plotTargetId ? document.getElementById(options.plotTargetId) : null;
+      if (plotContainer) {
+        plotContainer.innerHTML = "";
+      }
       for (const [filename, content] of Object.entries(files)) {
         this.pyodide.FS.writeFile(filename, content);
       }
 
-      // Install packages from micropip.txt only once (for non-bundled packages like seaborn)
       if (!this.requirementsInstalled && files["micropip.txt"]) {
         const reqLines = files["micropip.txt"]
           .split("\n")
@@ -101,19 +99,8 @@ export class PythonRunner implements CodeRunner {
         };
       }
 
-      // load packages from imports in the code before each run
       await this.pyodide.loadPackagesFromImports(mainContent);
 
-      const requirements: string[] = [];
-      if (files["micropip.txt"]) {
-        const reqLines = files["micropip.txt"]
-          .split("\n")
-          .map((line) => line.trim())
-          .filter((line) => line && !line.startsWith("#"));
-        requirements.push(...reqLines);
-      }
-
-      // set the target element BEFORE importing matplotlib
       if (options?.plotTargetId) {
         const targetElement = document.getElementById(options.plotTargetId);
         if (targetElement) {
@@ -128,29 +115,12 @@ warnings.filterwarnings('ignore')
 try:
   import matplotlib
   matplotlib.use('webagg')
-
-  # set smaller default figure size to prevent resize loops
   import matplotlib.pyplot as plt
   plt.rcParams['figure.figsize'] = [8, 5]
   plt.rcParams['figure.dpi'] = 100
-except ImportError:
-  pass`);
-
-      // Reset target and clean up old plots before each execution
-      if (options?.plotTargetId) {
-        const targetElement = document.getElementById(options.plotTargetId);
-        if (targetElement) {
-          (document as any).pyodideMplTarget = targetElement;
-        }
-      }
-
-      this.pyodide.runPython(`
-try:
-  import matplotlib.pyplot as plt
   plt.close('all')
 except ImportError:
-  pass
-        `);
+  pass`);
 
       // execute code and capture last expression value
       const result = await this.pyodide.runPythonAsync(mainContent);
@@ -197,26 +167,20 @@ except ImportError:
     if (!this.pyodide) return;
 
     try {
-      // clear all user modules from sys.modules to force reimport
-      try {
-        this.pyodide.runPython(`
+      this.pyodide.runPython(`
 import sys
 user_modules = [name for name in list(sys.modules.keys()) if not name.startswith('_') and name not in sys.builtin_module_names]
 for module_name in user_modules:
     if module_name in sys.modules:
         del sys.modules[module_name]
         `);
-      } catch (e) {
-        console.warn("Error clearing Python modules:", e);
-      }
 
-      // clear files from filesystem
       const files = this.pyodide.FS.readdir("/home/pyodide");
       for (const file of files) {
         if (file !== "." && file !== "..") {
           try {
             this.pyodide.FS.unlink(`/home/pyodide/${file}`);
-          } catch (e) {
+          } catch {
             // ignore errors for directories or special files
           }
         }
@@ -230,21 +194,9 @@ for module_name in user_modules:
     return this.initialized;
   }
 
-  /**
-   * Execute Python test code and return test results
-   * @param testCode - Python test code to execute
-   * @param context - Execution context (includes pyodide, stdout, stderr)
-   * @returns Array of test case results
-   */
   async executePythonTest(testCode: string, context: any): Promise<TestCaseResult[]> {
     if (!this.pyodide) {
-      return [
-        {
-          name: "Test initialization",
-          passed: false,
-          error: "Python runtime not initialized",
-        },
-      ];
+      return [{ name: "Test initialization", passed: false, error: "Python runtime not initialized" }];
     }
 
     try {
@@ -256,38 +208,25 @@ for module_name in user_modules:
           stderr: context.stderr || "",
         })
       );
-      const wrappedTestCode = `
+
+      const results = await this.pyodide.runPythonAsync(`
 import sys
 from io import StringIO
 
-# test code
 ${testCode}
 
-if 'results' not in dir():
-    results = [(False, "Test execution", "Test code must define a 'results' variable with test results")]
+results`);
 
-results`;
-
-      const results = await this.pyodide.runPythonAsync(wrappedTestCode);
-      const testCases: TestCaseResult[] = [];
-      for (let i = 0; i < results.length; i++) {
-        const [passed, name, error] = results[i];
-        testCases.push({
+      return results.toJs().map((result: any, i: number) => {
+        const [passed, name, error] = result;
+        return {
           name: name || `Test ${i + 1}`,
           passed: Boolean(passed),
           error: error || undefined,
-        });
-      }
-
-      return testCases;
+        };
+      });
     } catch (error: any) {
-      return [
-        {
-          name: "Test execution",
-          passed: false,
-          error: error.message || String(error),
-        },
-      ];
+      return [{ name: "Test execution", passed: false, error: error.message || String(error) }];
     }
   }
 }

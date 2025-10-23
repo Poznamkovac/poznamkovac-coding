@@ -22,154 +22,55 @@ export class SQLiteRunner implements CodeRunner {
   }
 
   private buildHtmlContent(results: Array<{ query: string; result: any; error?: string; time: string }>): string {
-    const styles = `
-      body {
-        background: #1e1e1e;
-        color: #e0e0e0;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-        margin: 0;
-        padding: 16px;
-        line-height: 1.6;
-      }
+    const resultHtml = results
+      .map(({ result, error, time }) => {
+        const timeInfo = `<div class="query-time">Query executed in ${time} ms</div>`;
 
-      .query-container {
-        margin-bottom: 20px;
-      }
+        if (error) {
+          return `<div class="query-container">${timeInfo}<div class="error-message"><strong>Error: </strong>${error}</div></div>`;
+        }
 
-      .query-time {
-        color: #888;
-        font-size: 12px;
-        margin-bottom: 8px;
-        opacity: 0.8;
-      }
+        if (result && result.length > 0) {
+          const tables = result
+            .map((tableResult: any) => {
+              const headers = tableResult.columns.map((col: string) => `<th>${col}</th>`).join("");
+              const rows = tableResult.values
+                .map((row: any[]) => `<tr>${row.map((cell: any) => `<td>${cell ?? ""}</td>`).join("")}</tr>`)
+                .join("");
+              return `
+                <table class="result-table">
+                  <thead><tr>${headers}</tr></thead>
+                  <tbody>${rows}</tbody>
+                </table>
+                <div class="row-count">${tableResult.values.length} row(s) returned</div>`;
+            })
+            .join("");
+          return `<div class="query-container">${timeInfo}${tables}</div>`;
+        }
 
-      .result-table {
-        border-collapse: collapse;
-        width: 100%;
-        border: 1px solid #404040;
-        border-radius: 6px;
-        overflow: hidden;
-        background: #2d2d2d;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-      }
-
-      .result-table th {
-        border: 1px solid #404040;
-        padding: 10px 14px;
-        text-align: left;
-        color: #fff;
-        font-weight: 600;
-        background: #3a3a3a;
-      }
-
-      .result-table td {
-        border: 1px solid #404040;
-        padding: 10px 14px;
-        color: #e0e0e0;
-        background: #2d2d2d;
-      }
-
-      .result-table tr:hover td {
-        background: #353535;
-      }
-
-      .row-count {
-        color: #888;
-        font-size: 12px;
-        margin-top: 8px;
-        opacity: 0.8;
-      }
-
-      .success-message {
-        color: #10b981;
-        font-weight: 500;
-      }
-
-      .error-message {
-        margin-bottom: 20px;
-        padding: 12px;
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        border-radius: 6px;
-        color: #ef4444;
-      }
-    `;
-
-    const fragment = document.createDocumentFragment();
-
-    results.forEach(({ result, error, time }) => {
-      const container = document.createElement("div");
-      container.className = "query-container";
-
-      const timeDiv = document.createElement("div");
-      timeDiv.className = "query-time";
-      timeDiv.textContent = `Query executed in ${time} ms`;
-      container.appendChild(timeDiv);
-
-      if (error) {
-        const errorDiv = document.createElement("div");
-        errorDiv.className = "error-message";
-        const strong = document.createElement("strong");
-        strong.textContent = "Error: ";
-        errorDiv.appendChild(strong);
-        errorDiv.appendChild(document.createTextNode(error));
-        fragment.appendChild(errorDiv);
-      } else if (result && result.length > 0) {
-        // create table for results
-        result.forEach((tableResult: any) => {
-          const table = document.createElement("table");
-          table.className = "result-table";
-
-          const thead = document.createElement("thead");
-          const headerRow = document.createElement("tr");
-          tableResult.columns.forEach((col: string) => {
-            const th = document.createElement("th");
-            th.textContent = col;
-            headerRow.appendChild(th);
-          });
-          thead.appendChild(headerRow);
-          table.appendChild(thead);
-
-          const tbody = document.createElement("tbody");
-          tableResult.values.forEach((row: any[]) => {
-            const tr = document.createElement("tr");
-            row.forEach((cell: any) => {
-              const td = document.createElement("td");
-              td.textContent = String(cell ?? "");
-              tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
-          });
-          table.appendChild(tbody);
-          container.appendChild(table);
-
-          const rowCount = document.createElement("div");
-          rowCount.className = "row-count";
-          rowCount.textContent = `${tableResult.values.length} row(s) returned`;
-          container.appendChild(rowCount);
-        });
-      } else {
-        // no results
-        const successDiv = document.createElement("div");
-        successDiv.className = "success-message";
-        successDiv.textContent = "✓ Query executed successfully (no results returned)";
-        container.appendChild(successDiv);
-      }
-
-      fragment.appendChild(container);
-    });
-
-    const tempDiv = document.createElement("div");
-    tempDiv.appendChild(fragment);
+        return `<div class="query-container">${timeInfo}<div class="success-message">✓ Query executed successfully (no results returned)</div></div>`;
+      })
+      .join("");
 
     return `<!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <style>${styles}</style>
-        </head>
-        <body>${tempDiv.innerHTML}</body>
-      </html>`;
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { background: #1e1e1e; color: #e0e0e0; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 16px; line-height: 1.6; }
+    .query-container { margin-bottom: 20px; }
+    .query-time { color: #888; font-size: 12px; margin-bottom: 8px; opacity: 0.8; }
+    .result-table { border-collapse: collapse; width: 100%; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2d2d2d; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+    .result-table th { border: 1px solid #404040; padding: 10px 14px; text-align: left; color: #fff; font-weight: 600; background: #3a3a3a; }
+    .result-table td { border: 1px solid #404040; padding: 10px 14px; color: #e0e0e0; background: #2d2d2d; }
+    .result-table tr:hover td { background: #353535; }
+    .row-count { color: #888; font-size: 12px; margin-top: 8px; opacity: 0.8; }
+    .success-message { color: #10b981; font-weight: 500; }
+    .error-message { margin-bottom: 20px; padding: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; color: #ef4444; }
+  </style>
+</head>
+<body>${resultHtml}</body>
+</html>`;
   }
 
   async execute(

@@ -10,6 +10,14 @@ import { storageService } from "../services/storage";
 import { useDebouncedSave } from "../composables/useDebouncedSave";
 import type { CodeChallengeData } from "../types";
 
+const EXT_TO_RUNNER: Record<string, string> = {
+  py: "python",
+  sql: "sqlite",
+  html: "web",
+  css: "web",
+  js: "web",
+};
+
 export default defineComponent({
   name: "CodeChallenge",
 
@@ -73,15 +81,8 @@ export default defineComponent({
 
   computed: {
     runnerLanguage(): string {
-      const extToRunner: Record<string, string> = {
-        py: "python",
-        sql: "sqlite",
-        html: "web",
-        css: "web",
-        js: "web",
-      };
       const ext = this.challengeData.mainFile.split(".").pop()?.toLowerCase() || "";
-      return extToRunner[ext] || "python";
+      return EXT_TO_RUNNER[ext] || "python";
     },
 
     hasAutoReloadFiles(): boolean {
@@ -282,22 +283,8 @@ export default defineComponent({
           return;
         }
 
-        const allFiles = this.fileSystem.getAllFiles();
-        for (const file of allFiles) {
-          const savedContent = await storageService.getEditorCode(
-            this.coursePath,
-            this.challengeId,
-            file.filename,
-            this.language,
-          );
-          if (savedContent !== null) {
-            this.fileSystem.files.set(file.filename, { ...file, content: savedContent });
-          }
-        }
-
         const files: Record<string, string> = {};
-        const updatedFiles = this.fileSystem.getAllFiles();
-        for (const file of updatedFiles) {
+        for (const file of this.fileSystem.getAllFiles()) {
           files[file.filename] = file.content;
         }
 

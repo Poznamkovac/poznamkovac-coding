@@ -20,14 +20,10 @@ export function hashStringToColor(str: string): string {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
-export function isNumeric(value: string): boolean {
-  return !isNaN(Number(value));
-}
-
 export function parseUrlPath(path: string): { segments: string[]; isChallenge: boolean } {
   const segments = path.split("/").filter(Boolean);
   const lastSegment = segments[segments.length - 1];
-  const isChallenge = lastSegment ? isNumeric(lastSegment) : false;
+  const isChallenge = lastSegment ? !isNaN(Number(lastSegment)) : false;
 
   return { segments, isChallenge };
 }

@@ -21,13 +21,6 @@ export async function fetchTestPy(coursePath: string, challengeId: string, langu
   return await fetchTextAsset(`/${language}/data/${coursePath}/${challengeId}/test.py`);
 }
 
-const createErrorResult = (maxScore: number, error: string): TestResult => ({
-  score: 0,
-  maxScore,
-  passed: false,
-  error,
-});
-
 export async function runTests(
   language: string,
   files: Record<string, string>,
@@ -40,7 +33,7 @@ export async function runTests(
     const runner = await codeRunnerRegistry.getOrInitializeRunner(language);
 
     if (!runner) {
-      return createErrorResult(maxScore, `No runner found for language: ${language}`);
+      return { score: 0, maxScore, passed: false, error: `No runner found for language: ${language}` };
     }
 
     let result: ExecutionResult;
@@ -76,7 +69,7 @@ export async function runTests(
     };
   } catch (error: any) {
     console.error("[TestRunner] Runner error:", error);
-    return createErrorResult(maxScore, error.message || String(error));
+    return { score: 0, maxScore, passed: false, error: error.message || String(error) };
   }
 }
 
@@ -118,22 +111,15 @@ export async function executeTestJS(testJSCode: string, context: any): Promise<T
 export async function executeTest(testCode: string, testLanguage: string, context: any): Promise<TestCaseResult[]> {
   if (testLanguage === "python") {
     if (!context.pyodide) {
-      return [
-        {
-          name: "Test initialization",
-          passed: false,
-          error: "Python runtime not available in context",
-        },
-      ];
+      return [{ name: "Test initialization", passed: false, error: "Python runtime not available in context" }];
     }
 
     const { PythonRunner } = await import("./codeRunners/pythonRunner");
     const runner = new PythonRunner();
     runner["pyodide"] = context.pyodide;
     return await runner.executePythonTest(testCode, context);
-  } else {
-    return await executeTestJS(testCode, context);
   }
+  return await executeTestJS(testCode, context);
 }
 
 export interface NotebookCellTestResult {
@@ -151,17 +137,24 @@ export interface NotebookTestResult {
   cellResults: NotebookCellTestResult[];
 }
 
-/**
- * Run tests for a notebook challenge
- * @param cells - All notebook cells
- * @param language - Language of the notebook (python, web, sqlite)
- * @param coursePath - Path to the course
- * @param challengeId - Challenge ID
- * @param uiLanguage - UI language (sk, en)
- * @param maxScore - Maximum score for the challenge
- * @param executeCellsUpTo - Function to execute cells up to a specific index
- * @returns Test results for all cells
- */
+const createNotebookErrorResult = (
+  maxScore: number,
+  errorName: string,
+  errorMessage: string,
+): NotebookTestResult => ({
+  score: 0,
+  maxScore,
+  passed: false,
+  cellResults: [
+    {
+      cellIndex: 0,
+      cellId: "",
+      testCases: [{ name: errorName, passed: false, error: errorMessage }],
+      passed: false,
+    },
+  ],
+});
+
 export async function runNotebookTests(
   cells: NotebookCell[],
   language: "python" | "web" | "sqlite",
@@ -170,67 +163,45 @@ export async function runNotebookTests(
   uiLanguage: string,
   maxScore: number,
   executeCellsUpTo: (cellIndex: number) => Promise<any>,
-  specificCellIndex?: number,
+  options?: { failFast?: boolean; specificCellIndex?: number },
 ): Promise<NotebookTestResult> {
   try {
     const testMdContent = await fetchTestMd(coursePath, challengeId, uiLanguage);
     if (!testMdContent) {
-      return {
-        score: 0,
-        maxScore,
-        passed: false,
-        cellResults: [
-          {
-            cellIndex: 0,
-            cellId: "",
-            testCases: [
-              {
-                name: "Test file loading",
-                passed: false,
-                error: "No test.md file found for this notebook",
-              },
-            ],
-            passed: false,
-          },
-        ],
-      };
+      return createNotebookErrorResult(maxScore, "Test file loading", "No test.md file found for this notebook");
     }
+
     const editableCellIndices = cells
       .map((cell, index) => (!cell.readonly && !cell.hidden ? index : -1))
       .filter((index) => index !== -1);
     const cellTests = parseTestMd(testMdContent, editableCellIndices, language);
 
     if (cellTests.length === 0) {
-      return {
-        score: 0,
-        maxScore,
-        passed: false,
-        cellResults: [
-          {
-            cellIndex: 0,
-            cellId: "",
-            testCases: [
-              {
-                name: "Test parsing",
-                passed: false,
-                error: "No tests found in test.md",
-              },
-            ],
-            passed: false,
-          },
-        ],
-      };
+      return createNotebookErrorResult(maxScore, "Test parsing", "No tests found in test.md");
     }
+
     const cellResults: NotebookCellTestResult[] = [];
     let totalPassed = 0;
     const testsToRun =
-      specificCellIndex !== undefined ? cellTests.filter((test) => test.cellIndex === specificCellIndex) : cellTests;
+      options?.specificCellIndex !== undefined
+        ? cellTests.filter((test) => test.cellIndex === options.specificCellIndex)
+        : cellTests;
 
     for (const cellTest of testsToRun) {
       const cell = cells[cellTest.cellIndex];
+
+      if (options?.failFast && cell.error) {
+        cellResults.push({
+          cellIndex: cellTest.cellIndex,
+          cellId: cell.id,
+          testCases: [{ name: "Cell execution", passed: false, error: `Cell execution failed: ${cell.error}` }],
+          passed: false,
+        });
+        break;
+      }
+
       const context = await executeCellsUpTo(cellTest.cellIndex);
       const testCases = await executeTest(cellTest.testCode, cellTest.language, context);
-
       const allTestsPassed = testCases.every((tc) => tc.passed);
 
       cellResults.push({
@@ -242,8 +213,11 @@ export async function runNotebookTests(
 
       if (allTestsPassed) {
         totalPassed++;
+      } else if (options?.failFast) {
+        break;
       }
     }
+
     const scorePerCell = maxScore / cellTests.length;
     const score = Math.round(totalPassed * scorePerCell);
     const allPassed = totalPassed === cellTests.length;
@@ -255,40 +229,10 @@ export async function runNotebookTests(
       cellResults,
     };
   } catch (error: any) {
-    return {
-      score: 0,
-      maxScore,
-      passed: false,
-      cellResults: [
-        {
-          cellIndex: 0,
-          cellId: "",
-          testCases: [
-            {
-              name: "Test execution",
-              passed: false,
-              error: error.message || String(error),
-            },
-          ],
-          passed: false,
-        },
-      ],
-    };
+    return createNotebookErrorResult(maxScore, "Test execution", error.message || String(error));
   }
 }
 
-/**
- * Run tests for a notebook challenge with fail-fast strategy
- * Stops execution at the first cell that has a failing test or execution error
- * @param cells - All notebook cells
- * @param language - Language of the notebook (python, web, sqlite)
- * @param coursePath - Path to the course
- * @param challengeId - Challenge ID
- * @param uiLanguage - UI language (sk, en)
- * @param maxScore - Maximum score for the challenge
- * @param executeCellsUpTo - Function to execute cells up to a specific index
- * @returns Test results for cells up to the first failure
- */
 export async function runNotebookTestsFailFast(
   cells: NotebookCell[],
   language: "python" | "web" | "sqlite",
@@ -298,129 +242,7 @@ export async function runNotebookTestsFailFast(
   maxScore: number,
   executeCellsUpTo: (cellIndex: number) => Promise<any>,
 ): Promise<NotebookTestResult> {
-  try {
-    const testMdContent = await fetchTestMd(coursePath, challengeId, uiLanguage);
-    if (!testMdContent) {
-      return {
-        score: 0,
-        maxScore,
-        passed: false,
-        cellResults: [
-          {
-            cellIndex: 0,
-            cellId: "",
-            testCases: [
-              {
-                name: "Test file loading",
-                passed: false,
-                error: "No test.md file found for this notebook",
-              },
-            ],
-            passed: false,
-          },
-        ],
-      };
-    }
-    const editableCellIndices = cells
-      .map((cell, index) => (!cell.readonly && !cell.hidden ? index : -1))
-      .filter((index) => index !== -1);
-    const cellTests = parseTestMd(testMdContent, editableCellIndices, language);
-
-    if (cellTests.length === 0) {
-      return {
-        score: 0,
-        maxScore,
-        passed: false,
-        cellResults: [
-          {
-            cellIndex: 0,
-            cellId: "",
-            testCases: [
-              {
-                name: "Test parsing",
-                passed: false,
-                error: "No tests found in test.md",
-              },
-            ],
-            passed: false,
-          },
-        ],
-      };
-    }
-    const cellResults: NotebookCellTestResult[] = [];
-    let totalPassed = 0;
-
-    for (const cellTest of cellTests) {
-      const cell = cells[cellTest.cellIndex];
-
-      // Execute cells up to this point
-      const context = await executeCellsUpTo(cellTest.cellIndex);
-
-      // Check if the cell itself had an execution error
-      if (cell.error) {
-        cellResults.push({
-          cellIndex: cellTest.cellIndex,
-          cellId: cell.id,
-          testCases: [
-            {
-              name: "Cell execution",
-              passed: false,
-              error: `Cell execution failed: ${cell.error}`,
-            },
-          ],
-          passed: false,
-        });
-        // Stop execution on cell error
-        break;
-      }
-
-      const testCases = await executeTest(cellTest.testCode, cellTest.language, context);
-      const allTestsPassed = testCases.every((tc) => tc.passed);
-
-      cellResults.push({
-        cellIndex: cellTest.cellIndex,
-        cellId: cell.id,
-        testCases,
-        passed: allTestsPassed,
-      });
-
-      if (allTestsPassed) {
-        totalPassed++;
-      } else {
-        // Stop execution on first test failure
-        break;
-      }
-    }
-
-    const scorePerCell = maxScore / cellTests.length;
-    const score = Math.round(totalPassed * scorePerCell);
-    const allPassed = totalPassed === cellTests.length;
-
-    return {
-      score,
-      maxScore,
-      passed: allPassed,
-      cellResults,
-    };
-  } catch (error: any) {
-    return {
-      score: 0,
-      maxScore,
-      passed: false,
-      cellResults: [
-        {
-          cellIndex: 0,
-          cellId: "",
-          testCases: [
-            {
-              name: "Test execution",
-              passed: false,
-              error: error.message || String(error),
-            },
-          ],
-          passed: false,
-        },
-      ],
-    };
-  }
+  return runNotebookTests(cells, language, coursePath, challengeId, uiLanguage, maxScore, executeCellsUpTo, {
+    failFast: true,
+  });
 }
