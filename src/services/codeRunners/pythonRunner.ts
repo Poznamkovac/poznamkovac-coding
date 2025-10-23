@@ -14,9 +14,12 @@ export class PythonRunner implements CodeRunner {
 
     this.initPromise = (async () => {
       try {
-        const { loadPyodide } = await import("pyodide");
+        const pyodideModule = await import("pyodide");
+        const { loadPyodide } = pyodideModule;
+        const version = (pyodideModule as any).version;
+
         this.pyodide = await loadPyodide({
-          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.28.3/full/",
+          indexURL: `https://cdn.jsdelivr.net/pyodide/v${version}/full/`,
         });
 
         this.initialized = true;
