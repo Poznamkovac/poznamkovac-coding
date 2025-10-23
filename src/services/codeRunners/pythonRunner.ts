@@ -122,14 +122,16 @@ export class PythonRunner implements CodeRunner {
 import warnings
 warnings.filterwarnings('ignore')
 
-import matplotlib
-matplotlib.use('webagg')
+try:
+  import matplotlib
+  matplotlib.use('webagg')
 
-# Set smaller default figure size to prevent resize loops
-import matplotlib.pyplot as plt
-plt.rcParams['figure.figsize'] = [8, 5]
-plt.rcParams['figure.dpi'] = 100
-        `);
+  # set smaller default figure size to prevent resize loops
+  import matplotlib.pyplot as plt
+  plt.rcParams['figure.figsize'] = [8, 5]
+  plt.rcParams['figure.dpi'] = 100
+except ImportError:
+  pass`);
 
       // Reset target and clean up old plots before each execution
       if (options?.plotTargetId) {
@@ -140,8 +142,11 @@ plt.rcParams['figure.dpi'] = 100
       }
 
       this.pyodide.runPython(`
-import matplotlib.pyplot as plt
-plt.close('all')
+try:
+  import matplotlib.pyplot as plt
+  plt.close('all')
+except ImportError:
+  pass
         `);
 
       // execute code and capture last expression value
