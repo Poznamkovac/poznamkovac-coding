@@ -140,14 +140,21 @@ result_type = type(_last_result).__module__ + '.' + type(_last_result).__name__
           if (isMatplotlibObj) {
             await this.pyodide.runPythonAsync(`
 try:
+  fig = None
   if hasattr(_last_result, 'get_figure'):
     # It's an Axes object, get the figure
-    _last_result.get_figure().show()
-  elif hasattr(_last_result, 'show'):
+    fig = _last_result.get_figure()
+  elif hasattr(_last_result, 'figure'):
+    # It might be another matplotlib object with a figure attribute
+    fig = _last_result.figure
+  elif hasattr(_last_result, 'canvas'):
     # It's a Figure object
-    _last_result.show()
-except:
-  pass
+    fig = _last_result
+
+  if fig is not None and hasattr(fig, 'canvas') and hasattr(fig.canvas, 'show'):
+    fig.canvas.show()
+except Exception as e:
+  print(f"Error displaying matplotlib figure: {e}")
 `);
           }
         } catch {
