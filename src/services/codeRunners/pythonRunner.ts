@@ -125,6 +125,36 @@ except ImportError:
       // execute code and capture last expression value
       const result = await this.pyodide.runPythonAsync(mainContent);
 
+      // Check if result is a matplotlib Axes or Figure object and trigger display
+      if (result !== undefined && result !== null) {
+        try {
+          // Store the result in globals so we can check it
+          this.pyodide.globals.set('_last_result', result);
+
+          const isMatplotlibObj = await this.pyodide.runPythonAsync(`
+result_type = type(_last_result).__module__ + '.' + type(_last_result).__name__
+'matplotlib' in result_type
+`);
+
+          // If it's a matplotlib Axes or Figure, show it
+          if (isMatplotlibObj) {
+            await this.pyodide.runPythonAsync(`
+try:
+  if hasattr(_last_result, 'get_figure'):
+    # It's an Axes object, get the figure
+    _last_result.get_figure().show()
+  elif hasattr(_last_result, 'show'):
+    # It's a Figure object
+    _last_result.show()
+except:
+  pass
+`);
+          }
+        } catch {
+          // Ignore errors in matplotlib detection
+        }
+      }
+
       // if there's a non-None result, add it to output
       let output = stdout.trim();
       if (result !== undefined && result !== null) {

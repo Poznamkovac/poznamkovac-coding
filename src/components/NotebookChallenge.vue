@@ -826,7 +826,7 @@ export default defineComponent({
           this.language,
           this.challengeData.maxScore,
           executeCellsUpTo,
-          cellIndex
+          { specificCellIndex: cellIndex }
         );
         if (!this.testResults) {
           this.testResults = {
