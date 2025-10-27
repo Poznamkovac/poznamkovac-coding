@@ -53,7 +53,12 @@
     "cellTests": "Cell Tests",
     "embedCopied": "Copied!",
     "copyEmbedCode": "Copy embed code",
-    "revealedCells": "Revealed cells"
+    "revealedCells": "Revealed cells",
+    "embedInstructions": "Embed this challenge",
+    "autoHeightScript": "1. (Optional) Add this script once to your page",
+    "autoHeightScriptNote": "This script will automatically resize all embedded iframes. You can also set the iframe height manually using the height attribute.",
+    "embedCode": "2. Add the iframe code wherever you want",
+    "clickToCopy": "Click to copy"
   },
   "common": {
     "loading": "Loading...",

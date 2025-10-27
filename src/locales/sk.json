@@ -53,7 +53,12 @@
     "cellTests": "Testy bunky",
     "embedCopied": "Skopírované!",
     "copyEmbedCode": "Kopírovať embed kód",
-    "revealedCells": "Odhalené bunky"
+    "revealedCells": "Odhalené bunky",
+    "embedInstructions": "Vložiť túto úlohu",
+    "autoHeightScript": "1. (Voliteľné) Pridajte tento skript raz na vašu stránku",
+    "autoHeightScriptNote": "Tento skript automaticky prispôsobí výšku všetkých vložených iframe. Výšku môžete nastaviť aj manuálne pomocou atribútu height.",
+    "embedCode": "2. Pridajte kód iframe kamkoľvek chcete",
+    "clickToCopy": "Kliknutím skopírujete"
   },
   "common": {
     "loading": "Načítavam...",

@@ -31,6 +31,12 @@ export default defineComponent({
     };
   },
 
+  data() {
+    return {
+      resizeObserver: null as ResizeObserver | null,
+    };
+  },
+
   computed: {
     pathSegments(): string[] {
       return getPathSegments(this.$route);
@@ -70,6 +76,13 @@ export default defineComponent({
     });
 
     this.loadChallenge();
+    this.setupHeightMessaging();
+  },
+
+  beforeUnmount() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
   },
 
   methods: {
@@ -81,6 +94,22 @@ export default defineComponent({
       const nextId = Number(this.challengeId) + 1;
       const nextPath = `/embed/${this.coursePath}/${nextId}`;
       this.$router.push(nextPath);
+    },
+
+    setupHeightMessaging() {
+      const sendHeight = () => {
+        const height = document.documentElement.scrollHeight;
+        window.parent.postMessage({ type: 'resize', height }, '*');
+      };
+
+      sendHeight();
+
+      this.resizeObserver = new ResizeObserver(() => {
+        sendHeight();
+      });
+      this.resizeObserver.observe(document.body);
+
+      window.addEventListener('resize', sendHeight);
     },
   },
 });
@@ -96,7 +125,7 @@ export default defineComponent({
           {{ challengeData.title }}
         </h2>
 
-        <div v-if="challengeData.type !== 'notebook'" class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6">
+        <div v-if="challengeData.type !== 'notebook'" class="p-6 mb-6">
           <h3 class="text-xl font-semibold text-white mb-4">
             {{ t("challenge.assignment") }}
           </h3>
@@ -130,7 +159,7 @@ export default defineComponent({
       </div>
 
       <div v-else class="max-w-2xl mx-auto">
-        <div class="bg-[#1a1a1a] border border-red-900/50 rounded-lg p-8 text-center">
+        <div class="p-8 text-center">
           <div class="text-6xl mb-4">😕</div>
           <h2 class="text-2xl font-bold text-white mb-3">
             {{ t("challenge.notFound") }}

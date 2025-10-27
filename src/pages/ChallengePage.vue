@@ -35,7 +35,8 @@ export default defineComponent({
 
   data() {
     return {
-      embedCopied: false,
+      scriptCopied: false,
+      iframeCopied: false,
     };
   },
 
@@ -78,7 +79,19 @@ export default defineComponent({
       const coursePath = this.pathSegments.slice(0, -1).join("/");
       const origin = window.location.origin;
       const embedUrl = `${origin}/${lang}/embed/${coursePath}/${this.challengeId}`;
-      return `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0"></iframe>`;
+      return (
+        '<iframe src="' +
+        embedUrl +
+        '" style="width:100%;border:none;background:transparent" allowtransparency="true"></iframe>'
+      );
+    },
+
+    autoHeightScriptUrl(): string {
+      return window.location.origin + "/iframe-resizer.js";
+    },
+
+    autoHeightScriptTag(): string {
+      return '<script src="' + this.autoHeightScriptUrl + '"></' + "script>";
     },
   },
 
@@ -118,12 +131,24 @@ export default defineComponent({
 
     getLocalizedPath,
 
-    async copyEmbedCode() {
+    async copyScriptCode() {
+      try {
+        await navigator.clipboard.writeText(this.autoHeightScriptTag);
+        this.scriptCopied = true;
+        setTimeout(() => {
+          this.scriptCopied = false;
+        }, 2000);
+      } catch (err) {
+        console.error("Failed to copy:", err);
+      }
+    },
+
+    async copyIframeCode() {
       try {
         await navigator.clipboard.writeText(this.embedIframeCode);
-        this.embedCopied = true;
+        this.iframeCopied = true;
         setTimeout(() => {
-          this.embedCopied = false;
+          this.iframeCopied = false;
         }, 2000);
       } catch (err) {
         console.error("Failed to copy:", err);
@@ -154,19 +179,9 @@ export default defineComponent({
           </template>
         </nav>
 
-        <div class="flex items-start justify-between mb-6">
-          <h2 class="text-3xl font-bold text-white">
-            {{ challengeData.title }}
-          </h2>
-          <button
-            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition flex items-center gap-2 text-sm"
-            :class="{ 'bg-green-600 hover:bg-green-600': embedCopied }"
-            @click="copyEmbedCode"
-          >
-            <span v-if="embedCopied">✓ {{ t("challenge.embedCopied") }}</span>
-            <span v-else>📋 {{ t("challenge.copyEmbedCode") }}</span>
-          </button>
-        </div>
+        <h2 class="text-3xl font-bold text-white mb-6">
+          {{ challengeData.title }}
+        </h2>
 
         <div v-if="challengeData.type !== 'notebook'" class="bg-[#1a1a1a] border border-gray-800 rounded-lg p-6 mb-6">
           <h3 class="text-xl font-semibold text-white mb-4">
@@ -199,6 +214,50 @@ export default defineComponent({
           :challenge-id="challengeId"
           :language="language"
         />
+
+        <!-- Embed instructions -->
+        <div class="mt-8 bg-[#1a1a1a] border border-gray-800 rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-white mb-4">
+            {{ t("challenge.embedInstructions") }}
+          </h3>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm text-gray-400 mb-2">{{ t("challenge.autoHeightScript") }}</label>
+              <p class="text-sm text-gray-400 mb-2">{{ t("challenge.autoHeightScriptNote") }}</p>
+              <div
+                class="bg-[#0d0d0d] rounded p-4 text-sm text-gray-300 cursor-pointer hover:bg-[#151515] transition relative group"
+                :class="{ 'bg-green-900/30': scriptCopied }"
+                @click="copyScriptCode"
+              >
+                <pre class="break-all whitespace-break-spaces">{{ autoHeightScriptTag }}</pre>
+                <span
+                  class="absolute top-2 right-2 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
+                  :class="scriptCopied ? 'bg-green-600 opacity-100' : 'bg-gray-700'"
+                >
+                  {{ scriptCopied ? '✓ ' + t("challenge.embedCopied") : t("challenge.clickToCopy") }}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm text-gray-400 mb-2">{{ t("challenge.embedCode") }}</label>
+              <div
+                class="bg-[#0d0d0d] rounded p-4 text-sm text-gray-300 cursor-pointer hover:bg-[#151515] transition relative group"
+                :class="{ 'bg-green-900/30': iframeCopied }"
+                @click="copyIframeCode"
+              >
+                <pre class="break-all whitespace-break-spaces">{{ embedIframeCode }}</pre>
+                <span
+                  class="absolute top-2 right-2 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
+                  :class="iframeCopied ? 'bg-green-600 opacity-100' : 'bg-gray-700'"
+                >
+                  {{ iframeCopied ? '✓ ' + t("challenge.embedCopied") : t("challenge.clickToCopy") }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-else class="max-w-2xl mx-auto">
