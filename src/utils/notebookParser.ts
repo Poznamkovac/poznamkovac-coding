@@ -21,11 +21,9 @@ function parseMetadata(lang: string | undefined): CellMetadata {
     autoreload: false,
   };
 
-  const match = lang?.match(/^\[(.*)\]$/);
-  if (!match) return metadata;
+  if (!lang) return metadata;
 
-  const flags = match[1].split(",").map((f) => f.trim().toLowerCase());
-
+  const flags = lang.split(",").map((f) => f.trim().toLowerCase());
   return {
     readonly: flags.includes("readonly"),
     hidden: flags.includes("hidden"),

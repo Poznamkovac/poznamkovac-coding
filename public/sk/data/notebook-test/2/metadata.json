@@ -1,8 +1,0 @@
-{
-  "type": "notebook",
-  "progressive": false,
-  "maxScore": 10,
-  "language": "python",
-  "title": "Získavanie dát zo zdrojov",
-  "files": ["students.csv"]
-}
